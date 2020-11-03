@@ -30,13 +30,13 @@ class Linie {
     
     erstelleHTML () {
         var svg = document.getElementsByTagName('svg')[0];
-        var e = document.createElementNS("http://www.w3.org/2000/svg", 'line')
-        e.setAttribute("x1",this.x1+"%");
-        e.setAttribute("y1",this.y1+"%");
-        e.setAttribute("x2",this.x2+"%");
-        e.setAttribute("y2",this.y2+"%");
-        e.style.stroke = "white";
-        e.style.strokeWidth = this.dicke*2;
+        var linie = document.createElementNS("http://www.w3.org/2000/svg", 'line')
+        linie.setAttribute("x1",this.x1+"%");
+        linie.setAttribute("y1",this.y1+"%");
+        linie.setAttribute("x2",this.x2+"%");
+        linie.setAttribute("y2",this.y2+"%");
+        linie.style.stroke = "white";
+        linie.style.strokeWidth = this.dicke*2;
         svg.appendChild(e);
         return e;
     }
