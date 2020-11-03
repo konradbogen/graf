@@ -1,0 +1,39 @@
+body{
+  background:black;
+  margin:0;
+  overflow:hidden;
+}
+
+h1, h2, h3, h4, h5, h6{
+  color:white;
+  border:solid 2px;
+  background:black;
+  padding:4px;
+  margin:0;
+  position:absolute;
+  transform:translate(-50%, -50%);
+  -webkit-transform:translate(-50%, -50%);
+  animation: bigbang 2s;
+}
+
+
+svg{
+  position:absolute;
+  top:0;
+  left:0;
+  height:100%;
+  width:100%;
+  opacity: 0%;
+  animation: fade 2s;
+  animation-delay: 1.5s;
+  animation-fill-mode: forwards;
+}
+
+@keyframes bigbang {
+  from {top: 50%; left: 50%}
+}
+
+@keyframes fade {
+  from {opacity: 0%;}
+  to {opacity: 100%;}
+}
