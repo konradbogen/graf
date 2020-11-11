@@ -2,9 +2,11 @@ body{
   background:black;
   margin:0;
   overflow:hidden;
+  font-size:2vmin;
+  font-family: 'Oswald', sans-serif;
 }
 
-h1, h2, h3, h4, h5, h6{
+.graphContainer h1, .graphContainer h2, .graphContainer h3, .graphContainer h4, .graphContainer h5 {
   color:white;
   border:solid 2px;
   background:black;
@@ -13,27 +15,99 @@ h1, h2, h3, h4, h5, h6{
   position:absolute;
   transform:translate(-50%, -50%);
   -webkit-transform:translate(-50%, -50%);
-  animation: bigbang 2s;
 }
 
 
 svg{
-  position:absolute;
+  position: absolute;
   top:0;
   left:0;
   height:100%;
   width:100%;
-  opacity: 0%;
-  animation: fade 2s;
-  animation-delay: 1.5s;
-  animation-fill-mode: forwards;
 }
 
-@keyframes bigbang {
-  from {top: 50%; left: 50%}
+.graphContainer{
+  width:100%;
+  position: relative;
 }
 
-@keyframes fade {
-  from {opacity: 0%;}
-  to {opacity: 100%;}
+
+
+textarea{
+  position:relative;
+  width:100%;
+  height:30em;
+  background:inherit;
+  border-top:solid black;
+  border-bottom:solid black;
+  margin-bottom:1em;
+  font-family: 'Oswald', sans-serif;
+  resize:none;
 }
+
+textarea:focus{
+  border-top:solid white;
+  border-bottom:solid white;
+  outline:0px !important;
+  -webkit-appearance:none;
+  box-shadow: none !important;
+}
+
+button{
+  background:inherit;
+  font-family: 'Oswald', sans-serif;
+  font-size:1em;
+  border:solid 2px;
+  text-align:center;
+  text-decoration: none;
+  overflow: hidden;
+  cursor: pointer;
+  outline:0px !important;
+  box-shadow: none !important;
+}
+
+
+button:active{
+  outline:0px !important;
+  box-shadow: none !important;
+  background:silver;
+}
+
+.flexContainer{
+  display:flex;
+  justify-content: flex-start;
+}
+
+.inputContainer{
+  position:relative;
+  height:100vh;
+  width:25vw;
+  background:grey;
+  text-align:center;
+  right:25vw;
+  transition: right 1s;
+  margin:0;
+}
+
+.inputContainer h2{
+  padding-top:.5em;
+}
+
+.menu{
+  position:absolute;
+  left:0;
+  top:0;
+  height: 3em;
+  width:3em;
+  z-index: 1;
+}
+
+.button{
+  cursor:pointer;
+}
+
+.faderight{
+  right:0!important;
+  padding-left:0;
+}
+

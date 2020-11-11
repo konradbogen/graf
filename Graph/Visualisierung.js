@@ -29,7 +29,7 @@ class Linie {
     }
     
     erstelleHTML () {
-        var svg = document.getElementsByTagName('svg')[0];
+        var svg = document.getElementById ("graphSvg");
         var linie = document.createElementNS("http://www.w3.org/2000/svg", 'line')
         linie.setAttribute("x1",this.x1+"%");
         linie.setAttribute("y1",this.y1+"%");
@@ -37,8 +37,8 @@ class Linie {
         linie.setAttribute("y2",this.y2+"%");
         linie.style.stroke = "white";
         linie.style.strokeWidth = this.dicke*2;
-        svg.appendChild(e);
-        return e;
+        svg.appendChild(linie);
+        return linie;
     }
 
     aktualisiereHTMLPosition () {
@@ -92,10 +92,11 @@ class Punkt {
 
     erstelleHTML () {
         var e = document.createElement("h"+this.level);
+        var container = document.getElementsByClassName ("graphContainer") [0];
         e.innerHTML = this.name;
         e.setAttribute("id", this.id)
         e.setAttribute("style", "top:"+this._y+"%; left:"+this._x+"%;");
-        document.body.appendChild(e);
+        container.appendChild (e);
         return e;
     };
 
@@ -137,11 +138,36 @@ class Visual {
     constructor () {
           this.punkte = [];
           this.linien = [];
+          this.container;
+          this.svg;
+          this.verknüpfeMitHtmlDatei ();
     }
 
     zeichneGraph (g) {
+        this.leereHtml ();
         this.zeichneAlleKnoten (g);
         this.zeichneAlleVerbindungen (g);
+    }
+
+    erstelleHtml () {
+        var masterContainer = document.getElementsByClassName ("flexContainer") [0]
+        this.container = document.createElement ("div");
+        this.svg = document.createElement ("svg");
+        this.container.setAttribute ("class", "graphContainer");
+        this.svg.setAttribute ("id", "graphSvg");
+        masterContainer.appendChild (this.container);
+        this.container.appendChild (this.svg);
+    }
+
+    verknüpfeMitHtmlDatei () {
+        this.container = document.getElementsByClassName ("graphContainer") [0];
+        this.svg = document.getElementById ("graphSvg");
+    }
+
+    leereHtml () {
+        this.svg.innerHTML = "";
+        this.container.innerHTML = "";
+        this.container.appendChild (this.svg);
     }
 
     zeichneAlleKnoten (graph) {
@@ -158,7 +184,7 @@ class Visual {
         var children = graph.kriegeChildren (parentKnoten);
         for (var i=0; i<children.length; i++) {
             var knoten = children [i];
-            var winkel = i * (2 * Math.PI / children.length);
+            var winkel = i * (2*Math.PI / children.length);
             var { x, y } = this.kriegeKoordinatenAufKreis (xZentrum, yZentrum, radius, winkel);
             this.zeichneKnoten (x,y, knoten)
             this.zeichneChildrenKnoten(graph, knoten, x, y, radius/2);

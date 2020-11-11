@@ -149,6 +149,10 @@ class VisualTest {
         this.visual.punkte [index].y = x;
         console.log ("Nachher: Position des Punkt [0]: " + this.visual.punkte[0].x + ", " + this.visual.punkte [0].y)
     }
+    testErstelleHtml () {
+        console.log ("--VisualsTest.testErstelleHtml();---")
+        this.visual.erstelleHtml ()
+    }
 }
 
 class Test {
@@ -164,7 +168,6 @@ class Test {
     }
 
     test () {
-        
     }
 }
 
