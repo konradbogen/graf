@@ -36,11 +36,11 @@ svg{
 textarea{
   position:relative;
   width:100%;
-  height:30em;
+  height:80%;
+  overflow-y: scroll;
   background:inherit;
   border-top:solid black;
   border-bottom:solid black;
-  margin-bottom:1em;
   font-family: 'Oswald', sans-serif;
   resize:none;
 }
@@ -56,8 +56,9 @@ textarea:focus{
 button{
   background:inherit;
   font-family: 'Oswald', sans-serif;
-  font-size:1em;
   border:solid 2px;
+  width: 100%;
+  height: 10%;
   text-align:center;
   text-decoration: none;
   overflow: hidden;
@@ -87,6 +88,8 @@ button:active{
   right:25vw;
   transition: right 1s;
   margin:0;
+  display: flex;
+  flex-direction: column;
 }
 
 .inputContainer h2{
@@ -104,6 +107,7 @@ button:active{
 
 .button{
   cursor:pointer;
+
 }
 
 .faderight{
