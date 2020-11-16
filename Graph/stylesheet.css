@@ -82,7 +82,7 @@ button:active{
 .inputContainer{
   position:relative;
   height:100vh;
-  width:25vw;
+  width:0;
   background:grey;
   text-align:center;
   right:25vw;
@@ -112,6 +112,7 @@ button:active{
 
 .faderight{
   right:0!important;
+  width:25vw;
   padding-left:0;
 }
 
