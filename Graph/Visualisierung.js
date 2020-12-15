@@ -51,14 +51,24 @@ class Linie {
 }
 
 class Punkt {
-    constructor (x, y, name, id, level) {
+    constructor (x, y, name, url, id, level) {
         this._x = x;
         this._y = y;
         this.name = name;
         this.id = id;
         this.level = level;
+        this.url = url;
         this.html = this.erstelleHTML ();
         this.erstelleObserver ();
+        
+    }
+
+    get istLink () {
+        if (this.url != "") {
+            return true;
+        }else {
+            return false;
+        }
     }
     
     set x (value) {
@@ -93,7 +103,11 @@ class Punkt {
     erstelleHTML () {
         var e = document.createElement("h"+this.level);
         var container = document.getElementsByClassName ("graphContainer") [0];
-        e.innerHTML = this.name;
+        if (this.url == "") {
+            e.innerHTML = this.name;
+        }else {
+            e.innerHTML = "<a href="+this.url+">" + this.name + "</a>"
+        }
         e.setAttribute("id", this.id)
         e.setAttribute("style", "top:"+this._y+"%; left:"+this._x+"%;");
         container.appendChild (e);
@@ -192,9 +206,11 @@ class Visual {
     }
 
     zeichneKnoten (x,y, knoten) {
-        var p = new Punkt (x,y, knoten.name, knoten.id, knoten.level);
+        var p = new Punkt (x,y, knoten.name, knoten.url, knoten.id, knoten.level);
         this.punkte.push (p);
     }
+
+   
 
     zeichneVerbindung (verbindung) {
         var _punkte = this.kriegePunkteAusVerbindung (verbindung);

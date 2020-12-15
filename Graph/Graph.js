@@ -24,6 +24,7 @@ class Graph {
                 return element;
             };
         }
+        return null;
     }   
 
     findeVerbindung (knotenA, knotenB) {
@@ -68,6 +69,7 @@ class Knoten {
         this.id = id;
         this.parent = parent;
         this.level = level;
+        this.url = "";
     }
 }
 

@@ -9,48 +9,46 @@ class Parser {
     }
 
     erstelleAlleVerbindungen (daten, graph) {
-        var idList = this.findeAlleVerbindungIds (daten);
-        for (let element of idList) {
+        for (let element of daten.verbindungIds) {
             this.fügeVerbindungHinzu (element, graph);
         }
     }
 
     erstelleAlleKnoten (daten, graph) {
-        var idList = this.findeAlleKnotenIds (daten);
-        for (let element of idList) {
-            this.fügeAlleKnotenAusIdHinzu (graph, element);
+        for (var i = 0; i<daten.knotenIds.length; i++) {
+            var id = daten.knotenIds [i];
+            var url = daten.findeUrl (id);
+            this.fügeAlleChildrenKnotenHinzu (id, url, graph, null);
         }
     }
 
-    findeAlleKnotenIds (daten) {
-        var knotenIds = [];
-        knotenIds = this.findeIdInDaten (daten, Daten.knotenRegExp);
-        return knotenIds;
-    }
-
-    findeAlleVerbindungIds (daten) {
-        var verbindungIds;
-        verbindungIds = this.findeIdInDaten (daten, Daten.verbindungRegExp);
-        return verbindungIds;
-    }
-
-    fügeAlleKnotenAusIdHinzu (graph, id, parentKnoten) {
+    fügeAlleChildrenKnotenHinzu (id, url, graph, parent) {
         var idTeile = this.teileKnotenId (id);
         var knotenName = idTeile [0];
-        var knoten = this.fügeKnotenHinzu (parentKnoten, knotenName, graph);
+        var knoten = this.erstelleKnoten (parent, knotenName);
+        this.fügeKnotenHinzu (graph, knoten, parent);
         if (idTeile[1] != "") {
-            this.fügeAlleKnotenAusIdHinzu (graph, idTeile[1], knoten)
+            this.fügeAlleChildrenKnotenHinzu (idTeile[1], url, graph, knoten);
+        }else {
+            knoten.url = url; //nur das letzte children kriegt die url zugewiesen
         }
     }
 
-    fügeKnotenHinzu (parentKnoten, name, graph) {
+    erstelleKnoten (parentKnoten, name) {
         var knotenId = this.erstelleKnotenId (parentKnoten, name);
-        var knoten = this.erstelleKnoten (knotenId, name, parentKnoten);
-        if (graph.findeKnoten (knotenId) == null) {
-            graph.addKnoten (knoten);
-            this.erstelleVerbindungZuParent (knoten, parentKnoten, graph);
-        }
+        var level = this.kriegeKnotenLevelAusId (knotenId);
+        var knoten = new Knoten (knotenId, name, parentKnoten, level);
         return knoten;
+    }
+
+    fügeKnotenHinzu (graph, knoten, parent) {
+        var existierenderKnoten = graph.findeKnoten (knoten.id);
+        if (existierenderKnoten) {
+            //was passiert, wenn ein knoten hinzugefügt wird, der sich nur durch die url unterscheidet?
+        }else {
+            graph.addKnoten (knoten);
+            this.erstelleVerbindungZuParent (knoten, parent, graph);
+        }
     }
 
     fügeVerbindungHinzu (verbindungsId, graph) {
@@ -64,15 +62,9 @@ class Parser {
 
 
     erstelleVerbindungZuParent (knoten, parentKnoten, graph) {
-        if (parentKnoten != null) {
+        if (parentKnoten) {
             graph.addVerbindung (knoten, parentKnoten);
         }
-    }
-
-    erstelleKnoten (knotenId, name, parentKnoten) {
-        var level = this.kriegeKnotenLevelAusId (knotenId);
-        var knoten = new Knoten (knotenId, name, parentKnoten, level);
-        return knoten;
     }
 
     erstelleKnotenId (parentKnoten, id) {
@@ -118,20 +110,6 @@ class Parser {
             }
         }
         return knotenIds;
-    }
-
-    findeIdInDaten (daten, regEx) {
-        var zeilen = this.teileDatenInZeilen (daten);
-        var idListe = [];
-        for (let element of zeilen) {
-            if (regEx.test (element)) {idListe.push (element)};
-        }
-        return idListe;
-    }
-
-    teileDatenInZeilen (daten) {
-        var zeilen = daten.split ("\n");
-        return zeilen;
     }
 
     extrahiereIdBasis (id) {

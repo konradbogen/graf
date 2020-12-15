@@ -3,7 +3,7 @@ var parser;
 var visual;
 var daten;
 var test;
-var startEingabe = "Beyond.Nadja\nBeyond.Tim\nBeyond.Felix\nBeyond.Lukas\nBeyond.Jannis\nBeyond.Laurenz\nBeyond.Konrad";
+var startEingabe = "Beyond.Nadja\nBeyond.Tim\nBeyond.Felix\nBeyond.Lukas\nBeyond.Jannis\nBeyond.Laurenz\nBeyond.Konrad\n";
 
 function init () {
     daten = new Daten ();
@@ -11,13 +11,12 @@ function init () {
     graph = new Graph (); 
     visual = new Visual ();
     test = new Test (daten, parser, graph, visual);
-    test.test ();
 }
 
-function erstelleGraphAusEingabe (eingabe) {
+function aktualisiereGraph () {
     graph = new Graph ();
     visual = new Visual ();
-    parser.erstelleGraph (eingabe, graph);
+    parser.erstelleGraph (daten, graph);
     visual.zeichneGraph (graph);
 }
 
@@ -25,19 +24,26 @@ $(document).ready(function (){
     init ();
     erstelleSubmitEventListener ();
     erstelleMenuEventListener ();
-    setzeEingabe (startEingabe);
 
+    daten.leseVerzeichnisAus (true);
+    var text = startEingabe + daten.kriegeEingabeText ()
+    setzeEingabe (text);
+
+    aktualisiereGraph ();
 });
 
 function setzeEingabe (eingabe) {
     document.getElementById ("input").innerHTML = eingabe;
-    erstelleGraphAusEingabe (eingabe);
+    daten.leseEingabeAus (eingabe);
 }
+
+
 
 function erstelleSubmitEventListener () {
     document.getElementById("submit").addEventListener("click", function() {
         var val = $.trim($("textarea").val());
-          erstelleGraphAusEingabe (val);
+          daten.leseEingabeAus (val);
+          aktualisiereGraph ();
       }, false);
       
 }

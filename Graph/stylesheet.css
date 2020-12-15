@@ -8,7 +8,7 @@ body{
 
 .graphContainer h1, .graphContainer h2, .graphContainer h3, .graphContainer h4, .graphContainer h5 {
   color:white;
-  border:solid 2px;
+  /* border:solid 2px; */
   background:black;
   padding:4px;
   margin:0;
@@ -16,6 +16,26 @@ body{
   transform:translate(-50%, -50%);
   -webkit-transform:translate(-50%, -50%);
 }
+
+ /* unvisited link */
+ a:link {
+  color: white;
+}
+
+/* visited link */
+a:visited {
+  color: white;
+}
+
+/* mouse over link */
+a:hover {
+  color: orange;
+}
+
+/* selected link */
+a:active {
+  color: orange;
+} 
 
 
 svg{
