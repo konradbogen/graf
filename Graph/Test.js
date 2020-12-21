@@ -112,8 +112,19 @@ class ParserTest {
 }
 
 class GraphTest {
-    testKriegeChildren () {
+    constructor (graph) {
+        this.graph = graph;
+    }
 
+    testKriegeVerbindungenEinesKnotens (index) {
+        console.log ("--GraphTest.testKriegeVerbindungenEinesKnotens()---")
+        console.log ("Alle Verbindungen des ersten Knoten: ")
+        console.log ( this.graph.kriegeVerbindungenEinesKnotens (graph.knoten[index]));
+    }
+    testFindeAllePfade () {
+        console.log ("--GraphTest.test_finde_alle_pfade()---")
+        console.log ("Alle Pfade: ")
+        console.log ( this.graph.finde_alle_pfade (this.graph.knoten [0], this.graph.knoten [1]));
     }
 }
 
@@ -163,11 +174,13 @@ class Test {
         this.visual = visual;
         this.parserTest = new ParserTest (this.parser);
         this.visualTest = new VisualTest (this.visual);
+        this.graphTest = new GraphTest (graph)
         this.testDaten1 = "berlin.neukolln\nberlin.charlottenburg\nberlin.charlottenburg.sophie\nberlin.kreuzberg\nleipzig.connewitz\nleipzig.norden.merseburgerStr\nwien.yppenplatz\nwien.yppenplatz-berlin.charlottenburg.sophie\nleipzig.norden.merseburgerStr-wien.yppenplatz\nleipzig.norden.merseburgerStr-berlin.charlottenburg.sophie"
         this.testDaten2 = "Escapism.Mercury\nTHEANDAND.48\n\THEANDAND.48.Livestream\nTHEANDAND.Tour\nBab.Album\nBab.dreiecke\nBab.dreiecke.grün\nBab.dreiecke.grau\nBab.dreiecke.blau\nBeyond.Nadja\nBeyond.Felix\nBeyond.Laurenz\nBeyond.Jannis\nBeyond.Tim\nBeyond.Lukas\nBeyond.Konrad"
     }
 
     test () {
+        //this.graphTest.testFindeAllePfade ();
     }
 }
 

@@ -3,14 +3,25 @@ var parser;
 var visual;
 var daten;
 var test;
-var startEingabe = "Beyond.Nadja\nBeyond.Tim\nBeyond.Felix\nBeyond.Lukas\nBeyond.Jannis\nBeyond.Laurenz\nBeyond.Konrad\n";
+//var startEingabe = "Beyond.Nadja\nBeyond.Tim\nBeyond.Felix\nBeyond.Lukas\nBeyond.Jannis\nBeyond.Laurenz\nBeyond.Konrad\n";
+
+var startEingabe = "A\nB\nC\nD\nE\nA-B\nD-B\nA-E\nE-C\nC-B\nE-B\nE-D\nD-A";
+
+const testAktiviert = true;
+const lokal = true;
 
 function init () {
     daten = new Daten ();
     parser = new Parser ();
     graph = new Graph (); 
     visual = new Visual ();
-    test = new Test (daten, parser, graph, visual);
+}
+
+function test_ausfuhren () {
+    if (testAktiviert) {
+        test = new Test (daten, parser, graph, visual);
+        test.test ();
+    }
 }
 
 function aktualisiereGraph () {
@@ -18,6 +29,7 @@ function aktualisiereGraph () {
     visual = new Visual ();
     parser.erstelleGraph (daten, graph);
     visual.zeichneGraph (graph);
+    test_ausfuhren ();
 }
 
 $(document).ready(function (){
@@ -25,10 +37,12 @@ $(document).ready(function (){
     erstelleSubmitEventListener ();
     erstelleMenuEventListener ();
 
-    daten.leseVerzeichnisAus (true);
+    if (lokal == false) {
+        daten.leseVerzeichnisAus (true); 
+    }
+    
     var text = startEingabe + daten.kriegeEingabeText ()
     setzeEingabe (text);
-
     aktualisiereGraph ();
 });
 
