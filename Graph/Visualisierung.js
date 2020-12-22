@@ -1,3 +1,6 @@
+//PLUGIN FÜR GRAPH
+const DEFAULT_LINE_COLOUR = "grey";
+const UPDATE_RATE = 1000/60;
 const styleXYRegEx = /top:(\d*.*d*)%;\sleft:(\d*.*d*)%;/
 
 class Linie {
@@ -8,8 +11,8 @@ class Linie {
         this.punkt2.positionWurdeGeändert = this.callback.bind (this);
         this.dicke = dicke;
         this.html = this.erstelleHTML ();
-
     }
+
     get x1 () {
         return this.punkt1.x;
     }
@@ -35,7 +38,7 @@ class Linie {
         linie.setAttribute("y1",this.y1+"%");
         linie.setAttribute("x2",this.x2+"%");
         linie.setAttribute("y2",this.y2+"%");
-        linie.style.stroke = "white";
+        linie.style.stroke = DEFAULT_LINE_COLOUR;
         linie.style.strokeWidth = this.dicke*2;
         svg.appendChild(linie);
         return linie;
@@ -141,6 +144,14 @@ class Punkt {
         }    
     }
 
+    play () {
+        //je nach datentyp audio abspielen, bild anzeigen, etc.
+    }
+
+    stop () {
+        //je nach datentyp bild entfernen, audio stoppen, etc.
+    }
+
     positionWurdeGeändert () {
 
     }
@@ -150,13 +161,20 @@ class Punkt {
 class Visual {
     
     constructor () {
+         this.timer = setInterval (this.update_pacs.bind (this), UPDATE_RATE)
           this.punkte = [];
           this.linien = [];
+          this.pacs = [];
           this.container;
           this.svg;
           this.verknüpfeMitHtmlDatei ();
     }
 
+    update_pacs () {
+        this.pacs.forEach (pac=>{
+            pac.update (UPDATE_RATE);
+        });
+    }
     zeichneGraph (g) {
         this.leereHtml ();
         this.zeichneAlleKnoten (g);
@@ -216,6 +234,7 @@ class Visual {
         var _punkte = this.kriegePunkteAusVerbindung (verbindung);
         if (_punkte != null) {
             var linie = new Linie (_punkte [0], _punkte [1], 1);
+            linie.verbindung = verbindung;
             this.linien.push (linie);
         }
     }
@@ -242,6 +261,14 @@ class Visual {
         for (var i = 0; i<this.punkte.length; i++) {
             if (this.punkte[i].id == id) {
                 return this.punkte[i];
+            }
+        }
+    }
+
+    finde_linie (punkt1_id, punkt2_id) {
+        for (var i = 0; i<this.linien.length; i++) {
+            if (this.linien[i].punkt1.id == punkt1_id && this.linien[i].punkt2.id == punkt2_id) {
+                return this.linien[i];
             }
         }
     }

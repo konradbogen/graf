@@ -124,7 +124,7 @@ class GraphTest {
     testFindeAllePfade () {
         console.log ("--GraphTest.test_finde_alle_pfade()---")
         console.log ("Alle Pfade: ")
-        console.log ( this.graph.finde_alle_pfade (this.graph.knoten [0], this.graph.knoten [1]));
+        console.log ( this.graph.finde_alle_pfade (this.graph.knoten [1], this.graph.knoten [4]));
     }
 }
 
@@ -181,6 +181,14 @@ class Test {
 
     test () {
         //this.graphTest.testFindeAllePfade ();
+        var seq = new Sequenz (this.visual);
+        seq.push (this.graph.verbindungen [0], 6000)
+        seq.push (this.graph.verbindungen [1], 6000)
+        seq.push (this.graph.verbindungen [5], 6000)
+        seq.show ("yellow");
+
+        var pac = new PAC (seq);
+        this.visual.pacs.push (pac);
     }
 }
 

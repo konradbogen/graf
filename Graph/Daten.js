@@ -1,11 +1,20 @@
 const knotenRegExp = /^(?:(\w+))\.*((?:\.*\w+)*(?:\w+)*)$/;
 const verbindungRegExp = /^((?:\w*\.*)(?:\w+\.*\w+)*)-((?:\w*\.*)(?:\w+\.*\w+)*)$/;
 const dateiEndungRegExp = /\.[a-zA-Z]*/;
-const VERZEICHNIS = "http://www.heptagon.network/Graph/Content/"
+const seqRegExp = />seq (.*) .*/;
+const pacRegExp = />pac (.*)/;
 
+
+const VERZEICHNIS = "http://www.heptagon.network/Graph/Content/"
 
 class Daten {
     constructor () {
+        this.sequenz_ids = [];
+        this.sequenz_verbindungIds = [];
+
+        this.pac_ids = [];
+        this.pac_zugewiesene_sequenz_id = [];
+
         this.knotenIds = [];
         this.verbindungIds = [];
         this.urls = [];
@@ -85,6 +94,7 @@ class Daten {
         this.verbindungIds = [];
         this.erstelleKnotenIdsAusEingabe (eingabe);
         this.erstelleVerbindungsIdsAusEingabe (eingabe);
+        this.erstelle_pac_ids_aus_eingabe (eingabe);
     }
 
     kriegeEingabeText () {

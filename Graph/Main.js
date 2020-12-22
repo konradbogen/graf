@@ -5,7 +5,7 @@ var daten;
 var test;
 //var startEingabe = "Beyond.Nadja\nBeyond.Tim\nBeyond.Felix\nBeyond.Lukas\nBeyond.Jannis\nBeyond.Laurenz\nBeyond.Konrad\n";
 
-var startEingabe = "A\nB\nC\nD\nE\nA-B\nD-B\nA-E\nE-C\nC-B\nE-B\nE-D\nD-A";
+var startEingabe = "A\nA.L\nB\nC\nD\nE\nA-B\nD-B\nA-E\nE-C\nC-B\nE-B\nE-D\nD-A";
 
 const testAktiviert = true;
 const lokal = true;

@@ -1,3 +1,5 @@
+//PLUG-IN FÜR GRAPH.JS, DATEN.JS, PAC.JS
+
 class Parser {
     constructor () {
         
@@ -63,7 +65,7 @@ class Parser {
 
     erstelleVerbindungZuParent (knoten, parentKnoten, graph) {
         if (parentKnoten) {
-            graph.addVerbindung (knoten, parentKnoten);
+            graph.addVerbindung (knoten, graph.findeKnoten(parentKnoten.id));
         }
     }
 

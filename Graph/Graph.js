@@ -130,7 +130,6 @@ class Graph {
 
 }   
 
-
 class Knoten {
     constructor (id, name, parent, level) {
         this.name = name;

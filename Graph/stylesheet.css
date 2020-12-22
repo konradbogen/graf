@@ -9,7 +9,7 @@ body{
 .graphContainer h1, .graphContainer h2, .graphContainer h3, .graphContainer h4, .graphContainer h5 {
   color:white;
   /* border:solid 2px; */
-  background:black;
+  background:transparent;
   padding:4px;
   margin:0;
   position:absolute;
