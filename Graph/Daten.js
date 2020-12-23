@@ -1,48 +1,45 @@
-const knotenRegExp = /^(?:(\w+))\.*((?:\.*\w+)*(?:\w+)*)$/;
-const verbindungRegExp = /^((?:\w*\.*)(?:\w+\.*\w+)*)-((?:\w*\.*)(?:\w+\.*\w+)*)$/;
-const dateiEndungRegExp = /\.[a-zA-Z]*/;
-const seqRegExp = />seq (.*) .*/;
-const pacRegExp = />pac (.*)/;
+const KNOTEN_REGEXP = /^(?:(\w+))\.*((?:\.*\w+)*(?:\w+)*)$/;
+const VERBINDUNG_REGEXP = /^((?:\w*\.*)(?:\w+\.*\w+)*)-((?:\w*\.*)(?:\w+\.*\w+)*)$/;
+const DAUER_REGEXP = /^(\d*)$/
+const DATEI_ENDUNG_REGEXP = /\.[a-zA-Z]*/;
+const SEQ_REGEXP = />seq\s(\w*)\s.*/;
+const PAC_REGEXP = />pac (.*)/;
 
 
 const VERZEICHNIS = "http://www.heptagon.network/Graph/Content/"
 
 class Daten {
     constructor () {
-        this.sequenz_ids = [];
-        this.sequenz_verbindungIds = [];
-
+        this.seq_ids = [];
         this.pac_ids = [];
-        this.pac_zugewiesene_sequenz_id = [];
-
-        this.knotenIds = [];
-        this.verbindungIds = [];
+        this.knoten_ids = [];
+        this.verbindung_ids = [];
         this.urls = [];
     }
 
-    static get knotenRegExp () {
-        return knotenRegExp;
+    static get KNOTEN_REGEXP () {
+        return KNOTEN_REGEXP;
+    }
+ 
+    static get VERBINDUNG_REGEXP () {
+        return VERBINDUNG_REGEXP;
     }
 
-    static get verbindungRegExp () {
-        return verbindungRegExp;
-    }
-
-    leseVerzeichnisAus (erstelleKnoten) {
+    lese_verzeichnis_aus (erstelleKnoten) {
         this.urls = [];
         var array = [];
-        array = this.requestPHPDirectory(array);
+        array = this.request_php_verzeichnis (array);
         array.forEach(element => {
             if (element != false) { //JSON gibt manchmal ein false mit
                 var dateiname = new String (element);
                 if (dateiname != "." && dateiname != null && dateiname != "..") {
-                    this.fügeDateiHinzu(dateiname, erstelleKnoten);
+                    this.fuge_datei_hinzu(dateiname, erstelleKnoten);
                 }
             }
         });
     }
 
-    requestPHPDirectory(array) {
+    request_php_verzeichnis (array) {
         var xmlhttp = new XMLHttpRequest();
         xmlhttp.open("GET", "FileSystem.php", false);
         xmlhttp.send(null);
@@ -55,52 +52,53 @@ class Daten {
         return array;
     }
 
-    fügeDateiHinzu(dateiname, erstelleKnoten) {
-        var id = this.erstelleIdAusDateiname(dateiname);
+    fuge_datei_hinzu (dateiname, erstelleKnoten) {
+        var id = this.erstelle_id_aus_dateiname(dateiname);
         if (erstelleKnoten) {
-            this.knotenIds.push(id);
+            this.knoten_ids.push(id);
         }
         this.urls.push(VERZEICHNIS + dateiname);
     }
 
-    erstelleIdAusDateiname (dateinameString) {
+    erstelle_id_aus_dateiname (dateinameString) {
         var stringOhneDateityp = dateinameString.substr (0, dateinameString.lastIndexOf (".")) || null;
         return stringOhneDateityp;
     }
 
-    erstelleDateinameAusUrl (urlString) {
+    erstelle_dateiname_aus_url (urlString) {
         var stringOhneVerzeichnis = urlString.substr (VERZEICHNIS.length, urlString.length);
         return stringOhneVerzeichnis;
     }
 
-    erstelleIdAusUrl (urlString) {
-        var dateinameString = this.erstelleDateinameAusUrl (urlString);
-        var id = this.erstelleIdAusDateiname (dateinameString);
+    erstelle_knoten_id_aus_url (urlString) {
+        var dateinameString = this.erstelle_dateiname_aus_url (urlString);
+        var id = this.erstelle_id_aus_dateiname (dateinameString);
         return id;
     }
 
-    findeUrl (id) {
+    finde_url (knoten_id) {
         for (var i = 0; i<this.urls.length;i++) {
             var url = this.urls [i];
-            if (this.erstelleIdAusUrl (url) == id) {
+            if (this.erstelle_knoten_id_aus_url (url) == knoten_id) {
                 return url;
             }
         }
         return "";
     }
 
-    leseEingabeAus (eingabe) {
-        this.knotenIds = [];
-        this.verbindungIds = [];
-        this.erstelleKnotenIdsAusEingabe (eingabe);
-        this.erstelleVerbindungsIdsAusEingabe (eingabe);
+    lese_eingabe_aus (eingabe) {
+        this.knoten_ids = [];
+        this.verbindung_ids = [];
+        this.erstelle_knoten_ids_aus_eingabe (eingabe);
+        this.erstelle_verbindungs_ids_aus_eingabe (eingabe);
         this.erstelle_pac_ids_aus_eingabe (eingabe);
+        this.erstelle_seq_ids_aus_eingabe (eingabe);
     }
 
-    kriegeEingabeText () {
+    erstelle_eingabe_text () {
         var text = "";
-        if (this.knotenIds) {
-            this.knotenIds.forEach(element => {
+        if (this.knoten_ids) {
+            this.knoten_ids.forEach(element => {
                 text = text + element + "\n";
             });
         }
@@ -112,20 +110,27 @@ class Daten {
         return text;
     }
 
+    erstelle_pac_ids_aus_eingabe (eingabe) {
+        this.pac_ids = this.finde_id (eingabe, PAC_REGEXP);
+    }
 
-    erstelleKnotenIdsAusEingabe (eingabe) {
-        this.knotenIds = this.findeIdRegExp (eingabe, knotenRegExp);
-        return this.knotenIds;
+    erstelle_seq_ids_aus_eingabe (eingabe) {
+        this.seq_ids = this.finde_id (eingabe, SEQ_REGEXP);
+    }
+
+    erstelle_knoten_ids_aus_eingabe (eingabe) {
+        this.knoten_ids = this.finde_id (eingabe, KNOTEN_REGEXP);
+        return this.knoten_ids;
     }
 
 
-    erstelleVerbindungsIdsAusEingabe (eingabe) {
-        this.verbindungIds = this.findeIdRegExp (eingabe, verbindungRegExp);
-        return this.verbindungIds;
+    erstelle_verbindungs_ids_aus_eingabe (eingabe) {
+        this.verbindung_ids = this.finde_id (eingabe, VERBINDUNG_REGEXP);
+        return this.verbindung_ids;
     }
 
-    findeIdRegExp (eingabe, regEx) {
-        var zeilen = this.teileInZeilen (eingabe);
+    finde_id (eingabe, regEx) {
+        var zeilen = this.teile_in_zeilen (eingabe);
         var idListe = [];
         for (let element of zeilen) {
             if (regEx.test (element)) {idListe.push (element)};
@@ -133,7 +138,7 @@ class Daten {
         return idListe;
     }
 
-    teileInZeilen (eingabe) {
+    teile_in_zeilen (eingabe) {
         var zeilen = eingabe.split ("\n");
         return zeilen;
     }

@@ -1,20 +1,23 @@
 //PLUGIN FÜR VISUALISIERUNG UND GRAPH
 
 class Sequenz {
-    constructor (visualisierung) {
+    constructor (name, visualisierung) {
+        this.name = name;
+        this.farbe = "yellow";
         this.verbindungen = [];
-        this.linien = [];
         this.dauern = [];
+        this.linien = [];
         this.visualisierung = visualisierung;
+        
     }
     
     get length () {
         return this.verbindungen.length;
     }
 
-    show (farbe) {
+    show () {
         this.linien.forEach (linie => {
-            linie.html.style.stroke = farbe;
+            linie.html.style.stroke = this.farbe;
             linie.html.style.strokeWidth = linie.dicke*4;
         })
     }
@@ -34,9 +37,9 @@ class Sequenz {
 
     push (verbindung, dauer) {
         this.verbindungen.push (verbindung);
+        this.dauern.push (dauer);
         var linie = this.visualisierung.finde_linie (verbindung.knotenA.id, verbindung.knotenB.id)
         this.linien.push (linie);
-        this.dauern.push (dauer);
     }
 
     shift () {
@@ -48,7 +51,7 @@ class Sequenz {
 }
 
 
-class PAC {
+class Pac {
     constructor (sequenz, farbe) {
         this.sequenz = sequenz;
         this.farbe = farbe;
@@ -83,7 +86,6 @@ class PAC {
     update (vergangene_zeit) {
         if (this.aktiv) {
             this.fortschritt += vergangene_zeit/this.sequenz.dauern[0];
-            console.log ("fortschritt: " + this.fortschritt)
             if (this.fortschritt >= 1) {
                 this.exec ();
                 this.fetch();
@@ -107,7 +109,8 @@ class PAC {
     erstelle_svg () {
         this.svg_element = document.createElementNS("http://www.w3.org/2000/svg", 'circle')
         this.svg_element.setAttribute ("r", "10")
-        this.svg_element.style.stroke = "yellow";
+        this.svg_element.style.stroke = this.farbe;
+        this.svg_element.style.fill = this.farbe;
         this.svg_element.style.strokeWidth = 5;
         this.svg_container.appendChild(this.svg_element);
         this.draw ();

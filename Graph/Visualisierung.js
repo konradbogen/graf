@@ -1,7 +1,9 @@
 //PLUGIN FÜR GRAPH
 const DEFAULT_LINE_COLOUR = "grey";
-const UPDATE_RATE = 1000/60;
+const UPDATE_RATE = 1000/120;
 const styleXYRegEx = /top:(\d*.*d*)%;\sleft:(\d*.*d*)%;/
+const FARBEN = ["blue", "red", "yellow", "puple", "green", "orange", "pink", "brown", "white"]
+const OPACITY = 0.5;
 
 class Linie {
     constructor (punkt1, punkt2, dicke) {
@@ -39,6 +41,7 @@ class Linie {
         linie.setAttribute("x2",this.x2+"%");
         linie.setAttribute("y2",this.y2+"%");
         linie.style.stroke = DEFAULT_LINE_COLOUR;
+        linie.style.strokeOpacity = OPACITY;
         linie.style.strokeWidth = this.dicke*2;
         svg.appendChild(linie);
         return linie;
@@ -161,13 +164,14 @@ class Punkt {
 class Visual {
     
     constructor () {
-         this.timer = setInterval (this.update_pacs.bind (this), UPDATE_RATE)
-          this.punkte = [];
-          this.linien = [];
-          this.pacs = [];
-          this.container;
-          this.svg;
-          this.verknüpfeMitHtmlDatei ();
+        this.timer = setInterval (this.update_pacs.bind (this), UPDATE_RATE)
+        this.punkte = [];
+        this.linien = [];
+        this.pacs = [];
+        this.sequenzen = [];
+        this.container;
+        this.svg;
+        this.verknüpfeMitHtmlDatei ();
     }
 
     update_pacs () {
@@ -179,6 +183,12 @@ class Visual {
         this.leereHtml ();
         this.zeichneAlleKnoten (g);
         this.zeichneAlleVerbindungen (g);
+    }
+
+    zeichne_sequenzen () {
+        this.sequenzen.forEach (seq => {
+            seq.show ();
+        })
     }
 
     erstelleHtml () {

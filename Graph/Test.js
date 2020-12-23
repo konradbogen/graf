@@ -181,14 +181,14 @@ class Test {
 
     test () {
         //this.graphTest.testFindeAllePfade ();
-        var seq = new Sequenz (this.visual);
-        seq.push (this.graph.verbindungen [0], 6000)
-        seq.push (this.graph.verbindungen [1], 6000)
-        seq.push (this.graph.verbindungen [5], 6000)
-        seq.show ("yellow");
+        // var seq = new Sequenz ("hello", this.visual);
+        // seq.push (this.graph.verbindungen [0], 6000)
+        // seq.push (this.graph.verbindungen [1], 6000)
+        // seq.push (this.graph.verbindungen [5], 6000)
+        // seq.show ();
 
-        var pac = new PAC (seq);
-        this.visual.pacs.push (pac);
+        // var pac = new Pac (seq);
+        // this.visual.pacs.push (pac);
     }
 }
 

@@ -5,7 +5,7 @@ var daten;
 var test;
 //var startEingabe = "Beyond.Nadja\nBeyond.Tim\nBeyond.Felix\nBeyond.Lukas\nBeyond.Jannis\nBeyond.Laurenz\nBeyond.Konrad\n";
 
-var startEingabe = "A\nA.L\nB\nC\nD\nE\nA-B\nD-B\nA-E\nE-C\nC-B\nE-B\nE-D\nD-A";
+var startEingabe = "A\nA.L\nB\nC\nD\nE\nA-B\nB-D\nA-E\nE-C\nC-B\nE-B\nE-D\nD-A\n>seq lukas A-B 2 B-D 3\n>pac lukas";
 
 const testAktiviert = true;
 const lokal = true;
@@ -24,45 +24,48 @@ function test_ausfuhren () {
     }
 }
 
-function aktualisiereGraph () {
+function aktualisiere_graph () {
     graph = new Graph ();
     visual = new Visual ();
-    parser.erstelleGraph (daten, graph);
+    parser.erstelle_graph (daten, graph);
     visual.zeichneGraph (graph);
+    parser.erstelle_alle_sequenzen (daten, graph, visual);
+    parser.erstelle_alle_pacs (daten, visual);
+    visual.zeichne_sequenzen ();
     test_ausfuhren ();
 }
 
 $(document).ready(function (){
     init ();
-    erstelleSubmitEventListener ();
-    erstelleMenuEventListener ();
+    erstelle_submit_event_listener ();
+    erstelle_menu_event_listener ();
 
     if (lokal == false) {
-        daten.leseVerzeichnisAus (true); 
+        daten.lese_verzeichnis_aus (true); 
     }
     
-    var text = startEingabe + daten.kriegeEingabeText ()
-    setzeEingabe (text);
-    aktualisiereGraph ();
+    var text = startEingabe + daten.erstelle_eingabe_text ()
+    andere_eingabe (text);
+    aktualisiere_graph ();
 });
 
-function setzeEingabe (eingabe) {
+function andere_eingabe (eingabe) {
     document.getElementById ("input").innerHTML = eingabe;
-    daten.leseEingabeAus (eingabe);
+    daten.lese_eingabe_aus (eingabe);
 }
 
 
 
-function erstelleSubmitEventListener () {
+function erstelle_submit_event_listener () {
     document.getElementById("submit").addEventListener("click", function() {
         var val = $.trim($("textarea").val());
-          daten.leseEingabeAus (val);
-          aktualisiereGraph ();
+          daten.lese_eingabe_aus (val);
+          aktualisiere_graph ();
       }, false);
       
 }
 
-function erstelleMenuEventListener () {
+function erstelle_menu_event_listener () {
     $(".button").click(function() {
         $(".inputcontainer").toggleClass("faderight");
       

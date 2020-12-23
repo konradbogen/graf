@@ -9,12 +9,13 @@ class Graph {
     }
 
     addVerbindung (knotenA, knotenB) {
-        var existierendeVerbindung = this.findeVerbindung (knotenA, knotenB);
+        var existierendeVerbindung = this.finde_verbindung (knotenA.id, knotenB.id);
         if (existierendeVerbindung == null) {
             var neueVerbindung = new Verbindung (knotenA, knotenB, 1);
             knotenA.grad += 1; knotenA.verbindungen.push (neueVerbindung);
             knotenB.grad += 1; knotenB.verbindungen.push (neueVerbindung);
             this.verbindungen.push (neueVerbindung);
+            this.verbindungen.push (neueVerbindung.umkehren());
         }else {
            existierendeVerbindung.starke += 1;
         }
@@ -35,9 +36,9 @@ class Graph {
         }
     }
 
-    findeVerbindung (knotenA, knotenB) {
+    finde_verbindung (knotenA_id, knotenB_id) {
         for (let element of this.verbindungen){
-            if ((element.knotenA.id == knotenA.id && element.knotenB.id == knotenB.id) || (element.knotenA.id == knotenB.id && element.knotenB.id == knotenA.id)) {
+            if ((element.knotenA.id == knotenA_id && element.knotenB.id == knotenB_id)) {
                 return element;
             }
         }
