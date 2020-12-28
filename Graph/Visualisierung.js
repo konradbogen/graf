@@ -1,16 +1,16 @@
-//PLUGIN FÜR GRAPH
+//PLUGIN FuR GRAPH
 const DEFAULT_LINE_COLOUR = "grey";
 const UPDATE_RATE = 1000/120;
 const styleXYRegEx = /top:(\d*.*d*)%;\sleft:(\d*.*d*)%;/
 const FARBEN = ["blue", "red", "yellow", "puple", "green", "orange", "pink", "brown", "white"]
-const OPACITY = 0.5;
+const OPACITY = 1;
 
 class Linie {
     constructor (punkt1, punkt2, dicke) {
         this.punkt1 = punkt1;
         this.punkt2= punkt2;
-        this.punkt1.positionWurdeGeändert = this.callback.bind (this);
-        this.punkt2.positionWurdeGeändert = this.callback.bind (this);
+        this.punkt1.positionWurdeGeandert = this.callback.bind (this);
+        this.punkt2.positionWurdeGeandert = this.callback.bind (this);
         this.dicke = dicke;
         this.html = this.erstelleHTML ();
     }
@@ -78,11 +78,11 @@ class Punkt {
     }
     
     set x (value) {
-        this.änderePosition (value, this._y);
+        this.anderePosition (value, this._y);
     }
 
     set y (value) {
-        this.änderePosition (this._x, value);
+        this.anderePosition (this._x, value);
     }
 
     get x () {
@@ -97,7 +97,7 @@ class Punkt {
         return pos;
     }
 
-    änderePosition (newX, newY) {
+    anderePosition (newX, newY) {
         this._x = newX; this._y = newY;
         this.aktualisiereHTMLPosition ();
     }
@@ -143,7 +143,7 @@ class Punkt {
             var pos = Visual.kriegePositionAusStyle (style);
             this._x = pos [0];
             this._y = pos [1];
-            this.positionWurdeGeändert ();
+            this.positionWurdeGeandert ();
         }    
     }
 
@@ -155,7 +155,7 @@ class Punkt {
         //je nach datentyp bild entfernen, audio stoppen, etc.
     }
 
-    positionWurdeGeändert () {
+    positionWurdeGeandert () {
 
     }
 
@@ -171,12 +171,13 @@ class Visual {
         this.sequenzen = [];
         this.container;
         this.svg;
-        this.verknüpfeMitHtmlDatei ();
+        this.speed = 10;
+        this.verknupfeMitHtmlDatei ();
     }
 
     update_pacs () {
         this.pacs.forEach (pac=>{
-            pac.update (UPDATE_RATE);
+            pac.update (UPDATE_RATE*this.speed);
         });
     }
     zeichneGraph (g) {
@@ -201,7 +202,7 @@ class Visual {
         this.container.appendChild (this.svg);
     }
 
-    verknüpfeMitHtmlDatei () {
+    verknupfeMitHtmlDatei () {
         this.container = document.getElementsByClassName ("graphContainer") [0];
         this.svg = document.getElementById ("graphSvg");
     }
@@ -213,7 +214,7 @@ class Visual {
     }
 
     zeichneAlleKnoten (graph) {
-        this.zeichneChildrenKnoten (graph,null, 50, 50, 30);
+        this.zeichneChildrenKnoten (graph,null, 50, 50, 25);
     }
 
     zeichneAlleVerbindungen (graph) {
@@ -226,7 +227,7 @@ class Visual {
         var children = graph.kriegeChildren (parentKnoten);
         for (var i=0; i<children.length; i++) {
             var knoten = children [i];
-            var winkel = i * (2*Math.PI / children.length);
+            var winkel = i * (2*Math.PI / children.length) + Math.random () * 0.3;
             var { x, y } = this.kriegeKoordinatenAufKreis (xZentrum, yZentrum, radius, winkel);
             this.zeichneKnoten (x,y, knoten)
             this.zeichneChildrenKnoten(graph, knoten, x, y, radius/2);

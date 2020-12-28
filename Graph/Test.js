@@ -33,7 +33,7 @@ class ParserTest {
         console.log ("KnotenIds: ")
         var knotenIds = this.parser.kriegeKnotenIdsAusVerbindungId (testVerbindungId)
         console.log (knotenIds);
-        this.parser.fügeVerbindungHinzu (testVerbindungId, graph);
+        this.parser.fugeVerbindungHinzu (testVerbindungId, graph);
         console.log ("Neuer Graph: ");
         console.log (graph);
      }
@@ -42,7 +42,7 @@ class ParserTest {
         this.testKnotenRegExp (testKnotenId, this.parser);
         this.testExtrahiereIdBasis (testKnotenId, this.parser);
         this.testExtrahiereIdSchwanz (testKnotenId, this.parser);
-        this.testFügeAlleKnotenAusIdHinzu (graph, testKnotenId, this.parser);
+        this.testFugeAlleKnotenAusIdHinzu (graph, testKnotenId, this.parser);
      }
      
      testTeileInZeilen (daten) {
@@ -97,12 +97,12 @@ class ParserTest {
          console.log ("IdSchwanz: " + this.parser.extrahiereIdSchwanz (id));
      }
      
-     testFügeAlleKnotenAusIdHinzu (graph, id) {
-         console.log ("--testFügeAlleKnotenAusIdHinzu()--")
+     testFugeAlleKnotenAusIdHinzu (graph, id) {
+         console.log ("--testFugeAlleKnotenAusIdHinzu()--")
          console.log ("Graph Davor: ")
          console.log (graph);
          console.log ("Id: " + id)
-         this.parser.fügeAlleKnotenAusIdHinzu (graph, id)
+         this.parser.fugeAlleKnotenAusIdHinzu (graph, id)
          console.log ("Graph danach: ")
          console.log (graph);
      }
@@ -176,7 +176,7 @@ class Test {
         this.visualTest = new VisualTest (this.visual);
         this.graphTest = new GraphTest (graph)
         this.testDaten1 = "berlin.neukolln\nberlin.charlottenburg\nberlin.charlottenburg.sophie\nberlin.kreuzberg\nleipzig.connewitz\nleipzig.norden.merseburgerStr\nwien.yppenplatz\nwien.yppenplatz-berlin.charlottenburg.sophie\nleipzig.norden.merseburgerStr-wien.yppenplatz\nleipzig.norden.merseburgerStr-berlin.charlottenburg.sophie"
-        this.testDaten2 = "Escapism.Mercury\nTHEANDAND.48\n\THEANDAND.48.Livestream\nTHEANDAND.Tour\nBab.Album\nBab.dreiecke\nBab.dreiecke.grün\nBab.dreiecke.grau\nBab.dreiecke.blau\nBeyond.Nadja\nBeyond.Felix\nBeyond.Laurenz\nBeyond.Jannis\nBeyond.Tim\nBeyond.Lukas\nBeyond.Konrad"
+        this.testDaten2 = "Escapism.Mercury\nTHEANDAND.48\n\THEANDAND.48.Livestream\nTHEANDAND.Tour\nBab.Album\nBab.dreiecke\nBab.dreiecke.grun\nBab.dreiecke.grau\nBab.dreiecke.blau\nBeyond.Nadja\nBeyond.Felix\nBeyond.Laurenz\nBeyond.Jannis\nBeyond.Tim\nBeyond.Lukas\nBeyond.Konrad"
     }
 
     test () {

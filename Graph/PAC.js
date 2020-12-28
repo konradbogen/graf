@@ -3,7 +3,7 @@
 class Sequenz {
     constructor (name, visualisierung) {
         this.name = name;
-        this.farbe = "yellow";
+        this.farbe = "white";
         this.verbindungen = [];
         this.dauern = [];
         this.linien = [];
@@ -108,7 +108,7 @@ class Pac {
 
     erstelle_svg () {
         this.svg_element = document.createElementNS("http://www.w3.org/2000/svg", 'circle')
-        this.svg_element.setAttribute ("r", "10")
+        this.svg_element.setAttribute ("r", "6")
         this.svg_element.style.stroke = this.farbe;
         this.svg_element.style.fill = this.farbe;
         this.svg_element.style.strokeWidth = 5;

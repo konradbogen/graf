@@ -6,7 +6,7 @@ const SEQ_REGEXP = />seq\s(\w*)\s.*/;
 const PAC_REGEXP = />pac (.*)/;
 
 
-const VERZEICHNIS = "http://www.heptagon.network/Graph/Content/"
+const VERZEICHNIS = "http://www.konradbogen.com/graph/Content/"
 
 class Daten {
     constructor () {
@@ -29,6 +29,8 @@ class Daten {
         this.urls = [];
         var array = [];
         array = this.request_php_verzeichnis (array);
+        console.log ("VERZEICHNIS");
+        console.log (array);
         array.forEach(element => {
             if (element != false) { //JSON gibt manchmal ein false mit
                 var dateiname = new String (element);

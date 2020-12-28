@@ -1,13 +1,13 @@
 body{
-  background:black;
+  background:rgb(210, 210, 210);
   margin:0;
   overflow:hidden;
-  font-size:2vmin;
-  font-family: 'Oswald', sans-serif;
+  font-size:1.3vmin;
+  font-family: 'Courier New', monospace;
 }
 
 .graphContainer h1, .graphContainer h2, .graphContainer h3, .graphContainer h4, .graphContainer h5 {
-  color:white;
+  color:black;
   /* border:solid 2px; */
   background:transparent;
   padding:4px;
@@ -19,22 +19,22 @@ body{
 
  /* unvisited link */
  a:link {
-  color: white;
+  color: #262323;
 }
 
 /* visited link */
 a:visited {
-  color: white;
+  color: #262323;
 }
 
 /* mouse over link */
 a:hover {
-  color: orange;
+  color: rgb(102, 98, 98);
 }
 
 /* selected link */
 a:active {
-  color: orange;
+  color: black;
 } 
 
 
@@ -63,6 +63,7 @@ textarea{
   border-bottom:solid black;
   font-family: 'Oswald', sans-serif;
   resize:none;
+  border: none;
 }
 
 textarea:focus{
@@ -75,8 +76,9 @@ textarea:focus{
 
 button{
   background:inherit;
-  font-family: 'Oswald', sans-serif;
-  border:solid 2px;
+  font-family: inherit;
+  font-size: 3.0vmin;
+  border: none;
   width: 100%;
   height: 11%;
   text-align:center;
@@ -91,7 +93,7 @@ button{
 button:active{
   outline:0px !important;
   box-shadow: none !important;
-  background:silver;
+  background:rgb(167, 167, 167);
 }
 
 .flexContainer{
@@ -103,7 +105,7 @@ button:active{
   position:relative;
   height:100vh;
   width:0;
-  background:grey;
+  border:none;
   text-align:center;
   right:25vw;
   transition: right 1s;
@@ -117,6 +119,7 @@ button:active{
 }
 
 .menu{
+  color: grey;
   position:absolute;
   left:0;
   top:0;
@@ -127,7 +130,7 @@ button:active{
 
 .button{
   cursor:pointer;
-
+  border: none;
 }
 
 .faderight{

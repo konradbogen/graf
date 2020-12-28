@@ -1,4 +1,4 @@
-//PLUG-IN FÜR GRAPH.JS, DATEN.JS, PAC.JS
+//PLUG-IN FuR GRAPH.JS, DATEN.JS, PAC.JS
 
 class Parser {
     constructor () {
@@ -87,14 +87,16 @@ class Parser {
 
     erstelle_sequenz_aus_id_teilen(name, id_teile, graph, visual) {
         var sequenz = new Sequenz(name, visual);
+        var gesamt_dauer = 0;
         for (var i = 1; i < id_teile.length - 1; i += 2) {
-            var dauer = id_teile[i+1];
+            var dauer = id_teile[i+1]*1000 - gesamt_dauer;
             var verbindung_id = id_teile[i]
             var knoten_ids = this.kriege_knoten_id_aus_verbindung_id(verbindung_id);
             var verbindung = graph.finde_verbindung(knoten_ids[0], knoten_ids[1]);
-            if (verbindung && DAUER_REGEXP.test(dauer)) {
-                sequenz.push (verbindung, dauer*1000);
+            if (verbindung && DAUER_REGEXP.test(dauer)){
+                sequenz.push (verbindung, dauer);
             }
+            gesamt_dauer += dauer;
         }
         return sequenz;
     }
@@ -102,7 +104,7 @@ class Parser {
     fuge_knoten_hinzu (graph, knoten, parent) {
         var existierenderKnoten = graph.findeKnoten (knoten.id);
         if (existierenderKnoten) {
-            //was passiert, wenn ein knoten hinzugefügt wird, der sich nur durch die url unterscheidet?
+            //was passiert, wenn ein knoten hinzugefugt wird, der sich nur durch die url unterscheidet?
         }else {
             graph.addKnoten (knoten);
             this.erstelle_verbindung_zu_parent (knoten, parent, graph);
@@ -161,7 +163,7 @@ class Parser {
     kriege_knoten_id_aus_verbindung_id (verbindungId) {
         var idBestandteile = verbindungId.split ("-");
         var knotenIds = [];
-        if (idBestandteile != null) {
+        if (idBestandteile != null){
             for (let element of idBestandteile) {
                 var id = "." + element;
                 knotenIds.push (id);

@@ -56,7 +56,7 @@ class Graph {
     }
 
     kriegeChildren (parentKnoten) {
-        if (parentKnoten) {
+        if (parentKnoten){
             var children = [];
             this.knoten.forEach(element => {
                 if (element.parent) {

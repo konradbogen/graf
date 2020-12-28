@@ -2,8 +2,7 @@
 <?php
 
 function verzeichnisAuslesen ($path) {
-    if ($handle = opendir($path)) {
-
+    if ($handle = opendir($path)){
         //readdir kann auch andere Werte zurückgeben, die als false gewertet werden, aber nicht false sind, deshalb schreiben wir !== false
         while (false !== ($files[] = readdir($handle))) {
         }
@@ -12,8 +11,7 @@ function verzeichnisAuslesen ($path) {
         return $filesJSON;
     }
 }
-//testg
-    $main = "/public_html/Graph/Content"; //die Main URL sollte man irgendwann zentral in einer Datenbank hinterlegen
+    $main = "/home/www/konradbogen.com/graph/Content"; //die Main URL sollte man irgendwann zentral in einer Datenbank hinterlegen
     echo verzeichnisAuslesen ($main);
 
 ?>
