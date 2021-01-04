@@ -1,123 +1,155 @@
-//PLUGIN FÜR VISUALISIERUNG UND GRAPH
+//PLUGIN FÜR VISUAL
 
-class Sequenz {
-    constructor (name, visualisierung) {
+class Sequence {
+    constructor (name) {
         this.name = name;
-        this.farbe = "white";
-        this.verbindungen = [];
-        this.dauern = [];
-        this.linien = [];
-        this.visualisierung = visualisierung;
-        
+        this.color = "white";
+        this.lines = [];
+        this.durations = [];
+        this.visual;
     }
     
     get length () {
-        return this.verbindungen.length;
+        return this.lines.length;
     }
 
     show () {
-        this.linien.forEach (linie => {
-            linie.html.style.stroke = this.farbe;
-            linie.html.style.strokeWidth = linie.dicke*4;
+        this.lines.forEach (linie => {
+            linie.html.style.stroke = this.color;
+            linie.html.style.strokeWidth = linie.strength*4;
         })
     }
 
     hide () {
-        this.linien.forEach (linie => {
+        this.lines.forEach (linie => {
             linie.html.style.stroke = DEFAULT_LINE_COLOUR;
             linie.html.style.strokeWidth = linie.dicke*2;
         })
     }
 
     play (index) {
-        if (index < this.linien.length) {
-            this.linien[index].punkt1.play ();
+        if (index < this.lines.length) {
+            this.lines[index].point_a.play ();
         }
     }
 
-    push (verbindung, dauer) {
-        this.verbindungen.push (verbindung);
-        this.dauern.push (dauer);
-        var linie = this.visualisierung.finde_linie (verbindung.knotenA.id, verbindung.knotenB.id)
-        this.linien.push (linie);
+    stop (index) {
+        if (index < this.lines.length) {
+            this.lines[index].point_a.stop ();
+        }
+    } 
+
+    push (node_ids, dauer) {
+        this.durations.push (dauer);
+        var line = this.visual.find_line (node_ids [0], node_ids [1])
+        if (line) {
+            this.lines.push (line);
+        }
     }
 
     shift () {
-        this.verbindungen.shift ();
-        this.linien.shift ();
-        this.dauern.shift ();
+        this.lines.shift ();
+        this.durations.shift ();
     }
 
 }
 
+class PACSystem {
+    constructor (visual, graph) {
+        this.visual = visual;
+        this.pacs = [];
+        this.sequences = [];
+        this.speed = 10;
+        this.timer = setInterval (this.update_pacs.bind (this), UPDATE_RATE)
+    }
+
+    update_pacs () {
+        this.pacs.forEach (pac=>{
+            pac.update (UPDATE_RATE*this.speed);
+        });
+    }
+
+    show_all_sequences () {
+        this.sequences.forEach (seq => {
+            seq.show ();
+        })
+    }
+
+}
 
 class Pac {
-    constructor (sequenz, farbe) {
-        this.sequenz = sequenz;
-        this.farbe = farbe;
-        this.fortschritt = 0;
-        this.aktiv = true;
-        this.svg_container = sequenz.visualisierung.svg;
+    constructor (sequence, color) {
+        this.sequence = sequence;
+        this.color = color;
+        this.local_progress = 0;
+        this.active = true;
+        this.svg_container = sequence.visual.svg;
         this.svg_element;
         this.erstelle_svg ();
         this.exec ();
     }
 
     get x () {
-        if (this.sequenz) {
-            var linie = this.sequenz.linien[0];
-            return linie.x1 + (linie.x2-linie.x1)*this.fortschritt;
+        if (this.sequence) {
+            var linie = this.sequence.lines[0];
+            return linie.x1 + (linie.x2-linie.x1)*this.local_progress;
         }
     }
 
     get y () {
-        if (this.sequenz) {
-            var linie = this.sequenz.linien[0];
-            return linie.y1 + (linie.y2-linie.y1)*this.fortschritt;
+        if (this.sequence) {
+            var linie = this.sequence.lines[0];
+            return linie.y1 + (linie.y2-linie.y1)*this.local_progress;
         }
     }
 
     delete () {
         this.active = false;
-        this.sequenz = new Sequenz ();
+        this.sequence = new Sequence ();
         this.svg_element = null;
     }
 
-    update (vergangene_zeit) {
-        if (this.aktiv) {
-            this.fortschritt += vergangene_zeit/this.sequenz.dauern[0];
-            if (this.fortschritt >= 1) {
-                this.exec ();
+    update (elapsed_time) {
+        if (this.active) {
+            this.local_progress += elapsed_time/this.sequence.durations[0];
+            if (this.local_progress >= 1) {
+                this.stop ();
                 this.fetch();
+                this.exec ();
             }
         }
         this.draw ();
     }
 
     fetch () {
-        this.sequenz.shift ();
-        this.fortschritt = 0;
-        if (this.sequenz.length==0) {
-            this.aktiv=false;
+        this.sequence.shift ();
+        this.sequence.stop
+        this.local_progress = 0;
+        if (this.sequence.length==0) {
+            this.active=false;
         }
     }
 
     exec () {
-        this.sequenz.play (0);
+        this.sequence.play (0);
+    }
+
+    stop () {
+        this.sequence.stop (0);
     }
 
     erstelle_svg () {
         this.svg_element = document.createElementNS("http://www.w3.org/2000/svg", 'circle')
         this.svg_element.setAttribute ("r", "6")
-        this.svg_element.style.stroke = this.farbe;
-        this.svg_element.style.fill = this.farbe;
+        this.svg_element.style.stroke = this.color;
+        this.svg_element.style.fill = this.color;
         this.svg_element.style.strokeWidth = 5;
         this.svg_container.appendChild(this.svg_element);
         this.draw ();
     }
 
     draw () {
-        if (this.aktiv) {
+        if (this.active) {
             this.svg_element.setAttribute("cx",this.x+"%");
             this.svg_element.setAttribute("cy",this.y+"%");
         }
