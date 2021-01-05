@@ -91,22 +91,68 @@ class DragAndDrop{
     }
 }
 
-// class Zoom{
-//     constructor(){
-//         this.zoomElement = document.getElementById('graphContainer');
-//         this.windowHeight = this.getWindowHeight();
-//     }
+class Zoom{
+    constructor(){
+        this.zoomElement = document.getElementById('graphContainer');
+        this.animation;
+        this.percentage;
+        window.addEventListener('scroll', () => {this.zoom()});
 
-//     getWindowHeight(){
-//         var windowHeight = window.innerHeight || 
-//         document.documentElement.clientHeight ||
-//         document.body.clientHeight || 0;
-//         return windowHeight;
-//     }
-// }
+        this.animation = anime({
+            targets: this.zoomElement,
+            width: {
+                value: '*=2',
+                delay:50
+            },
+            height: {
+                value: '*=2',
+            },
+    
+            easing: 'linear',
+            autoplay: false
+
+        })
+    }
+
+        zoom(){
+        this.percentage=this.getScrollPercentage ();
+        this.animation.seek(this.animation.duration * (this.percentage * 0.01))
+        }
+
+
+    getWindowHeight(){
+        return window.innerHeight || 
+        document.documentElement.clientHeight ||
+        document.body.clientHeight || 0;
+    }
+
+    getWindowYScroll() {
+        return window.pageYOffset || 
+               document.body.scrollTop ||
+               document.documentElement.scrollTop || 0;
+    }
+
+    getDocHeight() {
+        return Math.max(
+            document.body.scrollHeight || 0, 
+            document.documentElement.scrollHeight || 0,
+            document.body.offsetHeight || 0, 
+            document.documentElement.offsetHeight || 0,
+            document.body.clientHeight || 0, 
+            document.documentElement.clientHeight || 0
+        );
+    }
+
+    getScrollPercentage() {
+        return (
+            this.getWindowYScroll()  / (this.getDocHeight() - this.getWindowHeight())
+        ) * 100;
+    }
+
+}
 
 uiInputContainer = new UiInputContainer();
 
 uiGraphContainer = new DragAndDrop('graphContainer');
 
-// uiGraphZoom = new Zoom();
+zoom = new Zoom();
