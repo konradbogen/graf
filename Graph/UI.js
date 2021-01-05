@@ -150,9 +150,3 @@ class Zoom{
     }
 
 }
-
-uiInputContainer = new UiInputContainer();
-
-uiGraphContainer = new DragAndDrop('graphContainer');
-
-zoom = new Zoom();
