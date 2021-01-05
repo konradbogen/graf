@@ -6,7 +6,7 @@ const WAV_REGEXP = /.*.wav/;
 const MP3_REGEXP = /.*.mp3/;
 
 
-const VERZEICHNIS = "http://www.konradbogen.com/graph/Content/"
+const VERZEICHNIS = "https://www.hepta.ga/Graph/Content/"
 
 class FileSystem {
     constructor () {

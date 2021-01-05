@@ -11,7 +11,7 @@ function verzeichnisAuslesen ($path) {
         return $filesJSON;
     }
 }
-    $main = "/home/www/konradbogen.com/graph/Content"; //die Main URL sollte man irgendwann zentral in einer Datenbank hinterlegen
+    $main = "/public_html/Graph/Content"; //die Main URL sollte man irgendwann zentral in einer Datenbank hinterlegen
     echo verzeichnisAuslesen ($main);
 
 ?>

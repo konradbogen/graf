@@ -48,6 +48,10 @@ class Line {
         this.svg.appendChild(this.html);
     }
 
+    zoom_has_changed () {
+        
+    }
+
     update_html () {
         this.html.setAttribute("x1",this.x1+"%");
         this.html.setAttribute("y1",this.y1+"%");
