@@ -1,72 +1,136 @@
-const styleXYRegEx = /top:(\d*.*d*)%;\sleft:(\d*.*d*)%;/
+//PLUGIN FuR GRAPH
+const DEFAULT_LINE_COLOUR = "grey";
+const UPDATE_RATE = 1000/120;
+const FARBEN = ["blue", "red", "yellow", "puple", "green", "orange", "pink", "brown", "white"]
+const OPACITY = 1;
+const MOUSE_OVER = true;
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
-class Linie {
-    constructor (punkt1, punkt2, dicke) {
-        this.punkt1 = punkt1;
-        this.punkt2= punkt2;
-        this.punkt1.positionWurdeGeändert = this.callback.bind (this);
-        this.punkt2.positionWurdeGeändert = this.callback.bind (this);
-        this.dicke = dicke;
-        this.html = this.erstelleHTML ();
-
+class Line {
+    constructor (point_a, point_b, strength, visual) {
+        this.point_a = point_a;
+        this.point_b = point_b;
+        this.point_a.callbacks.push (this.callback.bind(this));
+        this.point_b.callbacks.push (this.callback.bind(this));
+        this.strength = strength;
+        this.visual = visual;
+        this.svg = visual.svg;
+        this.create_html ();
     }
+
     get x1 () {
-        return this.punkt1.x;
+        return this.point_a.x;
     }
     get y1 () {
-        return this.punkt1.y;
+        return this.point_a.y;
     }
     get x2 () {
-        return this.punkt2.x;
+        return this.point_b.x;
     }
     get y2 () {
-        return this.punkt2.y;
+        return this.point_b.y;
     }
 
     callback () {
-        this.aktualisiereHTMLPosition ();
+        this.update_html ();
         console.log ("callback");
     }
     
-    erstelleHTML () {
-        var svg = document.getElementById ("graphSvg");
-        var linie = document.createElementNS("http://www.w3.org/2000/svg", 'line')
-        linie.setAttribute("x1",this.x1+"%");
-        linie.setAttribute("y1",this.y1+"%");
-        linie.setAttribute("x2",this.x2+"%");
-        linie.setAttribute("y2",this.y2+"%");
-        linie.style.stroke = "white";
-        linie.style.strokeWidth = this.dicke*2;
-        svg.appendChild(linie);
-        return linie;
+    create_html () {
+        this.html = document.createElementNS(SVG_NAMESPACE, 'line');
+        this.html.setAttribute("x1",this.x1+"%");
+        this.html.setAttribute("y1",this.y1+"%");
+        this.html.setAttribute("x2",this.x2+"%");
+        this.html.setAttribute("y2",this.y2+"%");
+        this.html.style.stroke = DEFAULT_LINE_COLOUR;
+        this.html.style.strokeOpacity = OPACITY;
+        this.html.style.strokeWidth = this.strength*2;
+        this.svg.appendChild(this.html);
     }
 
-    aktualisiereHTMLPosition () {
+    update_html () {
         this.html.setAttribute("x1",this.x1+"%");
         this.html.setAttribute("y1",this.y1+"%");
         this.html.setAttribute("x2",this.x2+"%");
         this.html.setAttribute("y2",this.y2+"%"); 
+
+        if (this.point_a.visibility && this.point_b.visibility) {
+            this.show ();
+        }else {
+            this.hide ();
+        }
+    }
+
+    show () {
+        this.html.style.visibility = 'visible';
+    }
+
+    hide () {
+        this.html.style.visibility = 'hidden';
+
     }
 
 }
 
-class Punkt {
-    constructor (x, y, name, id, level) {
+class Point {
+    constructor (x, y, node, visual) {
         this._x = x;
         this._y = y;
-        this.name = name;
-        this.id = id;
-        this.level = level;
-        this.html = this.erstelleHTML ();
-        this.erstelleObserver ();
+        this.node = node;
+        this.visual = visual;
+        this.container=visual.container;
+        this.html;
+        this.is_playing = false;
+        this.mouse_over_aktiv = true;
+        this.audio;
+        this._visibility = true;
+        this._url = "";
+        this.create_html ();
+        this.create_observer ();
+        this.update_content ();
+        this.callbacks = [];
+    }
+
+    get visibility () {
+        return this._visibility;
+    }
+
+    set visibility (val) {
+        if (val == true) {
+            this.show ();
+        }else {
+            this.hide ();
+        }
+    } 
+
+    get id () {
+        return this.node.id;
+    }
+
+    get url () {
+        return this._url;
+    }
+
+    set url (val) {
+        this._url = val;
+        this.update_content ();
+        this.set_html_text ();
+    }
+
+    get is_link () {
+        if (this.url != "") {
+            return true;
+        }else {
+            return false;
+        }
     }
     
     set x (value) {
-        this.änderePosition (value, this._y);
+        this.change_position (value, this._y);
     }
 
     set y (value) {
-        this.änderePosition (this._x, value);
+        this.change_position (this._x, value);
     }
 
     get x () {
@@ -76,31 +140,95 @@ class Punkt {
         return this._y;
     }
 
-    get absolutePosition () {
+    get typ () {
+        if (this.url.match (WAV_REGEXP) || this.url.match (MP3_REGEXP)) {
+            return "audio"
+        }else {
+            return "node"
+        }
+    }
+
+    get absolute_position () {
         var pos = $(this.html).offset();
         return pos;
     }
 
-    änderePosition (newX, newY) {
+    change_position (newX, newY) {
         this._x = newX; this._y = newY;
-        this.aktualisiereHTMLPosition ();
+        this.update_html_position ();
     }
 
-    aktualisiereHTMLPosition () {
-        this.html.setAttribute("style", "top:"+this._y+"%; left:"+this._x+"%;");
+    update_html_position () {
+        this.html.style.top = this._y+"%"; 
+        this.html.style.left = this._x+"%";
     }
 
-    erstelleHTML () {
-        var e = document.createElement("h"+this.level);
-        var container = document.getElementsByClassName ("graphContainer") [0];
-        e.innerHTML = this.name;
-        e.setAttribute("id", this.id)
-        e.setAttribute("style", "top:"+this._y+"%; left:"+this._x+"%;");
-        container.appendChild (e);
-        return e;
+    create_html () {
+        var h = this.node.level + 1;
+        this.html = document.createElement("h"+h);
+        this.html.setAttribute("id", this.node.id)
+        this.set_html_text();
+        this.set_html_style ();
+        this.update_html_position ();
+        this.create_event_listeners();
+        this.container.appendChild (this.html);
     };
 
-    erstelleObserver (callback) {
+    set_html_style () {
+        this.html.style.color = "black";
+        this.html.style.border = "solid 2px";
+        this.html.style.background = "transparent";
+        this.html.style.padding = "4px";
+        this.html.style.margin = "0";
+        this.html.style.position = "absolute";
+        this.html.style.transform = "translate(-50%, -50%)";
+        this.html.style.webkitTransform = "translate(-50%, -50%)";
+    }
+
+    set_html_text() {
+        if (this.is_link) {
+            this.html.innerHTML = "<u>" + this.node.name + "</u>";
+            this.html.style.cursor = "pointer";
+        } else {
+            this.html.innerHTML = this.node.name;
+        }
+    }
+
+    create_event_listeners() {
+        this.html.addEventListener('mouseover', this.mouse_over.bind(this));
+        this.html.addEventListener('mouseleave', this.mouse_leave.bind(this));
+        this.html.addEventListener('click', this.click.bind(this));
+    }
+
+    click () {
+        /* if (this.is_playing == true) {
+            this.stop ();
+        }else {
+            this.play ();
+        }
+        this.mouse_over_aktiv = false; */
+        
+        //this.visual.create_from_graph (this.visual.graph, this.node);
+    }
+
+    mouse_leave () {
+        this.mouse_over_aktiv = true;
+    }    
+    
+    mouse_over () {
+        if (this.mouse_over_aktiv==true && MOUSE_OVER) {
+            this.play ();
+        }
+    }
+
+    update_content () {
+        if (this.typ == "audio") {
+            this.audio = new Audio (this.url);
+            this.audio.addEventListener ("ended", this.stop.bind (this));
+        }
+    }
+
+    create_observer (callback) {
         var _callback = this.callback.bind (this);
         let observer = new MutationObserver(_callback);
         let observerOptions = {
@@ -120,141 +248,222 @@ class Punkt {
         var style = mutations[0].target.attributes.style.nodeValue;
         var id = mutations[0].target.attributes.id.nodeValue;
         if (style != null && id != null) {
-            var pos = Visual.kriegePositionAusStyle (style);
-            this._x = pos [0];
-            this._y = pos [1];
-            this.positionWurdeGeändert ();
+            var left = this.html.style.left.toString ();
+            var top = this.html.style.top.toString ();
+            this._x = parseFloat (left.substr (0, left.length - 1));
+            this._y = parseFloat (top.substr (0, top.length - 1));
+            this.callbacks.forEach (c => {
+                c ();
+            })
         }    
     }
 
-    positionWurdeGeändert () {
+    play () {
+        if (this.typ == "audio") {
+            console.log (this.name + " is playing");
+            this.is_playing = true;
+            this.audio.play ();
+            this.html.style.color="white";
+        }
+    }
 
+    stop () {
+        if (this.audio) {
+            this.is_playing = false;
+            this.audio.pause ();
+            this.audio.currentTime = 0;
+            this.html.style.color ="black";
+        }
+    }
+
+    show () {
+        this.html.style.visibility = "visible";
+        this._visibility = true;
+    }   
+
+    hide () {
+        this.html.style.visibility = "hidden";
+        this._visibility = false;
     }
 
 }
 
 class Visual {
     
-    constructor () {
-          this.punkte = [];
-          this.linien = [];
-          this.container;
-          this.svg;
-          this.verknüpfeMitHtmlDatei ();
+    constructor (master_container) {
+        this.graph;
+
+        this.points = [];
+        this.lines = [];
+        this.master_container = master_container; 
+        this.container;
+        this.svg;
+        
+        this._depth = 0;
+
+        this.x_center = 50; 
+        this.y_center = 50; 
+        this.radius = 25;
+        this.create_html ();
     }
 
-    zeichneGraph (g) {
-        this.leereHtml ();
-        this.zeichneAlleKnoten (g);
-        this.zeichneAlleVerbindungen (g);
+    get max_level () {
+        return this.points.count ();
     }
 
-    erstelleHtml () {
-        var masterContainer = document.getElementsByClassName ("flexContainer") [0]
-        this.container = document.createElement ("div");
-        this.svg = document.createElement ("svg");
-        this.container.setAttribute ("class", "graphContainer");
-        this.svg.setAttribute ("id", "graphSvg");
-        masterContainer.appendChild (this.container);
-        this.container.appendChild (this.svg);
+    get depth () {
+        return this._depth;
     }
 
-    verknüpfeMitHtmlDatei () {
-        this.container = document.getElementsByClassName ("graphContainer") [0];
-        this.svg = document.getElementById ("graphSvg");
+    set depth (val) {
+        this._depth = val;
+        this.reset ();
+        this.create_from_graph (this.graph);
     }
 
-    leereHtml () {
+    reset () {
+        this.points = [];
+        this.lines = [];
         this.svg.innerHTML = "";
         this.container.innerHTML = "";
-        this.container.appendChild (this.svg);
     }
 
-    zeichneAlleKnoten (graph) {
-        this.zeichneChildrenKnoten (graph,null, 50, 50, 30);
+    create_from_graph (g, start_node) {
+        this.reset ();
+        this.graph = g;
+        if (start_node == null) {
+            this.create_points_from_graph (g, this.depth);
+        }else {
+            this.create_points_from_start_node (g, start_node, this.depth);
+        }
+        this.create_lines_from_graph (g);
     }
 
-    zeichneAlleVerbindungen (graph) {
-        graph.verbindungen.forEach(element => {
-            this.zeichneVerbindung (element);
+    create_html () {
+        this.container = document.createElement ("div");
+        this.svg = document.createElementNS (SVG_NAMESPACE, "svg");
+        this.container.setAttribute ("class", "graphNodes");
+        this.svg.setAttribute ("id", "graphSvg");
+        this.master_container.appendChild (this.svg);
+        this.master_container.appendChild (this.container);
+    }
+
+    create_points_from_graph (graph, depth) {
+        var level_zero_nodes = graph.get_all_nodes_from_level (0);
+        if (level_zero_nodes.length == 1) {
+            this.create_points_from_start_node (graph, level_zero_nodes[0], this.x_center, this.y_center, this.radius, depth);
+        }else {
+            this.create_children_points_from_graph_node (graph,null, this.x_center, this.y_center, this.radius, depth);
+        }
+    }
+
+    create_points_from_start_node (graph, start_node, depth) {
+        this.create_point (this.x_center, this.y_center, start_node);
+        this.create_children_points_from_graph_node (graph,start_node, this.x_center, this.y_center, this.radius, depth-1);
+    }
+
+    create_lines_from_graph (graph) {
+        graph.edges.forEach(element => {
+            this.create_line (element);
         });
     }
 
-    zeichneChildrenKnoten (graph, parentKnoten, xZentrum, yZentrum, radius) {
-        var children = graph.kriegeChildren (parentKnoten);
+
+    create_children_points_from_graph_node (graph, parentnode, x_center, y_center, radius, remaining_depth) {
+        var children = graph.get_children_nodes (parentnode);
         for (var i=0; i<children.length; i++) {
-            var knoten = children [i];
-            var winkel = i * (2*Math.PI / children.length);
-            var { x, y } = this.kriegeKoordinatenAufKreis (xZentrum, yZentrum, radius, winkel);
-            this.zeichneKnoten (x,y, knoten)
-            this.zeichneChildrenKnoten(graph, knoten, x, y, radius/2);
+            var node = children [i];
+            var winkel = i * (2*Math.PI / children.length) + Math.random () * 0.3;
+            var { x, y } = this.convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel);
+            this.create_point (x,y, node)
+            if (remaining_depth > 0) {
+                this.create_children_points_from_graph_node(graph, node, x, y, radius/2, remaining_depth-1);
+            }
         }
     }
 
-    zeichneKnoten (x,y, knoten) {
-        var p = new Punkt (x,y, knoten.name, knoten.id, knoten.level);
-        this.punkte.push (p);
+    create_point (x,y, node) {
+        var p = new Point (x,y, node, this);
+        var level = node.level;
+        if (!this.points[level]) {
+            this.points[level] = [];
+        }
+        this.points[level].push (p);
     }
 
-    zeichneVerbindung (verbindung) {
-        var _punkte = this.kriegePunkteAusVerbindung (verbindung);
-        if (_punkte != null) {
-            var linie = new Linie (_punkte [0], _punkte [1], 1);
-            this.linien.push (linie);
+    create_line (edge) {
+        var _points = this.find_points_from_graph_edge (edge);
+        if (_points != null) {
+            var line = new Line (_points [0], _points [1], 1, this);
+            line.edge = edge;
+            this.lines.push (line);
         }
     }
 
-    kriegePunkteAusVerbindung (verbindung) {
-        var id1 = verbindung.knotenA.id;
-        var id2 = verbindung.knotenB.id;
-        var punkt1 = this.findePunkt (id1);
-        var punkt2 = this.findePunkt (id2);
-        if (punkt1 != null && punkt2 != null) {
-            return [punkt1, punkt2] 
+    find_points_from_graph_edge (edge) {
+        var id1 = edge.node_a.id;
+        var id2 = edge.node_b.id;
+        var point_a = this.find_point (id1);
+        var point_b = this.find_point (id2);
+        if (point_a != null && point_b != null) {
+            return [point_a, point_b] 
         }else {
             return null;
         }
     }
 
-    kriegeKoordinatenAufKreis (xZentrum, yZentrum, radius, winkel) {
-        var x = xZentrum + radius * Math.cos(winkel);
-        var y = yZentrum + radius * Math.sin(winkel);
+    change_visibility_of_level (level, visibility) {
+        if (this.points[level]){
+            this.points[level].forEach (point => {
+                point.visibility = visibility;
+            });
+        }
+    }
+
+    convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel) {
+        var x = x_center + radius * Math.cos(winkel);
+        var y = y_center + radius * Math.sin(winkel);
         return { x, y };
     }
 
-    findePunkt (id) {
-        for (var i = 0; i<this.punkte.length; i++) {
-            if (this.punkte[i].id == id) {
-                return this.punkte[i];
+    find_point (id) {
+            var level = Graph.get_node_level_from_id (id);
+            if (level < this.points.length) {
+                for (var i = 0; i<this.points[level].length; i++) {
+                    if (this.points[level][i].node.id == id) {
+                        return this.points[level][i];
+                    }
+                }
+            }
+    }
+
+
+    find_line (point_a_id, point_b_id) {
+        for (var i = 0; i<this.lines.length; i++) {
+            if (this.lines[i].point_a.id == point_a_id && this.lines[i].point_b.id == point_b_id) {
+                return this.lines[i];
             }
         }
     }
 
-    static kriegePositionAusStyle (style) {
-        var match = style.match (styleXYRegEx);
-        var top = match [1]; 
-        var left = match [2];
-        return [left, top];
-
+    add_urls_to_points (urls, ids) {
+        for (var i = 0; i<ids.length; i++) {
+            var point = this.find_point (ids [i]);
+            if (point) {
+                point.url = urls [i];
+            }
+        };
     }
 
-    static kriegeHTMLAttribut (id, attribut) {
-        let element = document.getElementById(id);
-        var wert = element.getAttribute(attribut)
-        return wert;
-    }
-
-    static kriegeHTMLPosition (id) {
-        var style = this.kriegeHTMLAttribut (id, "style");
-        var pos = this.kriegePositionAusStyle (style);
-        return pos;
+    connect_with_file_system (file_system) {
+        this.add_urls_to_points (file_system.urls, file_system.node_ids);
     }
 
 
 }
 
 
-
+//339
 
 
 
