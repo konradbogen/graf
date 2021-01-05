@@ -96,6 +96,7 @@ class Zoom{
         this.zoomElement = document.getElementById('graphContainer');
         this.animation;
         this.percentage;
+        this.callbacks = [];
         window.addEventListener('scroll', () => {this.zoom()});
 
         this.animation = anime({
@@ -115,6 +116,9 @@ class Zoom{
     }
 
         zoom(){
+            this.callbacks.forEach(c => {
+            c();
+            })
         this.percentage=this.getScrollPercentage ();
         this.animation.seek(this.animation.duration * (this.percentage * 0.01))
         }
