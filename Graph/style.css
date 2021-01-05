@@ -5,20 +5,28 @@ body{
     overflow-y: scroll;
 }
 
-h1, h2, h3, h4, h5, h6 {
-    color: white;
-    border: solid white;
-    position: absolute;
-    cursor: pointer;
-}
-
 #graphContainer{
     position:fixed;
-    height:100vh;
+    height:100%;
     width:100%;
     cursor: move;
 }
 
+#graphContainer svg {
+    position: absolute;
+    top:0;
+    left:0;
+    height:100%;
+    width:100%;
+} 
+
+.graphNodes {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+}
+
+  
 #input{
     position:fixed;
     background:white;

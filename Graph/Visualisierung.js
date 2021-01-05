@@ -179,7 +179,7 @@ class Point {
     };
 
     set_html_style () {
-        this.html.style.color = "black";
+        this.html.style.color = "white";
         this.html.style.border = "solid 2px";
         this.html.style.background = "transparent";
         this.html.style.padding = "4px";
@@ -332,6 +332,10 @@ class Visual {
         this.container.innerHTML = "";
     }
 
+    on_zoom_change (zoom) {
+        console.log ("On Zoom Change");
+    };
+
     create_from_graph (g, start_node) {
         this.reset ();
         this.graph = g;
@@ -345,9 +349,8 @@ class Visual {
 
     create_html () {
         this.container = document.createElement ("div");
+        this.container.className = "graphNodes"; 
         this.svg = document.createElementNS (SVG_NAMESPACE, "svg");
-        this.container.setAttribute ("class", "graphNodes");
-        this.svg.setAttribute ("id", "graphSvg");
         this.master_container.appendChild (this.svg);
         this.master_container.appendChild (this.container);
     }

@@ -9,8 +9,8 @@ var parser;
 var visual;
 var daten;
 var test;
-var uiInputContainer;
-var uiGraphContainer
+var ui_input_container;
+var ui_graph_container;
 var zoom;
 
 $(document).ready(function (){
@@ -29,12 +29,12 @@ function init () {
 }
 
 function create_ui() {
-    uiInputContainer = new UiInputContainer();
-    uiInputContainer.onSubmitClick = function (val) {
+    ui_input_container = new UiInputContainer();
+    ui_input_container.onSubmitClick = function (val) {
         parser.read_text(val);
         update_graph_visual();
     };
-    uiGraphContainer = new DragAndDrop('graphContainer');
+    ui_graph_container = new DragAndDrop('graphContainer');
     zoom = new Zoom();
 }
 
@@ -50,7 +50,7 @@ function update_graph_visual () {
 }
 
 function update_entry (eingabe) {
-    uiInputContainer.textarea.innerHTML = eingabe;
+    ui_input_container.textarea.innerHTML = eingabe;
     parser = new Parser ();
     parser.read_text (eingabe);
     update_graph_visual ();
