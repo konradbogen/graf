@@ -13,12 +13,15 @@ var default_entry = "agent.konradbogen\nagent.you\nagent.we\nverb.is\nverb.are\n
 const test_mode = true;
 const running_local = false;
 
+$(document).ready(function (){
+    init ();
+});
+
 function init () {
     files = new FileSystem ();
-    var container = document.getElementsByClassName ("flexContainer") [0];
-    visual = new Visual (container);
-    //ui = new UI ();
-    //visual = new Visual (ui.graphContainer)
+    ui = new UI ();
+    create_event_listeners();
+    visual = new Visual (ui.graphContainer.div);
     if (running_local == false) {
         files.lese_verzeichnis_aus (); 
     }
@@ -36,19 +39,15 @@ function test () {
 function update_graph () {
     graph = new Graph ();
     parser.create_graph (graph);
-    visual.create_from_graph (graph);
     visual.connect_with_file_system (files);
-    pacs = new PACSystem (visual);
+    visual.create_from_graph (graph);
+    /* pacs = new PACSystem (visual);
     parser.create_all_sequences (pacs);
     parser.create_all_pacs (pacs);
-    pacs.show_all_sequences ();
+    pacs.show_all_sequences (); */
 }
 
-$(document).ready(function (){
-    init ();
-    create_event_listeners();
 
-});
 
 function create_event_listeners() {
     create_submit_event_listener ();
@@ -56,14 +55,14 @@ function create_event_listeners() {
 }
 
 function entry_has_changed (eingabe) {
-    document.getElementById ("input").innerHTML = eingabe;
+    ui.inputContainer.textArea.innerHTML = eingabe;
     parser = new Parser ();
     parser.read_text (eingabe);
     update_graph ();
 }
 
 function create_submit_event_listener  () {
-    document.getElementById("submit").addEventListener("click", function() {
+    ui.inputContainer.submitButton.addEventListener("click", function() {
         var val = $.trim($("textarea").val());
           parser.read_text (val);
           update_graph ();
@@ -73,7 +72,7 @@ function create_submit_event_listener  () {
 
 function create_menu_event_listener  () {
     $(".button").click(function() {
-        $(".inputcontainer").toggleClass("faderight");
+        ui.inputContainer.toggle_visible ();
       
         });
     

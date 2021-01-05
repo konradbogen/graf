@@ -49,6 +49,16 @@ class Graph {
         return knoten;
     }
 
+
+    static get_node_level_from_id (id) {
+        var idBestandteile = id.split (".")
+        if (idBestandteile != null) {
+            return idBestandteile.length-1;
+        }else {
+            return 0;
+        }
+    }
+
     get_children_nodes (parent_knoten) {
         if (parent_knoten){
             var children = [];

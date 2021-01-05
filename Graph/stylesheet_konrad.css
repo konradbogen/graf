@@ -6,16 +6,7 @@ body{
   font-family: 'Courier New', monospace;
 }
 
-.graphContainer h1, .graphContainer h2, .graphContainer h3, .graphContainer h4, .graphContainer h5 {
-  color:black;
-  /* border:solid 2px; */
-  background:transparent;
-  padding:4px;
-  margin:0;
-  position:absolute;
-  transform:translate(-50%, -50%);
-  -webkit-transform:translate(-50%, -50%);
-}
+
 
  /* unvisited link */
  a:link {

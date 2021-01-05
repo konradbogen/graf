@@ -148,7 +148,7 @@ class Parser {
 
     create_node (parent_node, name) {
         var node_id = this.create_node_id (parent_node, name);
-        var level = this.get_node_level_from_id (node_id);
+        var level = Graph.get_node_level_from_id (node_id);
         var knoten = new Node (node_id, name, parent_node, level);
         return knoten;
     }
@@ -217,14 +217,6 @@ class Parser {
     }
 
 
-    get_node_level_from_id (id) {
-        var idBestandteile = id.split (".")
-        if (idBestandteile != null) {
-            return idBestandteile.length-1;
-        }else {
-            return 0;
-        }
-    }
 
     split_node_id (id) {
         var idBasis = this.extract_id_base (id);

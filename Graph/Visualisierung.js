@@ -10,12 +10,12 @@ class Line {
     constructor (point_a, point_b, strength, visual) {
         this.point_a = point_a;
         this.point_b = point_b;
-        this.point_a.on_position_change = this.callback.bind (this);
-        this.point_b.on_position_change = this.callback.bind (this);
+        this.point_a.callbacks.push (this.callback.bind(this));
+        this.point_b.callbacks.push (this.callback.bind(this));
         this.strength = strength;
         this.visual = visual;
         this.svg = visual.svg;
-        this.html = this.create_html ();
+        this.create_html ();
     }
 
     get x1 () {
@@ -32,28 +32,42 @@ class Line {
     }
 
     callback () {
-        this.update_html_position ();
+        this.update_html ();
         console.log ("callback");
     }
     
     create_html () {
-        var line = document.createElementNS(SVG_NAMESPACE, 'line');
-        line.setAttribute("x1",this.x1+"%");
-        line.setAttribute("y1",this.y1+"%");
-        line.setAttribute("x2",this.x2+"%");
-        line.setAttribute("y2",this.y2+"%");
-        line.style.stroke = DEFAULT_LINE_COLOUR;
-        line.style.strokeOpacity = OPACITY;
-        line.style.strokeWidth = this.strength*2;
-        this.svg.appendChild(line);
-        return line;
+        this.html = document.createElementNS(SVG_NAMESPACE, 'line');
+        this.html.setAttribute("x1",this.x1+"%");
+        this.html.setAttribute("y1",this.y1+"%");
+        this.html.setAttribute("x2",this.x2+"%");
+        this.html.setAttribute("y2",this.y2+"%");
+        this.html.style.stroke = DEFAULT_LINE_COLOUR;
+        this.html.style.strokeOpacity = OPACITY;
+        this.html.style.strokeWidth = this.strength*2;
+        this.svg.appendChild(this.html);
     }
 
-    update_html_position () {
+    update_html () {
         this.html.setAttribute("x1",this.x1+"%");
         this.html.setAttribute("y1",this.y1+"%");
         this.html.setAttribute("x2",this.x2+"%");
         this.html.setAttribute("y2",this.y2+"%"); 
+
+        if (this.point_a.visibility && this.point_b.visibility) {
+            this.show ();
+        }else {
+            this.hide ();
+        }
+    }
+
+    show () {
+        this.html.style.visibility = 'visible';
+    }
+
+    hide () {
+        this.html.style.visibility = 'hidden';
+
     }
 
 }
@@ -69,11 +83,25 @@ class Point {
         this.is_playing = false;
         this.mouse_over_aktiv = true;
         this.audio;
+        this._visibility = true;
         this._url = "";
         this.create_html ();
         this.create_observer ();
         this.update_content ();
+        this.callbacks = [];
     }
+
+    get visibility () {
+        return this._visibility;
+    }
+
+    set visibility (val) {
+        if (val == true) {
+            this.show ();
+        }else {
+            this.hide ();
+        }
+    } 
 
     get id () {
         return this.node.id;
@@ -140,10 +168,22 @@ class Point {
         this.html = document.createElement("h"+h);
         this.html.setAttribute("id", this.node.id)
         this.set_html_text();
+        this.set_html_style ();
         this.update_html_position ();
         this.create_event_listeners();
         this.container.appendChild (this.html);
     };
+
+    set_html_style () {
+        this.html.style.color = "black";
+        this.html.style.border = "solid 2px";
+        this.html.style.background = "transparent";
+        this.html.style.padding = "4px";
+        this.html.style.margin = "0";
+        this.html.style.position = "absolute";
+        this.html.style.transform = "translate(-50%, -50%)";
+        this.html.style.webkitTransform = "translate(-50%, -50%)";
+    }
 
     set_html_text() {
         if (this.is_link) {
@@ -167,7 +207,8 @@ class Point {
             this.play ();
         }
         this.mouse_over_aktiv = false; */
-        this.visual.create_from_graph (this.visual.graph, this.node);
+        
+        //this.visual.create_from_graph (this.visual.graph, this.node);
     }
 
     mouse_leave () {
@@ -211,7 +252,9 @@ class Point {
             var top = this.html.style.top.toString ();
             this._x = parseFloat (left.substr (0, left.length - 1));
             this._y = parseFloat (top.substr (0, top.length - 1));
-            this.on_position_change ();
+            this.callbacks.forEach (c => {
+                c ();
+            })
         }    
     }
 
@@ -233,8 +276,14 @@ class Point {
         }
     }
 
-    on_position_change () {
+    show () {
+        this.html.style.visibility = "visible";
+        this._visibility = true;
+    }   
 
+    hide () {
+        this.html.style.visibility = "hidden";
+        this._visibility = false;
     }
 
 }
@@ -250,13 +299,26 @@ class Visual {
         this.container;
         this.svg;
         
-        this.scroll_enabled = false;
-        this.depth = 4;
+        this._depth = 0;
 
         this.x_center = 50; 
         this.y_center = 50; 
         this.radius = 25;
         this.create_html ();
+    }
+
+    get max_level () {
+        return this.points.count ();
+    }
+
+    get depth () {
+        return this._depth;
+    }
+
+    set depth (val) {
+        this._depth = val;
+        this.reset ();
+        this.create_from_graph (this.graph);
     }
 
     reset () {
@@ -270,9 +332,9 @@ class Visual {
         this.reset ();
         this.graph = g;
         if (start_node == null) {
-            this.create_points_from_graph (g);
+            this.create_points_from_graph (g, this.depth);
         }else {
-            this.create_points_from_start_node (g, start_node);
+            this.create_points_from_start_node (g, start_node, this.depth);
         }
         this.create_lines_from_graph (g);
     }
@@ -280,24 +342,24 @@ class Visual {
     create_html () {
         this.container = document.createElement ("div");
         this.svg = document.createElementNS (SVG_NAMESPACE, "svg");
-        this.container.setAttribute ("class", "graphContainer");
+        this.container.setAttribute ("class", "graphNodes");
         this.svg.setAttribute ("id", "graphSvg");
         this.master_container.appendChild (this.svg);
         this.master_container.appendChild (this.container);
     }
 
-    create_points_from_graph (graph) {
+    create_points_from_graph (graph, depth) {
         var level_zero_nodes = graph.get_all_nodes_from_level (0);
         if (level_zero_nodes.length == 1) {
-            this.create_points_from_start_node (graph, level_zero_nodes[0], this.x_center, this.y_center, this.radius);
+            this.create_points_from_start_node (graph, level_zero_nodes[0], this.x_center, this.y_center, this.radius, depth);
         }else {
-            this.create_children_points_from_graph_node (graph,null, this.x_center, this.y_center, this.radius);
+            this.create_children_points_from_graph_node (graph,null, this.x_center, this.y_center, this.radius, depth);
         }
     }
 
-    create_points_from_start_node (graph, start_node) {
+    create_points_from_start_node (graph, start_node, depth) {
         this.create_point (this.x_center, this.y_center, start_node);
-        this.create_children_points_from_graph_node (graph,start_node, this.x_center, this.y_center, this.radius);
+        this.create_children_points_from_graph_node (graph,start_node, this.x_center, this.y_center, this.radius, depth-1);
     }
 
     create_lines_from_graph (graph) {
@@ -307,14 +369,16 @@ class Visual {
     }
 
 
-    create_children_points_from_graph_node (graph, parentnode, x_center, y_center, radius) {
+    create_children_points_from_graph_node (graph, parentnode, x_center, y_center, radius, remaining_depth) {
         var children = graph.get_children_nodes (parentnode);
         for (var i=0; i<children.length; i++) {
             var node = children [i];
             var winkel = i * (2*Math.PI / children.length) + Math.random () * 0.3;
             var { x, y } = this.convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel);
             this.create_point (x,y, node)
-            this.create_children_points_from_graph_node(graph, node, x, y, radius/2);
+            if (remaining_depth > 0) {
+                this.create_children_points_from_graph_node(graph, node, x, y, radius/2, remaining_depth-1);
+            }
         }
     }
 
@@ -324,7 +388,7 @@ class Visual {
         if (!this.points[level]) {
             this.points[level] = [];
         }
-        this.points.level.push (p);
+        this.points[level].push (p);
     }
 
     create_line (edge) {
@@ -348,6 +412,14 @@ class Visual {
         }
     }
 
+    change_visibility_of_level (level, visibility) {
+        if (this.points[level]){
+            this.points[level].forEach (point => {
+                point.visibility = visibility;
+            });
+        }
+    }
+
     convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel) {
         var x = x_center + radius * Math.cos(winkel);
         var y = y_center + radius * Math.sin(winkel);
@@ -355,12 +427,16 @@ class Visual {
     }
 
     find_point (id) {
-        for (var i = 0; i<this.points.length; i++) {
-            if (this.points[i].node.id == id) {
-                return this.points[i];
+            var level = Graph.get_node_level_from_id (id);
+            if (level < this.points.length) {
+                for (var i = 0; i<this.points[level].length; i++) {
+                    if (this.points[level][i].node.id == id) {
+                        return this.points[level][i];
+                    }
+                }
             }
-        }
     }
+
 
     find_line (point_a_id, point_b_id) {
         for (var i = 0; i<this.lines.length; i++) {
