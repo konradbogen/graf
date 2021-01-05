@@ -2,6 +2,7 @@ class UI {
     constructor () {
         this.entry_position;
         this.font; 
+        this.callbacks = [];
         this.background_color;
         this.flexContainer;
         this.graphContainer = new UIGraphContainer ("graphContainer");
@@ -12,6 +13,12 @@ class UI {
 
     load_page () {
 
+    }
+
+    zoom_has_changed (val) {
+        this.callbacks.forEach (c => {
+            c (val);
+        });
     }
     
     create_html () {

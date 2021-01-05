@@ -20,13 +20,16 @@ $(document).ready(function (){
 function init () {
     files = new FileSystem ();
     ui = new UI ();
-    create_event_listeners();
     visual = new Visual (ui.graphContainer.div);
+    ui.callbacks.push (visual.on_zoom_change);
+
     if (running_local == false) {
         files.lese_verzeichnis_aus (); 
     }
     var text = default_entry;
-    entry_has_changed (text);
+    entry_has_changed (text);   
+    create_event_listeners();
+
 }
 
 function test () {
