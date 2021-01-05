@@ -1,0 +1,49 @@
+body{
+    background:black;
+    height:200%;
+    margin:0;
+    overflow-y: scroll;
+}
+
+h3{
+    color: white;
+    border: solid white;
+    position: absolute;
+    cursor: pointer;
+}
+
+#graphContainer{
+    position:fixed;
+    height:100vh;
+    width:100%;
+    cursor: move;
+}
+
+#input{
+    position:fixed;
+    background:white;
+    width:50%;
+    height:0;
+    opacity:0;
+    left:50%;
+    top:50%;
+    transform:translate(-50%, -50%);
+    text-align:center;
+}
+
+#inputButton{
+    position:fixed;
+    left:50%;
+    top:98%;
+    width:0;
+    height:0;
+    background: none;
+    border:none;
+}
+
+#inputButton svg{
+    position:absolute;
+    transform:translateX(-50%);
+    bottom:0;
+    cursor: pointer;
+}
