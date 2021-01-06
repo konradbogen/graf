@@ -102,11 +102,11 @@ class Zoom{
         this.animation = anime({
             targets: this.zoomElement,
             width: {
-                value: '*=2',
+                value: '*=10',
                 delay:50
             },
             height: {
-                value: '*=2',
+                value: '*=10',
             },
     
             easing: 'linear',
@@ -116,11 +116,11 @@ class Zoom{
     }
 
         zoom(){
+            this.percentage=this.getScrollPercentage ();
+            this.animation.seek(this.animation.duration * (this.percentage * 0.01))
             this.callbacks.forEach(c => {
-            c();
+                c(this.percentage);
             })
-        this.percentage=this.getScrollPercentage ();
-        this.animation.seek(this.animation.duration * (this.percentage * 0.01))
         }
 
 

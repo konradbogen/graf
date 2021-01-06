@@ -14,11 +14,49 @@ class Lexer {
         this.seq_ids = [];
     }
 
+    is_seq_id (line) {
+        if (SEQ_REGEX.test (line)) {
+            return true
+        }
+        return false;
+    }
+
+    is_pac_id (line) {
+        if (PAC_REGEX.test (line)) {
+            return true
+        }
+        return false;
+    }
+
+    is_edge_id (line) {
+        if (EDGE_REGEX.test (line)) {
+            return true
+        }
+        return false;
+    }
+
+    is_node_id (line) {
+        if (NODE_REGEX.test (line)) {
+            return true
+        }
+        return false;
+    }
+
     create_ids (eingabe) {
-        this.create_node_ids (eingabe);
-        this.create_edge_ids (eingabe);
-        this.create_pac_ids (eingabe);
-        this.create_seq_ids (eingabe);
+        var lines = this.split_by_lines (eingabe);
+        for (let line of lines) {
+            if (this.is_node_id(line)) {
+                this.node_ids.push (line);
+            }else if (this.is_edge_id (line)) {
+                this.edge_ids.push (line);
+            }
+            else if (this.is_seq_id (line)) {
+                this.seq_ids.push (line)
+            }else if (this.is_pac_id (line)) {
+                this.pac_ids.push (line);
+            }
+        }
+      
     }
 
     create_text () {
@@ -34,34 +72,6 @@ class Lexer {
             });
         }
         return text;
-    }
-
-    create_pac_ids (eingabe) {
-        this.pac_ids = this.extract_id (eingabe, PAC_REGEX);
-    }
-
-    create_seq_ids (eingabe) {
-        this.seq_ids = this.extract_id (eingabe, SEQ_REGEX);
-    }
-
-    create_node_ids (eingabe) {
-        this.node_ids = this.extract_id (eingabe, NODE_REGEX);
-        return this.node_ids;
-    }
-
-
-    create_edge_ids (eingabe) {
-        this.edge_ids = this.extract_id (eingabe, EDGE_REGEX);
-        return this.edge_ids;
-    }
-
-    extract_id (eingabe, regEx) {
-        var lines = this.split_by_lines (eingabe);
-        var id_list = [];
-        for (let element of lines) {
-            if (regEx.test (element)) {id_list.push (element)};
-        }
-        return id_list;
     }
 
     split_by_lines (eingabe) {
@@ -136,21 +146,23 @@ class Parser {
         }
     }
 
-    add_all_children_nodes (id, graph, parent) {
-        var idTeile = this.split_node_id (id);
-        var knotenName = idTeile [0];
-        var knoten = this.create_node (parent, knotenName);
-        this.add_node_to_graph (graph, knoten, parent);
-        if (idTeile[1] != "") {
-            this.add_all_children_nodes (idTeile[1], graph, knoten);
+    add_all_children_nodes (node_id, graph, parent_node) {
+        var id_parts = this.split_node_id (node_id);
+        var id = this.prepend_parent_id (parent_node, id_parts [0]);
+        var node = graph.find_node (id);
+        if (node == null) {
+            node = this.create_node (id, id_parts [0], parent_node);
+            this.add_node_to_graph (graph, node, parent_node);
+        }
+        if (id_parts[1] != "") {
+            this.add_all_children_nodes (id_parts[1], graph, node);
         }
     }
 
-    create_node (parent_node, name) {
-        var node_id = this.create_node_id (parent_node, name);
+    create_node (node_id, node_name, parent_node) {
         var level = Graph.get_node_level_from_id (node_id);
-        var knoten = new Node (node_id, name, parent_node, level);
-        return knoten;
+        var node = new Node (node_id, node_name, parent_node, level);
+        return node;
     }
 
     split_seq_id (id) {
@@ -185,11 +197,11 @@ class Parser {
     }
 
     add_node_to_graph (graph, node, parent_node) {
-        var existing_node = graph.find_node (node.id);
-        if (!existing_node) {
             graph.add_node (node);
-            this.create_edges_to_parent (node, parent_node, graph);
-        }
+            if (parent_node) {
+                parent_node.children.push (node);
+                graph.add_edge (node, parent_node);
+            }
     }
 
     create_edge (edge_id, graph) {
@@ -201,14 +213,7 @@ class Parser {
         }   
     }
 
-
-    create_edges_to_parent (knoten, parent_node, graph) {
-        if (parent_node) {
-            graph.add_edge (knoten, graph.find_node(parent_node.id));
-        }
-    }
-
-    create_node_id (parent_node, name) {
+    prepend_parent_id (parent_node, name) {
         var node_id = name;
         if (parent_node) {
             node_id =  parent_node.id + "." + name;

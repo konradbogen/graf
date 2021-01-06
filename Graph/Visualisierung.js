@@ -6,6 +6,12 @@ const OPACITY = 1;
 const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
+var FONT_SIZE_ZOOM_FACTOR = 1.1;
+var FONT_SIZE_LEVEL_FACTOR = 1;
+var FONT_SIZE_LEVEL_EXP_FACTOR = 2.2;
+var RADIUS_LEVEL_FACTOR = 3.5;
+var RADIUS_VALUE = 35;
+
 class Line {
     constructor (point_a, point_b, strength, visual) {
         this.point_a = point_a;
@@ -179,13 +185,19 @@ class Point {
     };
 
     set_html_style () {
+        var size = 100 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, this.node.level)*FONT_SIZE_LEVEL_FACTOR);
+        var border_width = size/20;
+        var margin = 0;
+        var padding = size*1.2;
+
         this.html.style.color = "white";
-        this.html.style.border = "solid 2px";
+        this.html.style.border = "solid " + border_width + "%";
         this.html.style.background = "transparent";
-        this.html.style.padding = "4px";
-        this.html.style.margin = "0";
+        this.html.style.padding = padding + "%";
+        this.html.style.margin = margin + "%";
         this.html.style.position = "absolute";
         this.html.style.transform = "translate(-50%, -50%)";
+        this.html.style.fontSize = size + "%";
         this.html.style.webkitTransform = "translate(-50%, -50%)";
     }
 
@@ -303,12 +315,21 @@ class Visual {
         this.container;
         this.svg;
         
-        this._depth = 0;
+        this.default_font_size = 20;
+        this._depth = 10;
 
         this.x_center = 50; 
         this.y_center = 50; 
-        this.radius = 25;
+        this.radius = RADIUS_VALUE;
         this.create_html ();
+    }
+
+    get font_size () {
+        return this.container.style.fontSize;
+    }
+
+    set font_size (val) {
+        this.container.style.fontSize = val;
     }
 
     get max_level () {
@@ -334,6 +355,7 @@ class Visual {
 
     on_zoom_change (zoom) {
         console.log ("On Zoom Change");
+        this.font_size = this.default_font_size + zoom*FONT_SIZE_ZOOM_FACTOR;
     };
 
     create_from_graph (g, start_node) {
@@ -353,7 +375,9 @@ class Visual {
         this.svg = document.createElementNS (SVG_NAMESPACE, "svg");
         this.master_container.appendChild (this.svg);
         this.master_container.appendChild (this.container);
+        this.font_size = this.default_font_size;
     }
+
 
     create_points_from_graph (graph, depth) {
         var level_zero_nodes = graph.get_all_nodes_from_level (0);
@@ -384,7 +408,7 @@ class Visual {
             var { x, y } = this.convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel);
             this.create_point (x,y, node)
             if (remaining_depth > 0) {
-                this.create_children_points_from_graph_node(graph, node, x, y, radius/2, remaining_depth-1);
+                this.create_children_points_from_graph_node(graph, node, x, y, radius/RADIUS_LEVEL_FACTOR, remaining_depth-1);
             }
         }
     }

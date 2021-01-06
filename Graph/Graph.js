@@ -4,8 +4,12 @@ class Graph {
         this.edges = [];
     }
 
-    add_node (neuerKnoten) {
-        this.nodes.push (neuerKnoten);
+    add_node (new_node) {
+        var level = new_node.level;
+        if (this.nodes[level] == null) {
+            this.nodes[level] = [];
+        }
+        this.nodes[level].push (new_node);
     }
 
     add_edge (node_a, node_b) {
@@ -22,10 +26,14 @@ class Graph {
     }
 
     find_node (id) {
-        for (let element of this.nodes){
-            if (element.id==id) {
-                return element;
-            };
+        var level = Graph.get_node_level_from_id (id);
+        if (this.nodes[level] != null) {
+            for (var i = 0; i<this.nodes[level].length; i++) {
+                var node = this.nodes[level][i]
+                if (node.id == id) {
+                    return node
+                }
+            }
         }
         return null;
     }   
@@ -40,13 +48,11 @@ class Graph {
     }
 
     get_all_nodes_from_level (level) {
-        var knoten = [];
-        for (let element of this.nodes){
-            if (element.level==level) {
-                knoten.push (element);
-            };
+        if (this.nodes[level]) {
+            return this.nodes[level];
+        } else {
+            return [];
         }
-        return knoten;
     }
 
 
@@ -61,15 +67,7 @@ class Graph {
 
     get_children_nodes (parent_knoten) {
         if (parent_knoten){
-            var children = [];
-            this.nodes.forEach(element => {
-                if (element.parent) {
-                    if (element.parent.id == parent_knoten.id) {
-                        children.push (element);
-                    }
-                }
-            });
-            return children;
+            return parent_knoten.children;
         }else {
             return this.get_all_nodes_from_level (0);
         }
@@ -140,6 +138,7 @@ class Node {
         this.name = name;
         this.id = id;
         this.parent = parent;
+        this.children = [];
         this.level = level;
 
         this.grad = 0;
