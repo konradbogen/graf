@@ -98,6 +98,7 @@ class Zoom{
         this.animation;
         this.percentage;
         this.callbacks = [];
+        $(document).ready(this.scrollToBottom);
         window.addEventListener('scroll', this.zoom.bind(this));
 
 
@@ -113,7 +114,8 @@ class Zoom{
             translateY: '-500vh',
     
             easing: 'linear',
-            autoplay: false
+            autoplay: false,
+
         
         });
         this.mobile = false;
@@ -160,8 +162,11 @@ class Zoom{
 
     getScrollPercentage() {
         return (
-            this.getWindowYScroll()  / (this.getDocHeight() - this.getWindowHeight())
-        ) * 100;
+            100 - (this.getWindowYScroll()  / (this.getDocHeight() - this.getWindowHeight())
+        ) * 100);
     }
 
+    scrollToBottom(){
+        document.body.scrollTop = document.body.scrollHeight;
+    }
 }
