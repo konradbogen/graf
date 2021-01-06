@@ -93,6 +93,9 @@ class DragAndDrop{
 
 class Zoom{
     constructor(){
+        if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
+            // fuck mobiles anyway
+        }else{
         this.zoomElement = document.getElementById('graphContainer');
         this.animation;
         this.percentage;
@@ -113,8 +116,9 @@ class Zoom{
     
             easing: 'linear',
             autoplay: false
-
+        
         });
+    }
     }
 
 
