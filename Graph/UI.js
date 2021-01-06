@@ -93,9 +93,7 @@ class DragAndDrop{
 
 class Zoom{
     constructor(){
-        if( /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ) {
-            // fuck mobiles anyway
-        }else{
+        var string =  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/;
         this.zoomElement = document.getElementById('graphContainer');
         this.animation;
         this.percentage;
@@ -118,16 +116,21 @@ class Zoom{
             autoplay: false
         
         });
-    }
+        this.mobile = false;
+        if(string.test(navigator.userAgent) ) {
+            this.mobile = true;
+        }
     }
 
 
         zoom(){
+            if (this.mobile == false) {
             this.percentage=this.getScrollPercentage ();
             this.animation.seek(this.animation.duration * (this.percentage * 0.01));
             this.callbacks.forEach(c => {
                 c(this.percentage);
             })
+        }
         }
 
       

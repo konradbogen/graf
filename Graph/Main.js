@@ -20,7 +20,7 @@ $(document).ready(function (){
 function init () {
     create_ui();
     files = new FileSystem ();
-    visual = new Visual (zoom.zoomElement);
+    visual = new Visual (document.getElementById('graphContainer'));
     zoom.callbacks.push (visual.on_zoom_change.bind (visual));
     update_entry (default_entry);   
     if (RUNNING_IN_LOCAL == false) {

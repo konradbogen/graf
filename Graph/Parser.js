@@ -50,7 +50,7 @@ class Lexer {
     }
 
     create_ids (eingabe) {
-        init_ids ();
+        this.init_ids ();
         var lines = this.split_by_lines (eingabe);
         for (let line of lines) {
             if (this.is_node_id(line)) {
