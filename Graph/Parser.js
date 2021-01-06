@@ -42,7 +42,15 @@ class Lexer {
         return false;
     }
 
+    init_ids () {
+        this.node_ids = [];
+        this.edge_ids = [];
+        this.pac_ids = [];
+        this.seq_ids = [];
+    }
+
     create_ids (eingabe) {
+        init_ids ();
         var lines = this.split_by_lines (eingabe);
         for (let line of lines) {
             if (this.is_node_id(line)) {
