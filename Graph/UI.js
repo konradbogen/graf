@@ -95,69 +95,37 @@ class Zoom{
     constructor(){
         this.zoomElement = document.getElementById('graphContainer');
         this.animation;
-        this._percentage;
-        this.mouseX;
-        this.mouseY;
-        this._moveX = 0;
-        this._moveY = 0;
+        this.percentage;
         this.callbacks = [];
-        this.MAXZOOMFACTOR = 10
         window.addEventListener('scroll', this.zoom.bind(this));
-        window.addEventListener('mousemove', this.setMousePosition.bind(this));
-    }
 
-    get percentage () {
-        return this._percentage;
-    }
 
-    set percentage (val) {
-        this._percentage = val;
-        var css_width_percentage = 100+100 * this.MAXZOOMFACTOR * val;
-        var  css_height_percentage = 100+ 100 * this.MAXZOOMFACTOR * val;
-        this.zoomElement.style.width = css_width_percentage + "%";
-        this.zoomElement.style.height = css_height_percentage + "%";
-    }
+        this.animation = anime({
+            targets: this.zoomElement,
+            width: {
+                value: '*=10',
+            },
+            height: {
+                value: '*=10',
+            },
+            translateX: '-500vw',
+            translateY: '-500vh',
+    
+            easing: 'linear',
+            autoplay: false
 
-    get moveX () {
-        return this._moveX;
+        });
     }
-
-    get moveY () {
-        return this._moveY;
-    }
-
-    set moveX (val) {
-        this._moveX = val;
-        this.zoomElement.style.transform = "translateX(" + this._moveX + "px)";
-    }
-
-    set moveY (val) {
-        this._moveY = val;
-        this.zoomElement.style.transform = "translateY(" + this._moveY + "px)";
-    }
-        
-        // getMoveX () {
-        //     return this.moveX;
-        // }
-
-        // getMoveY (){
-        //     return this.moveY
-        // }
 
 
         zoom(){
-
-            this.moveX = (-1) * this.mouseX * this.percentage * (this.MAXZOOMFACTOR - 1) * 100;
-            this.moveY = (-1) * this.mouseY * this.percentage * (this.MAXZOOMFACTOR - 1) * 100;
             this.percentage=this.getScrollPercentage ();
+            this.animation.seek(this.animation.duration * (this.percentage * 0.01));
+            this.callbacks.forEach(c => {
+                c(this.percentage);
+            })
         }
 
-        setMousePosition(e){
-            e = e || window.event;
-            e.preventDefault;
-            this.mouseX = e.clientX;
-            this.mouseY = e.clientY;
-        }
       
 
     getWindowHeight(){
@@ -186,7 +154,7 @@ class Zoom{
     getScrollPercentage() {
         return (
             this.getWindowYScroll()  / (this.getDocHeight() - this.getWindowHeight())
-        );
+        ) * 100;
     }
 
 }
