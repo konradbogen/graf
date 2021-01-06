@@ -97,32 +97,36 @@ class Zoom{
         this.animation;
         this.percentage;
         this.callbacks = [];
-        window.addEventListener('scroll', () => {this.zoom()});
+        window.addEventListener('scroll', this.zoom.bind(this));
+
 
         this.animation = anime({
             targets: this.zoomElement,
             width: {
                 value: '*=10',
-                delay:50
             },
             height: {
                 value: '*=10',
             },
+            translateX: '-500vw',
+            translateY: '-500vh',
     
             easing: 'linear',
             autoplay: false
 
-        })
+        });
     }
+
 
         zoom(){
             this.percentage=this.getScrollPercentage ();
-            this.animation.seek(this.animation.duration * (this.percentage * 0.01))
+            this.animation.seek(this.animation.duration * (this.percentage * 0.01));
             this.callbacks.forEach(c => {
                 c(this.percentage);
             })
         }
 
+      
 
     getWindowHeight(){
         return window.innerHeight || 
