@@ -189,7 +189,7 @@ class Point {
         var margin = 0;
         var padding = 0;
         //var padding = size*1.2;
-
+        this.html.style.cursor = "pointer";
         this.html.style.color = this.color;
         this.html.style.border = "solid " + border_width + "%";
         this.html.style.background = "transparent";
@@ -217,13 +217,18 @@ class Point {
     }
 
     click () {
-        /* if (this.is_playing == true) {
-            this.stop ();
+        if (this.typ == "audio") {
+            if (this.is_playing == true) {
+                this.stop ();
+            }else {
+                this.play ();
+            }
+            this.mouse_over_aktiv = false;
         }else {
-            this.play ();
+            window.open ("?sub=" + this.id, "_self");
         }
-        this.mouse_over_aktiv = false; */
         
+
         //this.visual.create_from_graph (this.visual.graph, this.node);
     }
 
@@ -279,7 +284,7 @@ class Point {
             console.log (this.name + " is playing");
             this.is_playing = true;
             this.audio.play ();
-            this.html.style.color="white";
+            this.html.style.color="red";
         }
     }
 
@@ -288,7 +293,7 @@ class Point {
             this.is_playing = false;
             this.audio.pause ();
             this.audio.currentTime = 0;
-            this.html.style.color ="black";
+            this.html.style.color = this.color;
         }
     }
 
