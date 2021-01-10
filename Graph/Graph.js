@@ -57,11 +57,15 @@ class Graph {
 
 
     static get_node_level_from_id (id) {
-        var idBestandteile = id.split (".")
-        if (idBestandteile != null) {
-            return idBestandteile.length-1;
+        if (id) {
+                var idBestandteile = id.split (".")
+            if (idBestandteile != null) {
+                return idBestandteile.length-1;
+            }else {
+                return 0;
+            }
         }else {
-            return 0;
+            return null;
         }
     }
 
@@ -71,6 +75,19 @@ class Graph {
         }else {
             return this.get_all_nodes_from_level (0);
         }
+    }
+
+    get_children_nodes_from_id (parent_node_id) {
+        var parent_level = Graph.get_node_level_from_id (parent_node_id);
+        var nodes = [];
+        if (this.nodes[parent_level+1]) {
+            this.nodes[parent_level+1].forEach (node => {
+                if (node.id == parent_node_id) {
+                    nodes.push (node);
+                }
+            })
+        }
+        return nodes;
     }
 
     get_all_paths_from_a_to_b (start_node, final_node) {

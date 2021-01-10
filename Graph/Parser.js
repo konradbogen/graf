@@ -1,6 +1,7 @@
 //PLUG-IN FuR GRAPH.JS, DATEN.JS, PAC.JS
 const SEQ_REGEX = />seq\s(\w*)\s.*/;
 const PAC_REGEX = />pac (.*)/;
+const SUB_REGEX = />sub (.*)/;
 const NODE_REGEX = /^(?:(\w+))\.*((?:\.*\w+)*(?:\w+)*)$/;
 const EDGE_REGEX = /^((?:\w*\.*)(?:\w+\.*\w+)*)-((?:\w*\.*)(?:\w+\.*\w+)*)$/;
 const DURATION_REGEXP = /^(\d*)$/
@@ -12,31 +13,11 @@ class Lexer {
         this.edge_ids = [];
         this.pac_ids = [];
         this.seq_ids = [];
+        this.sub_ids = [];
     }
 
-    is_seq_id (line) {
-        if (SEQ_REGEX.test (line)) {
-            return true
-        }
-        return false;
-    }
-
-    is_pac_id (line) {
-        if (PAC_REGEX.test (line)) {
-            return true
-        }
-        return false;
-    }
-
-    is_edge_id (line) {
-        if (EDGE_REGEX.test (line)) {
-            return true
-        }
-        return false;
-    }
-
-    is_node_id (line) {
-        if (NODE_REGEX.test (line)) {
+    test_id (line, reg_ex) {
+        if (reg_ex.test (line)) {
             return true
         }
         return false;
@@ -47,21 +28,24 @@ class Lexer {
         this.edge_ids = [];
         this.pac_ids = [];
         this.seq_ids = [];
+        this.sub_ids = [];
     }
 
-    create_ids (eingabe) {
+    categorize_ids (eingabe) {
         this.init_ids ();
         var lines = this.split_by_lines (eingabe);
         for (let line of lines) {
-            if (this.is_node_id(line)) {
+            if (this.test_id (line, NODE_REGEX)) {
                 this.node_ids.push (line);
-            }else if (this.is_edge_id (line)) {
+            }else if (this.test_id (line, EDGE_REGEX)) {
                 this.edge_ids.push (line);
             }
-            else if (this.is_seq_id (line)) {
+            else if (this.test_id (line, SEQ_REGEX)) {
                 this.seq_ids.push (line)
-            }else if (this.is_pac_id (line)) {
+            }else if (this.test_id (line, PAC_REGEX)) {
                 this.pac_ids.push (line);
+            }else if (this.test_id (line, SUB_REGEX)) {
+                this.sub_ids.push (line);
             }
         }
       
@@ -93,6 +77,7 @@ class Parser {
     constructor () {
         this.lexer = new Lexer ();
         this.relative_seq_duration = true;
+        this.start_node_id;
     }
 
     create_all_pacs (pac_system) {
@@ -133,12 +118,25 @@ class Parser {
 
 
     read_text (text) {
-        this.lexer.create_ids (text);
+        this.lexer.categorize_ids (text);
     }
 
     create_graph (graph) {
-        this.create_all_nodes (this.lexer.node_ids, graph);
+        this.set_start_node_id_from_lexer ();
+        if (this.start_node_id) {
+            //this.create_all_nodes_from_parent (this.lexer.node_ids, this.parent_node_id, graph);
+            this.create_all_nodes (this.lexer.node_ids, graph);
+        }else {
+            this.create_all_nodes (this.lexer.node_ids, graph);
+        }
         this.create_all_edges (this.lexer.edge_ids, graph);
+    }
+
+    set_start_node_id_from_lexer () {
+        if (this.lexer.sub_ids[0]) {
+            var id = this.lexer.sub_ids[0].substring (5);
+            this.start_node_id = id;
+        }
     }
 
     create_all_edges (edge_ids, graph) {
@@ -151,6 +149,15 @@ class Parser {
         for (var i = 0; i<node_ids.length; i++) {
             var id = node_ids [i];
             this.add_all_children_nodes (id, graph, null);
+        }
+    }
+
+    create_all_nodes_from_parent (node_ids, parent_id, graph) {
+        for (var i = 0; i<node_ids.length; i++) {
+            var id = node_ids [i];
+            if (id.startsWith (parent_id)) {
+                this.add_all_children_nodes (id, graph, null);
+            }
         }
     }
 
@@ -171,6 +178,11 @@ class Parser {
         var level = Graph.get_node_level_from_id (node_id);
         var node = new Node (node_id, node_name, parent_node, level);
         return node;
+    }
+
+    get_node_name_from_node_id (node_id) {
+        var id_parts = this.split_node_id (node_id.lastIndexOf ("."));
+        return id_parts [1];
     }
 
     split_seq_id (id) {

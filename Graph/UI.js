@@ -57,19 +57,67 @@ class UiInputContainer{
 
 class DragAndDrop{
     constructor(dragElement){
-        this.dragElement = document.getElementById(dragElement);
-        this.dragElement.onmousedown = this.dragMouseDown.bind(this);
-        this.pos1;
-        this.pos2;
-        this.pos3;
-        this.pos4;
+        
+    }
+
+   
+}
+
+class Zoom{
+    constructor(){
+        this.mobile = false;
+        var string =  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/;
+        if(string.test(navigator.userAgent) ) {
+            this.mobile = true;
+        }
+        
+        this.html_element = document.getElementById('graphContainer');
+        
+        this.drag_offset_x = 0;
+        this.drag_offset_y = 0;
+        this.last_drag_offset_x;
+        this.last_drag_offset_y;
+
+        this.animation;
+        this.zoom_percentage = 0;
+        this.max_zoom_factor = 30;
+
+        this.callbacks = [];
+        this.mouseX = 0;
+        this.mouseY = 0;
+
+        $(document).ready = function (){
+            //this.scrollToBottom();
+        }
+
+        window.onscroll = this.zoom.bind (this);
+        this.html_element.onmousemove  = this.setMousePosition.bind(this);
+        this.html_element.onmousedown = this.dragMouseDown.bind(this);
+
+        this.init_animation();
+    }
+
+    get left () {
+        return this.html_element.offsetLeft;
+    }
+
+    set left (val) {
+        this.html_element.style.left = val + "px";
+    }
+
+    get top () {
+        return this.html_element.offsetTop;
+    }
+
+    set top (val) {
+        this.html_element.style.top = val + "px";
     }
 
     dragMouseDown(e){
         e = e ||  window.event;
         e.preventDefault();
-        this.pos3 = e.clientX;
-        this.pos4 = e.clientY;
+        this.last_drag_offset_x = e.clientX;
+        this.last_drag_offset_y = e.clientY;
         document.onmouseup = this.closeDragElement;
         document.onmousemove = this.elementDrag.bind(this);
     }
@@ -77,71 +125,67 @@ class DragAndDrop{
     elementDrag(e){
         e = e || window.event;
         e.preventDefault();
-        this.pos1 = this.pos3 - e.clientX;
-        this.pos2 = this.pos4 - e.clientY;
-        this.pos3 = e.clientX;
-        this.pos4 = e.clientY;
-        this.dragElement.style.top = (this.dragElement.offsetTop - this.pos2) + "px";
-        this.dragElement.style.left = (this.dragElement.offsetLeft - this.pos1) + "px";
+        this.drag_offset_x = this.last_drag_offset_x - e.clientX;
+        this.drag_offset_y = this.last_drag_offset_y - e.clientY;
+        this.last_drag_offset_x = e.clientX;
+        this.last_drag_offset_y = e.clientY;
+        this.html_element.style.left = (this.html_element.offsetLeft - this.drag_offset_x) + "px";
+        this.html_element.style.top = (this.html_element.offsetTop - this.drag_offset_y) + "px";
     }
 
     closeDragElement(){
         document.onmouseup = null;
         document.onmousemove = null;
     }
-}
 
-class Zoom{
-    constructor(){
-        var string =  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/;
-        this.zoomElement = document.getElementById('graphContainer');
-        this.animation;
-        this.percentage;
-        this.callbacks = [];
-        $(document).ready(this.scrollToBottom);
-        window.addEventListener('scroll', this.zoom.bind(this));
-
-
+    init_animation() {
         this.animation = anime({
-            targets: this.zoomElement,
+            targets: this.html_element,
             width: {
-                value: '*=10',
+                value: '*=' + this.max_zoom_factor,
             },
             height: {
-                value: '*=10',
+                value: '*=' + this.max_zoom_factor,
             },
-            translateX: '-500vw',
-            translateY: '-500vh',
-    
+            //translateX: '-1000vw',
+            //translateY: '-1000vh',
+
             easing: 'linear',
             autoplay: false,
-
-        
         });
-        this.mobile = false;
-        if(string.test(navigator.userAgent) ) {
-            this.mobile = true;
-        }
     }
 
+    zoom(){
+        if (this.mobile == false) {
+            var old_percentage = this.zoom_percentage;
+            this.zoom_percentage= this.getScrollPercentage ();
+            var delta_percentage = this.zoom_percentage - old_percentage;
 
-        zoom(){
-            if (this.mobile == false) {
-            this.percentage=this.getScrollPercentage ();
-            this.animation.seek(this.animation.duration * (this.percentage * 0.01));
+            this.animation.seek(this.zoom_percentage*this.animation.duration);
+
+            var factor = delta_percentage * (this.max_zoom_factor-1);
+            var dx = (this.mouseX)  * factor;
+            var dy = (this.mouseY) * factor;
+            this.left = this.left - dx;
+            this.top = this.top - dy;
             this.callbacks.forEach(c => {
-                c(this.percentage);
+                c(this.zoom_percentage);
             })
         }
-        }
-
-      
+    }
 
     getWindowHeight(){
         return window.innerHeight || 
         document.documentElement.clientHeight ||
         document.body.clientHeight || 0;
     }
+
+    getWindowWidth(){
+        return window.innerWidth || 
+        document.documentElement.clientWidth ||
+        document.body.clientWidth || 0;
+    }
+
 
     getWindowYScroll() {
         return window.pageYOffset || 
@@ -160,10 +204,28 @@ class Zoom{
         );
     }
 
+    getDocWidth() {
+        return Math.max(
+            document.body.scrollWidth || 0, 
+            document.documentElement.scrollWidth || 0,
+            document.body.offsetHeightWidth || 0, 
+            document.documentElement.offsetWidth || 0,
+            document.body.clientWidth || 0, 
+            document.documentElement.clientWidth || 0
+        );
+    }
+
     getScrollPercentage() {
-        return (
-            100 - (this.getWindowYScroll()  / (this.getDocHeight() - this.getWindowHeight())
-        ) * 100);
+        var doc_height = this.getDocHeight()
+        var scroll_pos = this.getWindowYScroll(); 
+        var window_height = this.getWindowHeight()
+        return  (scroll_pos  / (doc_height - window_height));
+    }
+
+    setMousePosition(event){
+        this.mouseX = event.clientX
+        this.mouseY = event.clientY;
+        //console.log ("X: " + this.mouseX + "Y: " + this.mouseY);
     }
 
     scrollToBottom(){

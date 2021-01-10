@@ -5,8 +5,9 @@ const DATEI_ENDUNG_REGEXP = /\.[a-zA-Z]*/;
 const WAV_REGEXP = /.*.wav/;
 const MP3_REGEXP = /.*.mp3/;
 
+const PHP_DIR_PREDECESSOR = "/var/www/heptagon/public_html/Graph/Content/"
 
-const VERZEICHNIS = "https://www.hepta.ga/Graph/Content/"
+const DIRECTORY = "https://www.hepta.ga/Graph/Content/"
 
 class FileSystem {
     constructor () {
@@ -22,17 +23,15 @@ class FileSystem {
         return VERBINDUNG_REGEXP;
     }
 
-    lese_verzeichnis_aus () {
+    read_directory () {
         this.urls = [];
         var array = [];
         array = this.request_php_verzeichnis (array);
-        console.log ("VERZEICHNIS");
-        console.log (array);
         array.forEach(element => {
             if (element != false) { //JSON gibt manchmal ein false mit
-                var dateiname = new String (element);
-                if (dateiname != "." && dateiname != null && dateiname != "..") {
-                    this.fuge_datei_hinzu(dateiname);
+                var php_string = new String (element);
+                if (php_string != "." && php_string != null && php_string != "..") {
+                    this.fuge_datei_hinzu(php_string);
                 }
             }
         });
@@ -51,26 +50,42 @@ class FileSystem {
         return array;
     }
 
-    fuge_datei_hinzu (dateiname) {
-        var id = this.erstelle_id_aus_dateiname(dateiname);
-        this.node_ids.push(id);
-        this.urls.push(VERZEICHNIS + dateiname);
+    fuge_datei_hinzu (php_string) {
+        var relative_file_path = this.create_relative_file_path (php_string);
+        var node_id = this.create_node_id_from_rel_file_path (relative_file_path);
+        if (node_id) {
+            this.node_ids.push(node_id);
+            this.urls.push(DIRECTORY + relative_file_path);
+        }
     }
 
-    erstelle_id_aus_dateiname (dateinameString) {
-        var stringOhneDateityp = dateinameString.substr (0, dateinameString.lastIndexOf (".")) || null;
-        return stringOhneDateityp;
+    create_node_id_from_rel_file_path (file_path) {
+        var string_without_fileextension = file_path.substr (0, file_path.lastIndexOf (".")) || null;
+        if (string_without_fileextension) {
+            var string_without_slash = string_without_fileextension.replaceAll ("/", ".");
+            var string_without_dash = string_without_slash.replaceAll ("-", "");
+            return string_without_dash;
+        }
+        return null;
     }
 
-    erstelle_dateiname_aus_url (urlString) {
-        var stringOhneVerzeichnis = urlString.substr (VERZEICHNIS.length, urlString.length);
+    create_relative_file_path (php_string) {
+        var stringOhneVerzeichnis = php_string.substr (PHP_DIR_PREDECESSOR.length);
         return stringOhneVerzeichnis;
     }
 
     erstelle_knoten_id_aus_url (urlString) {
-        var dateinameString = this.erstelle_dateiname_aus_url (urlString);
+        var dateinameString = this.create_relative_file_path (urlString);
         var id = this.erstelle_id_aus_dateiname (dateinameString);
         return id;
+    }
+
+    get_all_ids_entry_text () {
+        var text = "";
+        this.node_ids.forEach (id => {
+            text = text + id +"\n"
+        })
+        return text;
     }
 
     finde_url (knoten_id) {

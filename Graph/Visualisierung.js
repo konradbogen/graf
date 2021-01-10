@@ -6,7 +6,7 @@ const OPACITY = 1;
 const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
-var FONT_SIZE_ZOOM_FACTOR = 1.1;
+var FONT_SIZE_ZOOM_FACTOR = 1.1; //depends on UI Max Zoom (*1 equals)
 var FONT_SIZE_LEVEL_FACTOR = 1;
 var FONT_SIZE_LEVEL_EXP_FACTOR = 2.2;
 var RADIUS_LEVEL_FACTOR = 3.5;
@@ -52,10 +52,6 @@ class Line {
         this.html.style.strokeOpacity = OPACITY;
         this.html.style.strokeWidth = this.strength*2;
         this.svg.appendChild(this.html);
-    }
-
-    zoom_has_changed () {
-        
     }
 
     update_html () {
@@ -185,10 +181,13 @@ class Point {
     };
 
     set_html_style () {
-        var size = 100 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, this.node.level)*FONT_SIZE_LEVEL_FACTOR);
-        var border_width = size/20;
+        var relative_level = this.node.level - this.visual.start_level;
+        var size = 200 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, relative_level)*FONT_SIZE_LEVEL_FACTOR);
+        //var border_width = size/20;
+        var border_width = 2;
         var margin = 0;
-        var padding = size*1.2;
+        var padding = 0;
+        //var padding = size*1.2;
 
         this.html.style.color = "white";
         this.html.style.border = "solid " + border_width + "%";
@@ -317,11 +316,20 @@ class Visual {
         
         this.default_font_size = 20;
         this._depth = 10;
+        this.start_node;
 
         this.x_center = 50; 
         this.y_center = 50; 
         this.radius = RADIUS_VALUE;
         this.create_html ();
+    }
+
+    get start_level () {
+        if (this.start_node) {
+            return this.start_node.level
+        }else {
+            return 0;
+        }
     }
 
     get font_size () {
@@ -355,7 +363,7 @@ class Visual {
 
     on_zoom_change (zoom) {
         console.log ("On Zoom Change");
-        this.font_size = this.default_font_size + zoom*FONT_SIZE_ZOOM_FACTOR;
+        this.font_size = this.default_font_size + zoom*FONT_SIZE_ZOOM_FACTOR*100;
     };
 
     create_from_graph (g, start_node) {
@@ -389,6 +397,7 @@ class Visual {
     }
 
     create_points_from_start_node (graph, start_node, depth) {
+        this.start_node = start_node;
         this.create_point (this.x_center, this.y_center, start_node);
         this.create_children_points_from_graph_node (graph,start_node, this.x_center, this.y_center, this.radius, depth-1);
     }
@@ -459,7 +468,7 @@ class Visual {
 
     find_point (id) {
             var level = Graph.get_node_level_from_id (id);
-            if (level < this.points.length) {
+            if (this.points[level]) {
                 for (var i = 0; i<this.points[level].length; i++) {
                     if (this.points[level][i].node.id == id) {
                         return this.points[level][i];
