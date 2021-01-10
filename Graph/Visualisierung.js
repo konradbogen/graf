@@ -79,13 +79,14 @@ class Line {
 }
 
 class Point {
-    constructor (x, y, node, visual) {
+    constructor (x, y, node, visual, color) {
         this._x = x;
         this._y = y;
         this.node = node;
         this.visual = visual;
         this.container=visual.container;
         this.html;
+        this.color = color ? color : "white";
         this.is_playing = false;
         this.mouse_over_aktiv = true;
         this.audio;
@@ -182,14 +183,14 @@ class Point {
 
     set_html_style () {
         var relative_level = this.node.level - this.visual.start_level;
-        var size = 200 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, relative_level)*FONT_SIZE_LEVEL_FACTOR);
+        var size = 150 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, relative_level)*FONT_SIZE_LEVEL_FACTOR);
         //var border_width = size/20;
         var border_width = 2;
         var margin = 0;
         var padding = 0;
         //var padding = size*1.2;
 
-        this.html.style.color = "white";
+        this.html.style.color = this.color;
         this.html.style.border = "solid " + border_width + "%";
         this.html.style.background = "transparent";
         this.html.style.padding = padding + "%";
@@ -341,7 +342,7 @@ class Visual {
     }
 
     get max_level () {
-        return this.points.count ();
+        return this.points.length;
     }
 
     get depth () {
@@ -363,6 +364,10 @@ class Visual {
 
     on_zoom_change (zoom) {
         console.log ("On Zoom Change");
+        /* var new_depth = 2+Math.round (zoom*this.max_level);
+        if (new_depth != this.depth) {
+            this.depth = new_depth;
+        } */
         this.font_size = this.default_font_size + zoom*FONT_SIZE_ZOOM_FACTOR*100;
     };
 
@@ -415,15 +420,16 @@ class Visual {
             var node = children [i];
             var winkel = i * (2*Math.PI / children.length) + Math.random () * 0.3;
             var { x, y } = this.convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel);
-            this.create_point (x,y, node)
+            var color = parentnode ? parentnode.color : this.get_random_color ();
+            this.create_point (x,y, node, "white")
             if (remaining_depth > 0) {
                 this.create_children_points_from_graph_node(graph, node, x, y, radius/RADIUS_LEVEL_FACTOR, remaining_depth-1);
             }
         }
     }
 
-    create_point (x,y, node) {
-        var p = new Point (x,y, node, this);
+    create_point (x,y, node, color) {
+        var p = new Point (x,y, node, this, color);
         var level = node.level;
         if (!this.points[level]) {
             this.points[level] = [];
@@ -484,6 +490,11 @@ class Visual {
                 return this.lines[i];
             }
         }
+    }
+
+    get_random_color () {
+        var i = Math.round (Math.random () * FARBEN.length);
+        return FARBEN [i];
     }
 
     add_urls_to_points (urls, ids) {
