@@ -47,6 +47,10 @@ function create_ui() {
     zoom = new Zoom();
 }
 
+window.onpopstate = function (e) {
+    var stored_entry = sessionStorage.getItem('graph_entry');
+    update_entry (stored_entry); 
+}
 
 function update_graph_visual () {
     graph = new Graph ();
@@ -60,7 +64,7 @@ function update_graph_visual () {
     pacs.show_all_sequences ();
 }
 
-var get_url_parameter = function(name, w){
+ function get_url_parameter (name, w){
     w = w || window;
     var rx = new RegExp('[\&|\?]'+name+'=([^\&\#]+)'),
         val = w.location.search.match(rx);

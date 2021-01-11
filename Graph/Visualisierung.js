@@ -226,7 +226,7 @@ class Point {
             this.mouse_over_aktiv = false;
         }else {
             this.visual.create_from_graph (this.visual.graph, this.node);
-            window.history.replaceState(null, null, "?sub=" + this.id);
+            window.history.pushState(null, null, "?sub=" + this.id);
         }
         
 
