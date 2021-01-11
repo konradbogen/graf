@@ -8,7 +8,7 @@ const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
 var FONT_SIZE_ZOOM_FACTOR = 1.1; //depends on UI Max Zoom (*1 equals)
 var FONT_SIZE_LEVEL_FACTOR = 1;
-var FONT_SIZE_LEVEL_EXP_FACTOR = 2.2;
+var FONT_SIZE_LEVEL_EXP_FACTOR = 2.2 - 0.4;
 var RADIUS_LEVEL_FACTOR = 3.5;
 var RADIUS_VALUE = 35;
 
@@ -183,7 +183,7 @@ class Point {
 
     set_html_style () {
         var relative_level = this.node.level - this.visual.start_level;
-        var size = 150 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, relative_level)*FONT_SIZE_LEVEL_FACTOR);
+        var size = 111 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, relative_level)*FONT_SIZE_LEVEL_FACTOR);
         //var border_width = size/20;
         var border_width = 2;
         var margin = 0;
@@ -328,6 +328,7 @@ class Visual {
         this.x_center = 50; 
         this.y_center = 50; 
         this.radius = RADIUS_VALUE;
+
         this.create_html ();
     }
 
@@ -377,6 +378,8 @@ class Visual {
         this.font_size = this.default_font_size + zoom*FONT_SIZE_ZOOM_FACTOR*100;
     };
 
+    callback_create_from_graph = function () {};
+
     create_from_graph (g, start_node) {
         this.reset ();
         this.graph = g;
@@ -386,6 +389,7 @@ class Visual {
             this.create_points_from_start_node (g, start_node, this.depth);
         }
         this.create_lines_from_graph (g);
+        this.callback_create_from_graph ();
     }
 
     create_html () {

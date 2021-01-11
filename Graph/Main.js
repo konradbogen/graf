@@ -1,6 +1,7 @@
 const TEST_MODE = true;
 const RUNNING_IN_LOCAL = false;
-var default_entry = "Shop\nKonstellation\nProjekte\nInfrastruktur\n\nShop.Software.Graph\nShop.Software.BAB_SE\nShop.Alben\nShop.Merch.Brille\nShop.Merch.Visitenoffner\nShop.Hardware.WeihnachtZauber\n\nProjekte.BeyHdl\nProjekte.WellTechnic\nProjekte.BAB\n\nKonstellation.Nadege\nKonstellation.Ella\nKonstellation.Laurenz\nKonstellation.Felix\nKonstellation.Tim\nKonstellation.Nadja\nKonstellation.Jannis\nKonstellation.Lukas\nKonstellation.Konrad\nKonstellation.Tobija\n\nInfrastruktur.Events.Festival\nInfrastruktur.Orte.Konstanz\nInfrastruktur.Orte.Leipzig\nInfrastruktur.Orte.Stuttgart\nInfrastruktur.Orte.Berlin\nInfrastruktur.Orte.Mainz\nInfrastruktur.Orte.Cotignac\nInfrastruktur.Orte.Belley\nInfrastruktur.Orte.Grendach\n\nKonstellation.Tobija-Projekte.SoundCode\nKonstellation.Konrad-Projekte.SoundCode\nKonstellation.Felix-Projekte.SoundCode\n\nKonstellation.Laurenz-Projekte.BeyHdl\nKonstellation.Felix-Projekte.BeyHdl\nKonstellation.Tim-Projekte.BeyHdl\nKonstellation.Nadja-Projekte.BeyHdl\nKonstellation.Jannis-Projekte.BeyHdl\nKonstellation.Lukas-Projekte.BeyHdl\nKonstellation.Konrad-Projekte.BeyHdl\n\n\nKonstellation.Laurenz-Projekte.BAB\nKonstellation.Felix-Projekte.BAB\nKonstellation.Konrad-Projekte.BAB\n\nKonstellation.Konrad-Projekte.TheAndAnd\n\nKonstellation.Nadege.1\nKonstellation.Nadege.2\nKonstellation.Ella.1\nKonstellation.Ella.2\nKonstellation.Laurenz.1\nKonstellation.Laurenz.2\nKonstellation.Felix.1\nKonstellation.Felix.2\nKonstellation.Tim.1\nKonstellation.Tim.2\nKonstellation.Nadja.1\nKonstellation.Nadja.2\nKonstellation.Jannis.1\nKonstellation.Jannis.2\nKonstellation.Lukas.1\nKonstellation.Lukas.2\nKonstellation.Konrad.1\nKonstellation.Konrad.2\nKonstellation.Tobija.1\nKonstellation.Tobija.2\n\nProjekte.SoundCode.Vol1\nProjekte.SoundCode.Vol2\nProjekte.BAB.Playlists.Vol1\nProjekte.BAB.Playlists.Vol2\nProjekte.BAB.Playlists.Vol3\nProjekte.BAB.Playlists.Vol4\nProjekte.BAB.Playlists.Vol5\nProjekte.BAB.Playlists.Vol6\nProjekte.BAB.Playlists.Vol7\n\nProjekte.BeyHdl.Alben\nProjekte.BeyHdl.Fotos\nProjekte.BeyHdl.Alben.1\nProjekte.BeyHdl.Alben.2\nProjekte.BeyHdl.SOW\nProjekte.BeyHdl.SOW-Konstellation.Nadege\n\nProjekte.TheAndAnd.WeissRegen\nProjekte.TheAndAnd.48\nShop.Alben.48\nProjekte.TheAndAnd.48-Shop.Alben.48\n"
+var default_entry_url = "https://www.heptagon.network/Graph/Default.txt";
+var default_entry = ""
 //var default_entry = "A\nA.L\nB\nC\nD\nE\nA-B\nB-D\nA-E\nE-C\nC-B\nE-B\nE-D\nD-A\n>seq lukas A-B 2 B-D 3\n>pac lukas";
 //var default_entry = "schnipsel3-schnipsel4\nschnipsel4-schnipsel1\n>seq hallo schnipsel2-schnipsel3 50 schnipsel3-schnipsel4 80 schnipsel4-schnipsel1 110 schnipsel2-schnipsel3 130\n";
 //var default_entry = "agent.konradbogen\nagent.you\nagent.we\nverb.is\nverb.are\nquantity.a\nquantity.multiple\nquantity.the1221\nquantity.thefirst\nquantity.thelast\nnoun.visitor\nnoun.composer\nnoun.pirate\nnoun.cook\nnoun.observer\nnoun.speaker\nnoun.agent\nnoun.writer\nnoun.coder\nnoun.experientalist\nagent-verb\nverb-quantity\nquantity-noun\nagent-quantity\nnoun-agent\n>seq yellow agent-agent.konradbogen 12 agent.konrad-agent 12 agent-verb 12 verb-verb.is 12 verb.is-verb 12 verb-quantity 12 quantity-quantity.a 12 quantity.a-quantity 12 quantity-noun 12 noun-noun.composer 12\n>pac yellow\n>seq brown agent-agent.you 13 agent.you-agent 13 agent-verb 13 verb-verb.are 13 verb.are-verb 13 verb-quantity 13 quantity-quantity.the1221 13 quantity.the1221-quantity 13 quantity-noun 13\n>pac brown\n";
@@ -17,22 +18,34 @@ $(document).ready(function (){
     init ();
 });
 
+
+
+
 function init () {
     create_ui();
     files = new FileSystem ();
     visual = new Visual (document.getElementById('graphContainer'));
+    visual.callback_create_from_graph = function () {
+        zoom.reset_zoom ();
+    }
     zoom.callbacks.push (visual.on_zoom_change.bind (visual));
     if (RUNNING_IN_LOCAL == false) {
         files.read_directory (); 
-        files.node_ids.forEach (id => {
-            console.log (id);
-        })
     }
     var stored_entry = sessionStorage.getItem('graph_entry');
     if (stored_entry) {
         update_entry (stored_entry);   
     }else {
-        update_entry (files.get_all_ids_entry_text()+"\n"+default_entry);   
+        var jsonFile = new XMLHttpRequest();
+        jsonFile.open("GET",default_entry_url,true);
+        jsonFile.onreadystatechange = function() {
+            if (jsonFile.readyState== 4 && jsonFile.status == 200) {
+                this.default_entry = jsonFile.responseText;
+                console.log ("Default Entry From File: " + this.default_entry)
+                update_entry (files.get_all_ids_entry_text()+"\n"+this.default_entry);   
+            }
+        }
+        jsonFile.send();
     }
 }
 
@@ -55,14 +68,17 @@ window.onpopstate = function (e) {
 function update_graph_visual () {
     graph = new Graph ();
     parser.create_graph (graph);
-    var start_node = graph.find_node (parser.start_node_id);
-    visual.create_from_graph (graph, start_node);
+    var url_passed_start_node = get_url_parameter ("sub");
+    visual.start_node =  graph.find_node (url_passed_start_node);
+    visual.create_from_graph (graph, visual.start_node);
     visual.connect_with_file_system (files);
     pacs = new PACSystem (visual);
     parser.create_all_sequences (pacs);
     parser.create_all_pacs (pacs);
     pacs.show_all_sequences ();
 }
+
+
 
  function get_url_parameter (name, w){
     w = w || window;
@@ -75,8 +91,6 @@ function update_entry (eingabe) {
     ui_input_container.textarea.value = eingabe;
     sessionStorage.setItem('graph_entry', eingabe);
     parser = new Parser ();
-    var url_passed_sub = get_url_parameter ("sub");
-    parser.start_node_id = url_passed_sub;
     parser.read_text (eingabe);
     update_graph_visual ();
 }

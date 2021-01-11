@@ -73,13 +73,13 @@ class Zoom{
         
         this.html_element = document.getElementById('graphContainer');
         
-        this.drag_offset_x = 0;
-        this.drag_offset_y = 0;
+        this._drag_offset_x = 0;
+        this._drag_offset_y = 0;
         this.last_drag_offset_x;
         this.last_drag_offset_y;
 
         this.animation;
-        this.zoom_percentage = 0;
+        this._zoom_percentage = 0;
         this.max_zoom_factor = 30;
 
         this.callbacks = [];
@@ -95,6 +95,44 @@ class Zoom{
         this.html_element.onmousedown = this.dragMouseDown.bind(this);
 
         this.init_animation();
+    }
+
+    set drag_offset_x (val) {
+        this._drag_offset_x = val;
+        this.html_element.style.left = (this.html_element.offsetLeft - this._drag_offset_x) + "px";
+    }
+
+    set drag_offset_y (val) {
+        this._drag_offset_y = val;
+        this.html_element.style.top = (this.html_element.offsetTop - this._drag_offset_y) + "px";
+
+    }
+
+    get drag_offset_x () {
+        return this._drag_offset_x;
+    }
+
+    get drag_offset_y () {
+        return this._drag_offset_y;
+    }
+
+    set zoomPercentage (val) {
+            var delta_percentage = val - this._zoom_percentage;
+            this._zoom_percentage = val;
+            this.animation.seek(this._zoom_percentage*this.animation.duration);
+
+            var factor = delta_percentage * (this.max_zoom_factor-1);
+            var dx = (this.mouseX)  * factor;
+            var dy = (this.mouseY) * factor;
+            this.left = this.left - dx;
+            this.top = this.top - dy;
+            this.callbacks.forEach(c => {
+                c(this._zoom_percentage);
+            })
+    }
+
+    get zoomPercentage () {
+        return this._zoom_percentage;
     }
 
     get left () {
@@ -113,6 +151,17 @@ class Zoom{
         this.html_element.style.top = val + "px";
     }
 
+    reset_zoom () {
+        window.scrollTo(0,0); 
+        this.zoomPercentage = 0;
+        this.drag_offset_x = 0;
+        this.drag_offset_y = 0;
+        this.last_drag_offset_x = 0;
+        this.last_drag_offset_y = 0;
+        this.left = 0;
+        this.top = 0;
+    }
+
     dragMouseDown(e){
         e = e ||  window.event;
         e.preventDefault();
@@ -129,8 +178,6 @@ class Zoom{
         this.drag_offset_y = this.last_drag_offset_y - e.clientY;
         this.last_drag_offset_x = e.clientX;
         this.last_drag_offset_y = e.clientY;
-        this.html_element.style.left = (this.html_element.offsetLeft - this.drag_offset_x) + "px";
-        this.html_element.style.top = (this.html_element.offsetTop - this.drag_offset_y) + "px";
     }
 
     closeDragElement(){
@@ -157,20 +204,7 @@ class Zoom{
 
     zoom(){
         if (this.mobile == false) {
-            var old_percentage = this.zoom_percentage;
-            this.zoom_percentage= this.getScrollPercentage ();
-            var delta_percentage = this.zoom_percentage - old_percentage;
-
-            this.animation.seek(this.zoom_percentage*this.animation.duration);
-
-            var factor = delta_percentage * (this.max_zoom_factor-1);
-            var dx = (this.mouseX)  * factor;
-            var dy = (this.mouseY) * factor;
-            this.left = this.left - dx;
-            this.top = this.top - dy;
-            this.callbacks.forEach(c => {
-                c(this.zoom_percentage);
-            })
+            this.zoomPercentage= this.getScrollPercentage ();
         }
     }
 
