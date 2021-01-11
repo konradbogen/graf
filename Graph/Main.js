@@ -28,18 +28,25 @@ function init () {
             console.log (id);
         })
     }
-    update_entry (files.get_all_ids_entry_text()+"\n"+default_entry);   
+    var stored_entry = sessionStorage.getItem('graph_entry');
+    if (stored_entry) {
+        update_entry (stored_entry);   
+    }else {
+        update_entry (files.get_all_ids_entry_text()+"\n"+default_entry);   
+    }
 }
 
 function create_ui() {
     ui_input_container = new UiInputContainer();
     ui_input_container.onSubmitClick = function (val) {
         parser.read_text(val);
+        sessionStorage.setItem('graph_entry', val);
         update_graph_visual();
     };
     ui_graph_container = new DragAndDrop('graphContainer');
     zoom = new Zoom();
 }
+
 
 function update_graph_visual () {
     graph = new Graph ();
@@ -62,6 +69,7 @@ var get_url_parameter = function(name, w){
 
 function update_entry (eingabe) {
     ui_input_container.textarea.value = eingabe;
+    sessionStorage.setItem('graph_entry', eingabe);
     parser = new Parser ();
     var url_passed_sub = get_url_parameter ("sub");
     parser.start_node_id = url_passed_sub;

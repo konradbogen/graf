@@ -225,7 +225,8 @@ class Point {
             }
             this.mouse_over_aktiv = false;
         }else {
-            window.open ("?sub=" + this.id, "_self");
+            this.visual.create_from_graph (this.visual.graph, this.node);
+            window.history.replaceState(null, null, "?sub=" + this.id);
         }
         
 
