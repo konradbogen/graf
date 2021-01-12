@@ -1,6 +1,6 @@
 const TEST_MODE = true;
 const RUNNING_IN_LOCAL = false;
-var default_entry_url = "https://www.heptagon.network/Graph/Default.txt";
+var default_entry_url = "Default.txt";
 var default_entry = ""
 //var default_entry = "A\nA.L\nB\nC\nD\nE\nA-B\nB-D\nA-E\nE-C\nC-B\nE-B\nE-D\nD-A\n>seq lukas A-B 2 B-D 3\n>pac lukas";
 //var default_entry = "schnipsel3-schnipsel4\nschnipsel4-schnipsel1\n>seq hallo schnipsel2-schnipsel3 50 schnipsel3-schnipsel4 80 schnipsel4-schnipsel1 110 schnipsel2-schnipsel3 130\n";
@@ -27,6 +27,7 @@ function init () {
     visual = new Visual (document.getElementById('graphContainer'));
     visual.callback_create_from_graph = function () {
         zoom.reset_zoom ();
+        visual.connect_with_file_system (files);
     }
     zoom.callbacks.push (visual.on_zoom_change.bind (visual));
     if (RUNNING_IN_LOCAL == false) {
@@ -71,7 +72,6 @@ function update_graph_visual () {
     var url_passed_start_node = get_url_parameter ("sub");
     visual.start_node =  graph.find_node (url_passed_start_node);
     visual.create_from_graph (graph, visual.start_node);
-    visual.connect_with_file_system (files);
     pacs = new PACSystem (visual);
     parser.create_all_sequences (pacs);
     parser.create_all_pacs (pacs);

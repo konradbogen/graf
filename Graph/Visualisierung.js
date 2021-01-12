@@ -1,16 +1,14 @@
 //PLUGIN FuR GRAPH
-const DEFAULT_LINE_COLOUR = "grey";
-const UPDATE_RATE = 1000/120;
-const FARBEN = ["blue", "red", "yellow", "puple", "green", "orange", "pink", "brown", "white"]
-const OPACITY = 1;
+const FARBEN = ["blue", "red", "yellow", "purple", "green", "orange", "pink", "brown", "white"]
 const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+const UPDATE_RATE = 1000/120;
 
 var FONT_SIZE_ZOOM_FACTOR = 1.1; //depends on UI Max Zoom (*1 equals)
 var FONT_SIZE_LEVEL_FACTOR = 1;
 var FONT_SIZE_LEVEL_EXP_FACTOR = 2.2 - 0.4;
-var RADIUS_LEVEL_FACTOR = 3.5;
-var RADIUS_VALUE = 35;
+var RADIUS_LEVEL_FACTOR = 2.6;
+var RADIUS_VALUE = 30;
 
 class Line {
     constructor (point_a, point_b, strength, visual) {
@@ -19,6 +17,7 @@ class Line {
         this.point_a.callbacks.push (this.callback.bind(this));
         this.point_b.callbacks.push (this.callback.bind(this));
         this.strength = strength;
+        this.color = "white";
         this.visual = visual;
         this.svg = visual.svg;
         this.create_html ();
@@ -48,8 +47,8 @@ class Line {
         this.html.setAttribute("y1",this.y1+"%");
         this.html.setAttribute("x2",this.x2+"%");
         this.html.setAttribute("y2",this.y2+"%");
-        this.html.style.stroke = DEFAULT_LINE_COLOUR;
-        this.html.style.strokeOpacity = OPACITY;
+        this.html.style.stroke = this.color;
+        this.html.style.strokeOpacity = 0.1 + Math.random ()*0.4;
         this.html.style.strokeWidth = this.strength*2;
         this.svg.appendChild(this.html);
     }
@@ -87,6 +86,8 @@ class Point {
         this.container=visual.container;
         this.html;
         this.color = color ? color : "white";
+        this.opacity = 1;
+        this.background_color = "black";
         this.is_playing = false;
         this.mouse_over_aktiv = true;
         this.audio;
@@ -184,15 +185,19 @@ class Point {
     set_html_style () {
         var relative_level = this.node.level - this.visual.start_level;
         var size = 111 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, relative_level)*FONT_SIZE_LEVEL_FACTOR);
+        this.opacity = 1 - (relative_level-1) * 0.4 + Math.random () * 0.3;
         //var border_width = size/20;
-        var border_width = 2;
         var margin = 0;
-        var padding = 0;
+        var padding = size/900;
         //var padding = size*1.2;
         this.html.style.cursor = "pointer";
         this.html.style.color = this.color;
-        this.html.style.border = "solid " + border_width + "%";
-        this.html.style.background = "transparent";
+        this.html.style.border = "solid 1px";
+        this.html.style.zIndex = -this.node.level;
+        this.html.style.opacity = this.opacity;
+        this.html.style.borderColor = this.color;
+        this.html.style.background = this.background_color;
+        this.html.style.fontWeight = "normal";
         this.html.style.padding = padding + "%";
         this.html.style.margin = margin + "%";
         this.html.style.position = "absolute";
@@ -285,7 +290,9 @@ class Point {
             console.log (this.name + " is playing");
             this.is_playing = true;
             this.audio.play ();
-            this.html.style.color="red";
+            this.html.style.backgroundColor = "white";
+            this.html.style.color = "black";
+            this.html.style.opacity = 1;
         }
     }
 
@@ -294,7 +301,9 @@ class Point {
             this.is_playing = false;
             this.audio.pause ();
             this.audio.currentTime = 0;
+            this.html.style.backgroundColor = this.background_color;
             this.html.style.color = this.color;
+            this.html.style.opacity = this.opacity;
         }
     }
 
@@ -322,7 +331,7 @@ class Visual {
         this.svg;
         
         this.default_font_size = 20;
-        this._depth = 10;
+        this._depth = 4;
         this.start_node;
 
         this.x_center = 50; 
