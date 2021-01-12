@@ -81,10 +81,13 @@ class Zoom{
         this.animation;
         this._zoom_percentage = 0;
         this.max_zoom_factor = 30;
-
+        this.initialWidth = this.html_element.offsetWidth;
+        this.initialHeight = this.html_element.offsetHeight;
         this.callbacks = [];
+
         this.mouseX = 0;
         this.mouseY = 0;
+
 
         $(document).ready = function (){
             //this.scrollToBottom();
@@ -116,12 +119,12 @@ class Zoom{
         return this._drag_offset_y;
     }
 
-    set zoomPercentage (val) {
+    /* set zoomPercentage (val) {
             var delta_percentage = val - this._zoom_percentage;
             this._zoom_percentage = val;
             this.animation.seek(this._zoom_percentage*this.animation.duration);
 
-            var factor = delta_percentage * (this.max_zoom_factor-1);
+            var factor = delta_percentage * (this.max_zoom_factor-1*this.zoomPercentage);
             var dx = (this.mouseX)  * factor;
             var dy = (this.mouseY) * factor;
             this.left = this.left - dx;
@@ -129,6 +132,22 @@ class Zoom{
             this.callbacks.forEach(c => {
                 c(this._zoom_percentage);
             })
+    } */
+
+    set zoomPercentage (val) {
+        this.delta_zoom_percentage = val - this._zoom_percentage;
+        this._zoom_percentage = val;
+        this.animation.seek(this._zoom_percentage*this.animation.duration);
+
+        var factor = this.delta_zoom_percentage * (this.max_zoom_factor - 1);
+
+        var dx = (this.mouseX) * factor;
+        var dy = (this.mouseY) * factor;
+        this.left = this.left - dx;
+        this.top = this.top - dy;
+        this.callbacks.forEach(c => {
+            c(this._zoom_percentage);
+        })
     }
 
     get zoomPercentage () {
@@ -194,8 +213,6 @@ class Zoom{
             height: {
                 value: '*=' + this.max_zoom_factor,
             },
-            //translateX: '-1000vw',
-            //translateY: '-1000vh',
 
             easing: 'linear',
             autoplay: false,
@@ -257,9 +274,9 @@ class Zoom{
     }
 
     setMousePosition(event){
-        this.mouseX = event.clientX
-        this.mouseY = event.clientY;
-        //console.log ("X: " + this.mouseX + "Y: " + this.mouseY);
+        this.mouseX = (event.clientX - this.left) / (1 + this._zoom_percentage * (this.max_zoom_factor-1)); 
+        this.mouseY = (event.clientY - this.top) / (1 + this._zoom_percentage * (this.max_zoom_factor-1));
+        console.log ("mouseX: " + this.mouseX + "Y: " + this.mouseY);
     }
 
     scrollToBottom(){
