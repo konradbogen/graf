@@ -149,9 +149,17 @@ class Point {
     }
 
     get typ () {
-        if (this.url.match (WAV_REGEXP) || this.url.match (MP3_REGEXP)) {
-            return "audio"
-        }else {
+        var file_type = this.url.substr (this.url.lastIndexOf ("."));
+        if (file_type == ".mp3" || file_type == ".wav") {
+            return "audio";
+        }else if (file_type == ".jpg" || file_type == ".gif" || file_type==".png" || file_type==".jpeg") {
+            return "image";
+        }else if (file_type == ".mp4") {
+            return "video";
+        }else if (file_type == ".txt") {
+            return "text";
+        }
+        else {
             return "node"
         }
     }
@@ -229,13 +237,14 @@ class Point {
                 this.play ();
             }
             this.mouse_over_aktiv = false;
+        }else if (this.typ == "video" || this.typ == "image" || this.typ == "text") {
+            var file_type = this.url.substr (this.url.lastIndexOf ("."));
+            var frame_parameter = this.id + file_type;
+            window.open ("https://www.heptagon.network/Graph/c?=" + frame_parameter, "_self");
         }else {
             this.visual.create_from_graph (this.visual.graph, this.node);
             window.history.pushState(null, null, "?sub=" + this.id);
         }
-        
-
-        //this.visual.create_from_graph (this.visual.graph, this.node);
     }
 
     mouse_leave () {
@@ -376,6 +385,9 @@ class Visual {
         this.lines = [];
         this.svg.innerHTML = "";
         this.container.innerHTML = "";
+
+        var sounds = document.getElementsByTagName('audio');
+        for(var i=0; i<sounds.length; i++) {sounds[i].pause();};
     }
 
     on_zoom_change (zoom) {

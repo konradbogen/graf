@@ -19,14 +19,13 @@ $(document).ready(function (){
 });
 
 
-
-
 function init () {
     create_ui();
     files = new FileSystem ();
     visual = new Visual (document.getElementById('graphContainer'));
     visual.callback_create_from_graph = function () {
         zoom.reset_zoom ();
+        document.title = "heptagon." + visual.start_node.id;
         visual.connect_with_file_system (files);
     }
     zoom.callbacks.push (visual.on_zoom_change.bind (visual));
@@ -69,7 +68,10 @@ window.onpopstate = function (e) {
 function update_graph_visual () {
     graph = new Graph ();
     parser.create_graph (graph);
-    var url_passed_start_node = get_url_parameter ("sub");
+    var url_passed_start_node = get_url_parameter ("sub"); 
+    if (!url_passed_start_node) {
+        url_passed_start_node = get_url_parameter ("s"); 
+    }
     visual.start_node =  graph.find_node (url_passed_start_node);
     visual.create_from_graph (graph, visual.start_node);
     pacs = new PACSystem (visual);
