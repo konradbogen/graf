@@ -90,7 +90,7 @@ class Parser {
         var name = id.substring (5);
         pac_system.sequences.forEach(seq => {
             if (seq.name == name) {
-                var pac = new Pac (seq, seq.color);
+                var pac = new PAC (seq, seq.color);
                 pac_system.pacs.push (pac);
             }
         });

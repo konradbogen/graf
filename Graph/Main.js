@@ -1,6 +1,12 @@
 const TEST_MODE = true;
-const RUNNING_IN_LOCAL = false;
+const RUNNING_IN_LOCAL = true;
 var default_entry_url = "Default.txt";
+const RECORD_COMMAND = "_record";
+const PLAY_COMMAND = "_play";
+const PAUSE_COMMAND = "_pause";
+const RESET_COMMAND = "_reset";
+
+
 var graph;
 var parser;
 var visual;
@@ -8,7 +14,7 @@ var daten;
 var test;
 var ui_input_container;
 var ui_graph_container;
-var zoom;
+var zoom_container;
 
 $(document).ready(function (){
     init ();
@@ -46,7 +52,11 @@ function load_default_entry () {
     if (stored_entry) {
         set_entry (stored_entry);   
     }else {
-        set_entry_from_default_txt();
+        if (!RUNNING_IN_LOCAL) {
+            set_entry_from_default_txt();
+        }else {
+            set_entry ("running\nin\nlocal")
+        }
     }
 }
 
@@ -66,22 +76,52 @@ function set_entry_from_default_txt () {
 
 function set_visual_callbacks () {
     visual.callback_create_from_graph = function () {
-        zoom.reset_zoom();
-        document.title = "heptagon." + visual.start_node.id;
+        zoom_container.reset_zoom();
+        update_document_title ();
         visual.connect_with_file_system(files);
     };
-    zoom.callbacks.push (visual.on_zoom_change.bind (visual));
+    set_command_node_callbacks();
+    zoom_container.callbacks.push (visual.on_zoom_change.bind (visual));
+}
+
+function set_command_node_callbacks() {
+    visual.callbacks_point_play.push(function (point) {
+        if (point.node.name == RECORD_COMMAND) {
+            pacs.start_recording ();
+        }else if (point.node.name == PLAY_COMMAND) {
+            pacs.play_recorded ();
+        }else if (point.node.name == PAUSE_COMMAND) {
+            pacs.stop_all_pacs ();
+        }else if (point.node.name == RESET_COMMAND) {
+            pacs.delete_all_pacs ();
+            pacs.init_recorded_sequence ();
+        }
+    });
+    visual.callbacks_point_stop.push(function (point, duration) {
+        if (point.node.name == RECORD_COMMAND) {
+            pacs.stop_recording ();
+        }else if (point.node.name == PAUSE_COMMAND) {
+            pacs.start_all_pacs ();
+        }
+    });
+}
+
+function update_document_title () {
+    if (visual.start_node) {
+        document.title = "heptagon." + visual.start_node.id;
+    }else {
+        document.title = "heptagon";
+    }
 }
 
 function create_ui() {
-    ui_input_container = new UiInputContainer();
+    ui_input_container = new InputContainer();
     ui_input_container.onSubmitClick = function (val) {
         parser.read_text(val);
         sessionStorage.setItem('graph_entry', val);
         update();
     };
-    ui_graph_container = new DragAndDrop('graphContainer');
-    zoom = new Zoom();
+    zoom_container = new ZoomContainer();
 }
 
 window.onpopstate = function (e) {

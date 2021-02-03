@@ -2,7 +2,6 @@
 const FARBEN = ["blue", "red", "yellow", "purple", "green", "orange", "pink", "brown", "white"]
 const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
-const UPDATE_RATE = 1000/120;
 
 var FONT_SIZE_ZOOM_FACTOR = 1.1; //depends on UI Max Zoom (*1 equals)
 var FONT_SIZE_LEVEL_FACTOR = 1;
@@ -85,12 +84,14 @@ class Point {
         this.visual = visual;
         this.container=visual.container;
         this.html;
+        this.toggle = false;
         this.color = color ? color : "white";
         this.opacity = 1;
         this.background_color = "black";
         this.is_playing = false;
         this.mouse_over_aktiv = true;
-        this.audio;
+        this.audio_source;
+        this.start_time; this.end_time; this.playing_duration;
         this._visibility = true;
         this._url = "";
         this.create_html ();
@@ -230,13 +231,15 @@ class Point {
     }
 
     click () {
-        if (this.typ == "audio") {
-            if (this.is_playing == true) {
-                this.stop ();
-            }else {
-                this.play ();
-            }
-            this.mouse_over_aktiv = false;
+        if (this.is_playing == true) {
+            this.stop ();
+        }else {
+            this.play ();
+        }
+        this.mouse_over_aktiv = false; //debug play, put in if when finished
+
+        /* if (this.typ == "audio") {
+            
         }else if (this.typ == "video" || this.typ == "image" || this.typ == "text") {
             var file_type = this.url.substr (this.url.lastIndexOf ("."));
             var frame_parameter = this.id + file_type;
@@ -244,11 +247,14 @@ class Point {
         }else {
             this.visual.create_from_graph (this.visual.graph, this.node);
             window.history.pushState(null, null, "?sub=" + this.id);
-        }
+        } */
     }
 
     mouse_leave () {
         this.mouse_over_aktiv = true;
+        if (this.toggle == false) {
+            this.stop ();
+        }
     }    
     
     mouse_over () {
@@ -259,8 +265,13 @@ class Point {
 
     update_content () {
         if (this.typ == "audio") {
-            this.audio = new Audio (this.url);
-            this.audio.addEventListener ("ended", this.stop.bind (this));
+            var audio = new Audio (this.url)
+            this.audio_source = this.visual.audio_context.createMediaElementSource (audio);
+            this.audio_source.connect (this.visual.audio_context.destination)
+            this.audio_source.on_ended = this.stop.bind (this);//hier richtiges event finden
+            this.toggle = true;
+        }else if (this.node.name == RECORD_COMMAND || this.node.name == PAUSE_COMMAND) {
+            this.toggle = true;
         }
     }
 
@@ -295,25 +306,50 @@ class Point {
     }
 
     play () {
-        if (this.typ == "audio") {
-            console.log (this.name + " is playing");
+        if (this.is_playing == false) {
             this.is_playing = true;
-            this.audio.play ();
-            this.html.style.backgroundColor = "white";
-            this.html.style.color = "black";
-            this.html.style.opacity = 1;
+            this.set_playing_style();
+            if (this.typ == "audio") {
+                this.play_audio();
+            }
+            this.start_time = new Date ();
+            this.visual.fire_callbacks_point_play (this);
         }
     }
 
+    set_playing_style() {
+        this.html.style.backgroundColor = "white";
+        this.html.style.color = "black";
+        this.html.style.opacity = 1;
+    }
+
+    play_audio() {
+        //this.audio_source.play(0);
+        
+    }
+
     stop () {
-        if (this.audio) {
+        if (this.is_playing == true) {
             this.is_playing = false;
-            this.audio.pause ();
-            this.audio.currentTime = 0;
-            this.html.style.backgroundColor = this.background_color;
-            this.html.style.color = this.color;
-            this.html.style.opacity = this.opacity;
+            this.remove_playing_style();
+            if (this.audio) {
+                this.stop_audio();
+            }
+            this.end_time = new Date ();
+            this.playing_duration = this.end_time - this.start_time;
+            this.visual.fire_callbacks_point_stop (this, this.playing_duration);
         }
+    }
+
+    stop_audio() {
+        //this.audio_source.stop();
+        //this.audio.currentTime = 0;
+    }
+
+    remove_playing_style() {
+        this.html.style.backgroundColor = this.background_color;
+        this.html.style.color = this.color;
+        this.html.style.opacity = this.opacity;
     }
 
     show () {
@@ -338,7 +374,10 @@ class Visual {
         this.master_container = master_container; 
         this.container;
         this.svg;
-        
+        this.callbacks_point_play = [];
+        this.callbacks_point_stop = [];
+        this.audio_context = new AudioContext ();
+
         this.default_font_size = 20;
         this._depth = 4;
         this.start_node;
@@ -400,6 +439,18 @@ class Visual {
     };
 
     callback_create_from_graph = function () {};
+
+    fire_callbacks_point_play (point) {
+        this.callbacks_point_play.forEach (e => {
+            e(point);
+        })
+    }
+
+    fire_callbacks_point_stop (point, duration) {
+        this.callbacks_point_stop.forEach (e => {
+            e(point, duration);
+        })
+    }
 
     create_from_graph (g, start_node) {
         this.reset ();
@@ -474,6 +525,9 @@ class Visual {
             var line = new Line (_points [0], _points [1], 1, this);
             line.edge = edge;
             this.lines.push (line);
+            return line;
+        }else {
+            return null;
         }
     }
 

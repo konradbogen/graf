@@ -1,4 +1,4 @@
-class UiInputContainer{
+class InputContainer{
 
     constructor(){
         this.state = 0;
@@ -55,15 +55,7 @@ class UiInputContainer{
 
 }
 
-class DragAndDrop{
-    constructor(dragElement){
-        
-    }
-
-   
-}
-
-class Zoom{
+class ZoomContainer {
     constructor(){
         this.mobile = false;
         var string =  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/;
@@ -276,7 +268,6 @@ class Zoom{
     setMousePosition(event){
         this.mouseX = (event.clientX - this.left) / (1 + this._zoom_percentage * (this.max_zoom_factor-1)); 
         this.mouseY = (event.clientY - this.top) / (1 + this._zoom_percentage * (this.max_zoom_factor-1));
-        console.log ("mouseX: " + this.mouseX + "Y: " + this.mouseY);
     }
 
     scrollToBottom(){
