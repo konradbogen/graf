@@ -84,13 +84,17 @@ class Point {
         this.visual = visual;
         this.container=visual.container;
         this.html;
+        
+        this.is_control = false;
         this.toggle = false;
+
         this.color = color ? color : "white";
         this.opacity = 1;
         this.background_color = "black";
         this.is_playing = false;
         this.mouse_over_aktiv = true;
         this.audio_source;
+        this.audio;
         this.start_time; this.end_time; this.playing_duration;
         this._visibility = true;
         this._url = "";
@@ -231,23 +235,21 @@ class Point {
     }
 
     click () {
-        if (this.is_playing == true) {
-            this.stop ();
-        }else {
-            this.play ();
-        }
-        this.mouse_over_aktiv = false; //debug play, put in if when finished
-
-        /* if (this.typ == "audio") {
-            
-        }else if (this.typ == "video" || this.typ == "image" || this.typ == "text") {
+        if (this.typ == "video" || this.typ == "image" || this.typ == "text") {
             var file_type = this.url.substr (this.url.lastIndexOf ("."));
             var frame_parameter = this.id + file_type;
             window.open ("https://www.heptagon.network/Graph/c?=" + frame_parameter, "_self");
+        }else if (this.typ == "audio" || this.is_control == true) {
+            this.mouse_over_aktiv == false;
+            if (this.is_playing == true) {
+                this.stop ();
+            }else {
+                this.play ();
+            }
         }else {
             this.visual.create_from_graph (this.visual.graph, this.node);
             window.history.pushState(null, null, "?sub=" + this.id);
-        } */
+        }
     }
 
     mouse_leave () {
@@ -265,13 +267,15 @@ class Point {
 
     update_content () {
         if (this.typ == "audio") {
-            var audio = new Audio (this.url)
-            this.audio_source = this.visual.audio_context.createMediaElementSource (audio);
-            this.audio_source.connect (this.visual.audio_context.destination)
-            this.audio_source.on_ended = this.stop.bind (this);//hier richtiges event finden
+            this.audio = new Audio (this.url);
+            //this.audio_source = this.visual.audio_context.createMediaElementSource (audio);
+            //this.audio_source.connect (this.visual.audio_context.destination)
             this.toggle = true;
         }else if (this.node.name == RECORD_COMMAND || this.node.name == PAUSE_COMMAND) {
             this.toggle = true;
+            this.is_control = true;
+        }else if (this.node.name == PAUSE_COMMAND || this.node.name == RESET_COMMAND) {
+            this.is_control = true;
         }
     }
 
@@ -324,9 +328,40 @@ class Point {
     }
 
     play_audio() {
-        //this.audio_source.play(0);
-        
+        this.audio.play(0);
+        //var stoptimer = setTimeout(this.stop_audio.bind(this), this.audio.duration - 1000); // execute timeout 5 seconds before end of playback
+        //this.fade_in_audio (this.audio);
     }
+
+    stop_audio() {
+        this.audio.pause();
+        this.audio.currentTime = 0;
+        //this.fade_out_audio (this.audio);
+    }
+
+    fade_out_audio (sound) {
+        var fadeAudio = setInterval(function () {
+            if ((sound.volume >= 0.1)) {
+                sound.volume -= 0.05;
+            }else {
+                sound.pause();
+                sound.currentTime = 0;
+                clearInterval(fadeAudio);
+            }
+        }, 100);        
+    }
+
+    fade_in_audio (sound) {
+        sound.volume = 0;
+        var fadeAudio = setInterval(function () {
+            if (sound.volume <= 0.9) {
+                sound.volume += 0.05;
+            }else {
+                clearInterval(fadeAudio);
+            }
+        }, 100);        
+    }
+
 
     stop () {
         if (this.is_playing == true) {
@@ -339,11 +374,6 @@ class Point {
             this.playing_duration = this.end_time - this.start_time;
             this.visual.fire_callbacks_point_stop (this, this.playing_duration);
         }
-    }
-
-    stop_audio() {
-        //this.audio_source.stop();
-        //this.audio.currentTime = 0;
     }
 
     remove_playing_style() {
@@ -379,7 +409,7 @@ class Visual {
         this.audio_context = new AudioContext ();
 
         this.default_font_size = 20;
-        this._depth = 4;
+        this._depth = 2;
         this.start_node;
 
         this.x_center = 50; 

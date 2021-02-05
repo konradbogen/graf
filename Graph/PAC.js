@@ -53,7 +53,7 @@ class Sequence {
 
     stop (index) {
         if (index < this.lines.length) {
-            this.lines[index].point_a.stop ();
+            //this.lines[index].point_a.stop ();
         }
     } 
 
