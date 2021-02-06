@@ -13,8 +13,11 @@ function load () {
 }    
 
 function load_content(url, type) {
-    if (type == "txt" || type == "html") {
+    if (type == "txt") {
         create_from_text_file(url);
+    }
+    else if (type == "html") {
+        create_from_html_file (url);
     } else if (type == "jpg" || type == "gif" || type == "png" || type == "jpeg") {
         create_from_image_file(url);
     } else if (type == "mp4") {
@@ -71,6 +74,28 @@ function create_from_text_file (url) {
         }
     );
 
+}
+
+function create_from_html_file (url) {
+    fetch(url)
+        .then(response => response.text()) 
+        .then(textString => {
+            var container = document.getElementById("content");
+            container.innerHTML = textString;
+            var scripts = container.getElementsByTagName("script");
+            for (var i = 0; i < scripts.length; i++) {
+                if (scripts[i].src) {
+                    console.log ("Angehängtes Script geladen: ", i, scripts[i].src)
+                    var script = document.createElement("script");
+                    script.src = scripts[i].src;
+                    document.head.appendChild(script);
+                }
+                else {
+                    console.log ("Angehängtes Script nicht geladen: ", i, scripts[i].innerHTML)
+                }
+            }
+        }
+    );
 }
 
 function create_from_video_file (url) {
