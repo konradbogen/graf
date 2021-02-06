@@ -163,6 +163,8 @@ class Point {
             return "video";
         }else if (file_type == ".txt") {
             return "text";
+        }else if (file_type == ".html") {
+            return "html"
         }
         else {
             return "node"
@@ -235,7 +237,7 @@ class Point {
     }
 
     click () {
-        if (this.typ == "video" || this.typ == "image" || this.typ == "text") {
+        if (this.typ == "video" || this.typ == "image" || this.typ == "text" || this.typ == "html") {
             var file_type = this.url.substr (this.url.lastIndexOf ("."));
             var frame_parameter = this.id + file_type;
             window.open ("https://www.heptagon.network/Graph/c?=" + frame_parameter, "_self");

@@ -17,7 +17,8 @@ class Lexer {
     }
 
     test_id (line, reg_ex) {
-        if (reg_ex.test (line)) {
+        console.log ("test " + line);
+        if (line.match (reg_ex)) {
             return true
         }
         return false;
