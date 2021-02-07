@@ -397,7 +397,7 @@ class Point {
     }
 
     load_audio_buffer () {
-        var audioCtx = this.visual.audio_context;
+        var audioCtx = this.visual.audioContext;
         var request = new XMLHttpRequest();
         console.log ("path: " + this.relative_path);
         request.open('GET', this.relative_path, true);
@@ -480,9 +480,9 @@ class Point {
     }
 
     arm_audio_node() {
-        this.audio_node = this.visual.audio_context.createBufferSource();
+        this.audio_node = this.visual.audioContext.createBufferSource();
         this.audio_node.buffer = this.audio_buffer;
-        this.audio_node.connect(this.visual.audio_context.destination);
+        this.audio_node.connect(this.visual.audioGainNode);
     }
 
     stop_audio() {
@@ -553,7 +553,10 @@ class Visual {
         this.svg;
         this.callbacks_point_play = [];
         this.callbacks_point_stop = [];
-        this.audio_context = new AudioContext ();
+
+        this.audioContext = new AudioContext ();
+        this.audioGainNode = this.audioContext.createGain ();
+        this._audioVolume = false;
 
         this.default_font_size = 20;
         this._depth = 2;
@@ -564,6 +567,7 @@ class Visual {
         this.radius = RADIUS_VALUE;
 
         this.create_html ();
+        this.init_audio ();
     }
 
     get start_level () {
@@ -596,14 +600,20 @@ class Visual {
         this.create_from_graph (this.graph);
     }
 
+    get audioVolume () {
+        return this._audioVolume ();
+    }
+
+    set audioVolume (val) {
+        this.audioGainNode.gain.setValueAtTime(val, this.audioContext.currentTime);
+        this._audioVolume = val;
+    }
+
     reset () {
         this.points = [];
         this.lines = [];
         this.svg.innerHTML = "";
         this.container.innerHTML = "";
-
-        var sounds = document.getElementsByTagName('audio');
-        for(var i=0; i<sounds.length; i++) {sounds[i].pause();};
     }
 
     on_zoom_change (zoom) {
@@ -650,6 +660,9 @@ class Visual {
         this.font_size = this.default_font_size;
     }
 
+    init_audio () {
+        this.audioGainNode.connect (this.audioContext.destination);
+    }
 
     create_points_from_graph (graph, depth) {
         var level_zero_nodes = graph.get_all_nodes_from_level (0);
@@ -772,6 +785,14 @@ class Visual {
         this.add_urls_to_points (file_system.urls, file_system.node_ids);
     }
 
+
+    mute () {
+        this.audioVolume = 0;
+    }
+
+    unmute () {
+        this.audioVolume = 1;
+    }
 
 }
 
