@@ -2,6 +2,7 @@
 const FARBEN = ["blue", "red", "yellow", "purple", "green", "orange", "pink", "brown", "white"]
 const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
+const DOMAIN_PATH = "https://www.heptagon.network/";
 
 var FONT_SIZE_ZOOM_FACTOR = 1.1; //depends on UI Max Zoom (*1 equals)
 var FONT_SIZE_LEVEL_FACTOR = 1;
@@ -77,7 +78,7 @@ class Line {
 }
 
 class Point {
-    constructor (x, y, node, visual, color) {
+    constructor (x, y, node, visual, color, shadow_color) {
         this._x = x;
         this._y = y;
         this.node = node;
@@ -90,7 +91,7 @@ class Point {
 
         this._color = color ? color : "white";
         this._backgroundColor = "black";
-        this._boxShadowColor = [255, 255, 255];
+        this._boxShadowColor = shadow_color ? shadow_color : [255, 255, 255];
         this._fontSize;
 
         this._opacity = 1;
@@ -99,14 +100,17 @@ class Point {
 
         this.is_playing = false;
         this.mouse_over_aktiv = true;
-        this.audio_source;
+
+        this.audio_node;
+        this.audio_buffer;
         this.audio;
+
         this.start_time; this.end_time; this.playing_duration;
         this._visibility = true;
         this._url = "";
+        this.update_content ();
         this.create_html ();
         this.create_observer ();
-        this.update_content ();
         this.callbacks = [];
     }
 
@@ -127,6 +131,7 @@ class Point {
         this._boxShadowOpacity = val;
         this.update_html_boxshadow(val);
     }
+
 
     get opacity () {
         return this._opacity;
@@ -214,17 +219,21 @@ class Point {
         return this._y;
     }
 
+    get file_extension () {
+        return this.url.substr (this.url.lastIndexOf ("."));
+    }
+
     get typ () {
-        var file_type = this.url.substr (this.url.lastIndexOf ("."));
-        if (file_type == ".mp3" || file_type == ".wav") {
+        var ext = this.file_extension;
+        if (ext == ".mp3" || ext == ".wav") {
             return "audio";
-        }else if (file_type == ".jpg" || file_type == ".gif" || file_type==".png" || file_type==".jpeg") {
+        }else if (ext == ".jpg" || ext == ".gif" || ext==".png" || ext==".jpeg") {
             return "image";
-        }else if (file_type == ".mp4") {
+        }else if (ext == ".mp4") {
             return "video";
-        }else if (file_type == ".txt") {
+        }else if (ext == ".txt") {
             return "text";
-        }else if (file_type == ".html") {
+        }else if (ext == ".html") {
             return "html"
         }
         else {
@@ -239,6 +248,11 @@ class Point {
 
     get relative_level () {
         return this.node.level - this.visual.start_level;
+    }
+
+    get relative_path () {
+        var path = this.url.substring (DOMAIN_PATH.length - 1);
+        return path;
     }
 
     change_position (newX, newY) {
@@ -286,7 +300,7 @@ class Point {
 
     set_html_opacities() {
         this.opacity = 1 - (this.relative_level - 1) * 0.6 + Math.random() * 0.3;
-        this.defaultBoxShadowOpacity = 0.3 - 0.05 * this.relative_level;
+        this.defaultBoxShadowOpacity = 0.3 - 0.01 * this.relative_level;
         this.boxShadowOpacity = this.defaultBoxShadowOpacity;
     }
 
@@ -350,8 +364,7 @@ class Point {
     }
 
     open_content_page() {
-        var file_type = this.url.substr(this.url.lastIndexOf("."));
-        var frame_parameter = this.id + file_type;
+        var frame_parameter = this.id + this.file_extension;
         window.open("https://www.heptagon.network/Graph/c?=" + frame_parameter, "_self");
     }
 
@@ -370,16 +383,35 @@ class Point {
 
     update_content () {
         if (this.typ == "audio") {
-            this.audio = new Audio (this.url);
+            this.load_audio_buffer ()
             //this.audio_source = this.visual.audio_context.createMediaElementSource (audio);
             //this.audio_source.connect (this.visual.audio_context.destination)
             this.is_toggle = true;
+            this.backgroundColor = "rgb(71, 31, 31)";
         }else if (this.node.name == RECORD_COMMAND || this.node.name == PAUSE_COMMAND) {
             this.is_toggle = true;
             this.is_control = true;
         }else if (this.node.name == PAUSE_COMMAND || this.node.name == RESET_COMMAND) {
             this.is_control = true;
         }
+    }
+
+    load_audio_buffer () {
+        var audioCtx = this.visual.audio_context;
+        var request = new XMLHttpRequest();
+        console.log ("path: " + this.relative_path);
+        request.open('GET', this.relative_path, true);
+        request.responseType = 'arraybuffer';
+        request.onload = function() {
+            var audioData = request.response;  
+            audioCtx.decodeAudioData(audioData, function(buffer) {
+                this.audio_buffer = buffer;
+                console.log ("buffer loaded");
+            }.bind (this),        
+            function(e){ console.log("Error with decoding audio data" + e.err); });
+        }.bind (this);
+      
+        request.send();
     }
 
     create_observer (callback) {
@@ -426,7 +458,7 @@ class Point {
 
     set_playing_style() {
         this.html.style.backgroundColor = "white";
-        this.boxShadowOpacity = 0.6;
+        this.boxShadowOpacity = 0.5;
         this.html.style.color = "black";
         this.html.style.opacity = 1;
     }
@@ -439,13 +471,23 @@ class Point {
     }
 
     play_audio() {
-        this.audio.play(0);
+        //this.audio.play(0);
+        this.arm_audio_node();
+        this.audio_node.onended = this.stop.bind (this);
+        this.audio_node.start ();
         //var stoptimer = setTimeout(this.stop_audio.bind(this), this.audio.duration - 1000); // execute timeout 5 seconds before end of playback
         //this.fade_in_audio (this.audio);
     }
 
+    arm_audio_node() {
+        this.audio_node = this.visual.audio_context.createBufferSource();
+        this.audio_node.buffer = this.audio_buffer;
+        this.audio_node.connect(this.visual.audio_context.destination);
+    }
+
     stop_audio() {
-        this.audio.pause();
+        //this.audio.pause();
+        this.audio_node.stop();
         this.audio.currentTime = 0;
         //this.fade_out_audio (this.audio);
     }
