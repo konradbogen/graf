@@ -121,6 +121,13 @@ function create_ui() {
         sessionStorage.setItem('graph_entry', val);
         update();
     };
+    ui_input_container.onMuteChange = function (val) {
+        if (val) {
+            visual.mute();
+        }else {
+            visual.unmute();
+        }
+    }
     zoom_container = new ZoomContainer();
 }
 

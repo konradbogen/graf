@@ -40,7 +40,14 @@ body{
     z-index: -11;
 }
 
-  
+#menu {
+    position: fixed;
+    left: 50%;
+    bottom: 0px;
+    margin: 0 auto;
+    transform: translateX(-50%);
+}
+
 #input{
     position:fixed;
     background:white;
@@ -54,18 +61,35 @@ body{
 }
 
 #inputButton{
-    position:fixed;
-    left:50%;
-    top:98%;
+    position:relative;
+    margin: 16;
     width:0;
     height:0;
     background: none;
     border:none;
 }
 
-#inputButton svg{
+#volumeButton{
+    position: relative;
+    margin: 16;
+    width:0;
+    height:0;
+    background: none;
+    border:none;
+}
+
+#volumeImg {
+    width: 35;
+    height: 35;
+    cursor: pointer;
     position:absolute;
-    transform:translateX(-50%);
+    transform: translateY(-20%);
+    bottom:0;
+}
+
+#inputSvg{
+    position:absolute;
+    transform:translateX(-25%);
     bottom:0;
     cursor: pointer;
 }

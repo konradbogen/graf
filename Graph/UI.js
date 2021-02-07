@@ -1,3 +1,6 @@
+const VOLUME_ICON_ON = "../Graph/Ressources/Speaker_Icon.png";
+const VOLUME_ICON_OFF = "../Graph/Ressources/Speaker_Icon_Off.png";
+
 class InputContainer{
 
     constructor(){
@@ -5,14 +8,41 @@ class InputContainer{
         this.animation1;
         this.button = document.getElementById('inputButton');
         this.button.addEventListener('click', this.toggleInput.bind(this));
+
+        this.volumeButton = document.getElementById('volumeButton');
+        this.volumeButton.addEventListener('click', this.toggleMute.bind(this));
+        this.volumeImg = document.getElementById('volumeImg');
+
         this.textarea = document.getElementById('input')
         this.textarea.value = "input";
 
+        this._mute = true;
+        this.mute = true;
+    }
 
+    get mute () {
+        return this._mute;
+    }
+    set mute (val) {
+        this._mute = val;
+        if (val==true) {
+            this.volumeImg.src = VOLUME_ICON_OFF;
+        }else {
+            this.volumeImg.src = VOLUME_ICON_ON;
+        }
+        this.onMuteChange (val);
     }
 
     onSubmitClick(text){
         console.log(text);
+    }
+
+    toggleMute () {
+        this.mute = !this.mute;
+    }
+
+    onMuteChange () {
+
     }
 
     toggleInput(){

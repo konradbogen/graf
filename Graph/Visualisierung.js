@@ -300,7 +300,7 @@ class Point {
 
     set_html_opacities() {
         this.opacity = 1 - (this.relative_level - 1) * 0.6 + Math.random() * 0.3;
-        this.defaultBoxShadowOpacity = 0.3 - 0.01 * this.relative_level;
+        this.defaultBoxShadowOpacity = 0.2 - 0.01 * this.relative_level;
         this.boxShadowOpacity = this.defaultBoxShadowOpacity;
     }
 
@@ -458,7 +458,7 @@ class Point {
 
     set_playing_style() {
         this.html.style.backgroundColor = "white";
-        this.boxShadowOpacity = 0.5;
+        this.boxShadowOpacity = 0.3;
         this.html.style.color = "black";
         this.html.style.opacity = 1;
     }
@@ -662,6 +662,7 @@ class Visual {
 
     init_audio () {
         this.audioGainNode.connect (this.audioContext.destination);
+        this.mute ();
     }
 
     create_points_from_graph (graph, depth) {
