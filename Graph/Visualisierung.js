@@ -86,12 +86,17 @@ class Point {
         this.html;
         
         this.is_control = false;
-        this.toggle = false;
+        this.is_toggle = false;
 
-        this.color = color ? color : "white";
-        this.opacity = 1;
-        this.boxShadowOpacity = 1;
-        this.background_color = "black";
+        this._color = color ? color : "white";
+        this._backgroundColor = "black";
+        this._boxShadowColor = [255, 255, 255];
+        this._fontSize;
+
+        this._opacity = 1;
+        this._boxShadowOpacity;
+        this.defaultBoxShadowOpacity = 1;
+
         this.is_playing = false;
         this.mouse_over_aktiv = true;
         this.audio_source;
@@ -103,6 +108,61 @@ class Point {
         this.create_observer ();
         this.update_content ();
         this.callbacks = [];
+    }
+
+    get boxShadowColor () {
+        return this._boxShadowColor;
+    }
+
+    set boxShadowColor (val) {
+        this._boxShadowColor = val;
+        this.update_html_boxshadow(val);
+    }   
+
+    get boxShadowOpacity () {
+        return this._boxShadowOpacity;
+    }
+
+    set boxShadowOpacity (val) {
+        this._boxShadowOpacity = val;
+        this.update_html_boxshadow(val);
+    }
+
+    get opacity () {
+        return this._opacity;
+    }
+
+    set opacity (val) {
+        this._opacity = val;
+        this.html.style.opacity = val;
+    }
+
+    get color () {
+        return this._color;
+    }
+
+    set color (val) {
+        this._color = val;
+        this.html.style.color = val;
+        this.html.style.borderColor = val;
+    }
+
+    get backgroundColor () {
+        return this._backgroundColor;
+    }
+
+    set backgroundColor (val) {
+        this._backgroundColor = val;
+        this.html.style.background = val;
+    }
+
+    set fontSize (val) {
+        this._fontSize = val;
+        this.html.style.fontSize = val + "%";
+    }
+
+    get fontSize () {
+        return this._fontSize;
     }
 
     get visibility () {
@@ -177,8 +237,8 @@ class Point {
         return pos;
     }
 
-    get rgbBoxShadowOpacity () {
-        return 255 * this.boxShadowOpacity
+    get relative_level () {
+        return this.node.level - this.visual.start_level;
     }
 
     change_position (newX, newY) {
@@ -192,40 +252,55 @@ class Point {
     }
 
     create_html () {
-        var h = this.node.level + 1;
-        this.html = document.createElement("h"+h);
-        this.html.setAttribute("id", this.node.id)
+        this.create_html_element();
+        this.update_html_position ();
         this.set_html_text();
         this.set_html_style ();
-        this.update_html_position ();
         this.create_event_listeners();
         this.container.appendChild (this.html);
     };
 
+    create_html_element() {
+        var h = this.node.level + 1;
+        this.html = document.createElement("h" + h);
+        this.html.setAttribute("id", this.node.id);
+    }
+
     set_html_style () {
-        var relative_level = this.node.level - this.visual.start_level;
-        var size = 111 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, relative_level)*FONT_SIZE_LEVEL_FACTOR);
-        this.boxShadowOpacity = 0.3 - 0.05 * relative_level;
-        this.opacity = 1 - (relative_level-1) * 0.6 + Math.random () * 0.3;
-        //var border_width = size/20;
-        var margin = 0;
-        var padding = size/900;
-        //var padding = size*1.2;
-        this.html.style.cursor = "pointer";
-        this.html.style.color = this.color;
-        this.html.style.border = "solid 1px";
-        this.html.style.zIndex = -this.node.level;
-        this.html.style.opacity = this.opacity;
-        this.html.style.borderColor = this.color;
-        this.html.style.background = this.background_color;
+        this.init_html_font();
+        this.init_html_colors();
+        this.set_html_opacities();
+        this.set_html_box(this.fontSize, this.node.level);
+    }
+
+    init_html_font() {
+        this.fontSize = 111 / (Math.pow(FONT_SIZE_LEVEL_EXP_FACTOR, this.relative_level) * FONT_SIZE_LEVEL_FACTOR);
         this.html.style.fontWeight = "normal";
+    }
+
+    init_html_colors() {
+        this.color = this._color;
+        this.backgroundColor = this._backgroundColor;
+        this.boxShadowColor = this._boxShadowColor;
+    }
+
+    set_html_opacities() {
+        this.opacity = 1 - (this.relative_level - 1) * 0.6 + Math.random() * 0.3;
+        this.defaultBoxShadowOpacity = 0.3 - 0.05 * this.relative_level;
+        this.boxShadowOpacity = this.defaultBoxShadowOpacity;
+    }
+
+    set_html_box(fontSize, level) {
+        var margin = 0;
+        var padding = fontSize/900;
+        this.html.style.cursor = "pointer";
+        this.html.style.zIndex = -level;
         this.html.style.padding = padding + "%";
         this.html.style.margin = margin + "%";
         this.html.style.position = "absolute";
         this.html.style.transform = "translate(-50%, -50%)";
-        this.html.style.fontSize = size + "%";
         this.html.style.webkitTransform = "translate(-50%, -50%)";
-        this.html.style.boxShadow = "rgb(" + this.rgbBoxShadowOpacity + ", " + this.rgbBoxShadowOpacity + ", " + this.rgbBoxShadowOpacity + ") 0px 0px 50px 5px" 
+        this.html.style.border = "solid 1px";
     }
 
     set_html_text() {
@@ -237,6 +312,13 @@ class Point {
         }
     }
 
+    update_html_boxshadow() {
+        var r = this.boxShadowColor[0] * this.boxShadowOpacity;
+        var g = this.boxShadowColor[1] * this.boxShadowOpacity;
+        var b = this.boxShadowColor[2] * this.boxShadowOpacity;
+        this.html.style.boxShadow = "rgb(" + r + ", " + g + ", " + b + ") 0px 0px 50px 5px";
+    }
+
     create_event_listeners() {
         this.html.addEventListener('mouseover', this.mouse_over.bind(this));
         this.html.addEventListener('mouseleave', this.mouse_leave.bind(this));
@@ -245,25 +327,37 @@ class Point {
 
     click () {
         if (this.typ == "video" || this.typ == "image" || this.typ == "text" || this.typ == "html") {
-            var file_type = this.url.substr (this.url.lastIndexOf ("."));
-            var frame_parameter = this.id + file_type;
-            window.open ("https://www.heptagon.network/Graph/c?=" + frame_parameter, "_self");
+            this.open_content_page();
         }else if (this.typ == "audio" || this.is_control == true) {
-            this.mouse_over_aktiv == false;
-            if (this.is_playing == true) {
-                this.stop ();
-            }else {
-                this.play ();
-            }
+            this.toggle_play();
         }else {
-            this.visual.create_from_graph (this.visual.graph, this.node);
-            window.history.pushState(null, null, "?sub=" + this.id);
+            this.open_as_start_node();
         }
+    }
+
+    open_as_start_node() {
+        this.visual.create_from_graph(this.visual.graph, this.node);
+        window.history.pushState(null, null, "?sub=" + this.id);
+    }
+
+    toggle_play() {
+        this.mouse_over_aktiv == false;
+        if (this.is_playing == true) {
+            this.stop();
+        } else {
+            this.play();
+        }
+    }
+
+    open_content_page() {
+        var file_type = this.url.substr(this.url.lastIndexOf("."));
+        var frame_parameter = this.id + file_type;
+        window.open("https://www.heptagon.network/Graph/c?=" + frame_parameter, "_self");
     }
 
     mouse_leave () {
         this.mouse_over_aktiv = true;
-        if (this.toggle == false) {
+        if (this.is_toggle == false) {
             this.stop ();
         }
     }    
@@ -279,9 +373,9 @@ class Point {
             this.audio = new Audio (this.url);
             //this.audio_source = this.visual.audio_context.createMediaElementSource (audio);
             //this.audio_source.connect (this.visual.audio_context.destination)
-            this.toggle = true;
+            this.is_toggle = true;
         }else if (this.node.name == RECORD_COMMAND || this.node.name == PAUSE_COMMAND) {
-            this.toggle = true;
+            this.is_toggle = true;
             this.is_control = true;
         }else if (this.node.name == PAUSE_COMMAND || this.node.name == RESET_COMMAND) {
             this.is_control = true;
@@ -332,20 +426,17 @@ class Point {
 
     set_playing_style() {
         this.html.style.backgroundColor = "white";
-        this.html.style.boxShadow = "rgb(" + 150 + ", " + 150 + ", " + 150 + ") 0px 0px 100px 20px" 
+        this.boxShadowOpacity = 0.6;
         this.html.style.color = "black";
         this.html.style.opacity = 1;
     }
 
     remove_playing_style() {
-        this.html.style.backgroundColor = this.background_color;
-        this.html.style.boxShadow = "rgb(" + this.rgbBoxShadowOpacity + ", " + this.rgbBoxShadowOpacity + ", " + this.rgbBoxShadowOpacity + ") 0px 0px 50px 5px" 
+        this.html.style.backgroundColor = this.backgroundColor;
         this.html.style.color = this.color;
         this.html.style.opacity = this.opacity;
-       
-    
+        this.boxShadowOpacity = this.defaultBoxShadowOpacity;
     }
-
 
     play_audio() {
         this.audio.play(0);
