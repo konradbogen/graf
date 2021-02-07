@@ -90,6 +90,7 @@ class Point {
 
         this.color = color ? color : "white";
         this.opacity = 1;
+        this.boxShadowOpacity = 1;
         this.background_color = "black";
         this.is_playing = false;
         this.mouse_over_aktiv = true;
@@ -176,6 +177,10 @@ class Point {
         return pos;
     }
 
+    get rgbBoxShadowOpacity () {
+        return 255 * this.boxShadowOpacity
+    }
+
     change_position (newX, newY) {
         this._x = newX; this._y = newY;
         this.update_html_position ();
@@ -200,7 +205,8 @@ class Point {
     set_html_style () {
         var relative_level = this.node.level - this.visual.start_level;
         var size = 111 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, relative_level)*FONT_SIZE_LEVEL_FACTOR);
-        this.opacity = 1 - (relative_level-1) * 0.4 + Math.random () * 0.3;
+        this.boxShadowOpacity = 0.3 - 0.05 * relative_level;
+        this.opacity = 1 - (relative_level-1) * 0.6 + Math.random () * 0.3;
         //var border_width = size/20;
         var margin = 0;
         var padding = size/900;
@@ -219,6 +225,7 @@ class Point {
         this.html.style.transform = "translate(-50%, -50%)";
         this.html.style.fontSize = size + "%";
         this.html.style.webkitTransform = "translate(-50%, -50%)";
+        this.html.style.boxShadow = "rgb(" + this.rgbBoxShadowOpacity + ", " + this.rgbBoxShadowOpacity + ", " + this.rgbBoxShadowOpacity + ") 0px 0px 50px 5px" 
     }
 
     set_html_text() {
@@ -325,9 +332,20 @@ class Point {
 
     set_playing_style() {
         this.html.style.backgroundColor = "white";
+        this.html.style.boxShadow = "rgb(" + 150 + ", " + 150 + ", " + 150 + ") 0px 0px 100px 20px" 
         this.html.style.color = "black";
         this.html.style.opacity = 1;
     }
+
+    remove_playing_style() {
+        this.html.style.backgroundColor = this.background_color;
+        this.html.style.boxShadow = "rgb(" + this.rgbBoxShadowOpacity + ", " + this.rgbBoxShadowOpacity + ", " + this.rgbBoxShadowOpacity + ") 0px 0px 50px 5px" 
+        this.html.style.color = this.color;
+        this.html.style.opacity = this.opacity;
+       
+    
+    }
+
 
     play_audio() {
         this.audio.play(0);
@@ -376,12 +394,6 @@ class Point {
             this.playing_duration = this.end_time - this.start_time;
             this.visual.fire_callbacks_point_stop (this, this.playing_duration);
         }
-    }
-
-    remove_playing_style() {
-        this.html.style.backgroundColor = this.background_color;
-        this.html.style.color = this.color;
-        this.html.style.opacity = this.opacity;
     }
 
     show () {
