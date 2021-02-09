@@ -68,7 +68,6 @@ function set_entry_from_default_txt () {
             this.default_entry = jsonFile.responseText;
             console.log("Default Entry From File: " + this.default_entry);
             set_entry(files.get_all_ids_entry_text() + "\n" + this.default_entry);
-            return text;
         }
     };
     jsonFile.send();
@@ -125,6 +124,7 @@ function create_ui() {
         if (val) {
             visual.mute();
         }else {
+            visual.init_audio ();
             visual.unmute();
         }
     }

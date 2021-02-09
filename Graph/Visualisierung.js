@@ -10,6 +10,8 @@ var FONT_SIZE_LEVEL_EXP_FACTOR = 2.2 - 0.4;
 var RADIUS_LEVEL_FACTOR = 2.6;
 var RADIUS_VALUE = 30;
 
+var AudioContext = window.AudioContext || (window).webkitAudioContext;
+
 class Line {
     constructor (point_a, point_b, strength, visual) {
         this.point_a = point_a;
@@ -86,7 +88,6 @@ class Point {
         this.container=visual.container;
         this.html;
         
-        this.is_control = false;
         this.is_toggle = false;
 
         this._color = color ? color : "white";
@@ -101,9 +102,8 @@ class Point {
         this.is_playing = false;
         this.mouse_over_aktiv = true;
 
-        this.audio_node;
-        this.audio_buffer;
-        this.audio;
+        this.audio_node = null;
+        this.audio_buffer = null;
 
         this.start_time; this.end_time; this.playing_duration;
         this._visibility = true;
@@ -158,7 +158,7 @@ class Point {
 
     set backgroundColor (val) {
         this._backgroundColor = val;
-        this.html.style.background = val;
+        this.html.style.backgroundColor = val;
     }
 
     set fontSize (val) {
@@ -235,6 +235,10 @@ class Point {
             return "text";
         }else if (ext == ".html") {
             return "html"
+        }else if (this.node.name == RECORD_COMMAND || this.node.name == PAUSE_COMMAND) {
+            return "toogle control"
+        }else if (this.node.name == RESET_COMMAND || this.node.name == PLAY_COMMAND) {
+            return "control"
         }
         else {
             return "node"
@@ -292,6 +296,12 @@ class Point {
         this.html.style.fontWeight = "normal";
     }
 
+    on_load_state_change (state) {
+        if (state == 1) {
+            this.backgroundColor = get_random_rgb_color (); //loaded;
+        }
+    }
+
     init_html_colors() {
         this.color = this._color;
         this.backgroundColor = this._backgroundColor;
@@ -342,20 +352,21 @@ class Point {
     click () {
         if (this.typ == "video" || this.typ == "image" || this.typ == "text" || this.typ == "html") {
             this.open_content_page();
-        }else if (this.typ == "audio" || this.is_control == true) {
+        }else if (this.typ == "audio" || this.typ == "toogle control") {
             this.toggle_play();
-        }else {
-            this.open_as_start_node();
+        } else if (this.typ == "control") {
+            this.play ();
+        } else if (this.typ == "node") {
+            if (this.visual.start_node && this.node.id == this.visual.start_node.id) {
+                this.visual.create_from_graph (this.visual.graph, this.node.parent);
+            }else {
+                this.visual.create_from_graph (this.visual.graph, this.node);
+            }
         }
     }
 
-    open_as_start_node() {
-        this.visual.create_from_graph(this.visual.graph, this.node);
-        window.history.pushState(null, null, "?sub=" + this.id);
-    }
-
     toggle_play() {
-        this.mouse_over_aktiv == false;
+        this.mouse_over_aktiv = false;
         if (this.is_playing == true) {
             this.stop();
         } else {
@@ -370,48 +381,42 @@ class Point {
 
     mouse_leave () {
         this.mouse_over_aktiv = true;
-        if (this.is_toggle == false) {
-            this.stop ();
-        }
+        this.stop ();
     }    
     
     mouse_over () {
-        if (this.mouse_over_aktiv==true && MOUSE_OVER) {
+        if (this.mouse_over_aktiv==true && MOUSE_OVER && this.typ != "toogle control") {
             this.play ();
         }
     }
 
     update_content () {
         if (this.typ == "audio") {
-            this.load_audio_buffer ()
-            //this.audio_source = this.visual.audio_context.createMediaElementSource (audio);
-            //this.audio_source.connect (this.visual.audio_context.destination)
             this.is_toggle = true;
-            this.backgroundColor = "rgb(71, 31, 31)";
-        }else if (this.node.name == RECORD_COMMAND || this.node.name == PAUSE_COMMAND) {
+            this.visual.callbacks_init_audio.push (this.load_audio_buffer.bind (this));
+        }else if (this.typ == "toggle control") {
             this.is_toggle = true;
-            this.is_control = true;
-        }else if (this.node.name == PAUSE_COMMAND || this.node.name == RESET_COMMAND) {
-            this.is_control = true;
         }
     }
 
     load_audio_buffer () {
-        var audioCtx = this.visual.audioContext;
-        var request = new XMLHttpRequest();
-        console.log ("path: " + this.relative_path);
-        request.open('GET', this.relative_path, true);
-        request.responseType = 'arraybuffer';
-        request.onload = function() {
-            var audioData = request.response;  
-            audioCtx.decodeAudioData(audioData, function(buffer) {
-                this.audio_buffer = buffer;
-                console.log ("buffer loaded");
-            }.bind (this),        
-            function(e){ console.log("Error with decoding audio data" + e.err); });
-        }.bind (this);
+        if (!this.audio_buffer) {
+            var audioCtx = this.visual.audioContext;
+            var request = new XMLHttpRequest();
+            console.log ("path: " + this.relative_path);
+            request.open('GET', this.relative_path, true);
+            request.responseType = 'arraybuffer';
+            request.onload = function() {
+                var audioData = request.response;  
+                audioCtx.decodeAudioData(audioData, function(buffer) {
+                    this.audio_buffer = buffer;
+                    this.on_load_state_change (1);
+                }.bind (this),        
+                function(e){ console.log("Error with decoding audio data" + e.err); });
+            }.bind (this);
       
-        request.send();
+            request.send();
+        }
     }
 
     create_observer (callback) {
@@ -471,12 +476,11 @@ class Point {
     }
 
     play_audio() {
-        //this.audio.play(0);
-        this.arm_audio_node();
-        this.audio_node.onended = this.stop.bind (this);
-        this.audio_node.start ();
-        //var stoptimer = setTimeout(this.stop_audio.bind(this), this.audio.duration - 1000); // execute timeout 5 seconds before end of playback
-        //this.fade_in_audio (this.audio);
+        if (this.visual.audioContext) {
+            this.arm_audio_node();
+            this.audio_node.onended = this.stop.bind (this);
+            this.audio_node.start ();
+        }
     }
 
     arm_audio_node() {
@@ -486,43 +490,16 @@ class Point {
     }
 
     stop_audio() {
-        //this.audio.pause();
-        this.audio_node.stop();
-        this.audio.currentTime = 0;
-        //this.fade_out_audio (this.audio);
+        if (this.audio_node) {
+            this.audio_node.stop();
+        }
     }
-
-    fade_out_audio (sound) {
-        var fadeAudio = setInterval(function () {
-            if ((sound.volume >= 0.1)) {
-                sound.volume -= 0.05;
-            }else {
-                sound.pause();
-                sound.currentTime = 0;
-                clearInterval(fadeAudio);
-            }
-        }, 100);        
-    }
-
-    fade_in_audio (sound) {
-        sound.volume = 0;
-        var fadeAudio = setInterval(function () {
-            if (sound.volume <= 0.9) {
-                sound.volume += 0.05;
-            }else {
-                clearInterval(fadeAudio);
-            }
-        }, 100);        
-    }
-
 
     stop () {
         if (this.is_playing == true) {
             this.is_playing = false;
             this.remove_playing_style();
-            if (this.audio) {
-                this.stop_audio();
-            }
+            this.stop_audio();
             this.end_time = new Date ();
             this.playing_duration = this.end_time - this.start_time;
             this.visual.fire_callbacks_point_stop (this, this.playing_duration);
@@ -554,9 +531,10 @@ class Visual {
         this.callbacks_point_play = [];
         this.callbacks_point_stop = [];
 
-        this.audioContext = new AudioContext ();
-        this.audioGainNode = this.audioContext.createGain ();
-        this._audioVolume = false;
+        this.callbacks_init_audio = [];
+        this.audioContext;
+        this.audioGainNode;
+        this._audioVolume = 0;
 
         this.default_font_size = 20;
         this._depth = 2;
@@ -567,7 +545,7 @@ class Visual {
         this.radius = RADIUS_VALUE;
 
         this.create_html ();
-        this.init_audio ();
+
     }
 
     get start_level () {
@@ -625,7 +603,7 @@ class Visual {
         this.font_size = this.default_font_size + zoom*FONT_SIZE_ZOOM_FACTOR*100;
     };
 
-    callback_create_from_graph = function () {};
+    callback_create_from_graph () {};
 
     fire_callbacks_point_play (point) {
         this.callbacks_point_play.forEach (e => {
@@ -644,11 +622,14 @@ class Visual {
         this.graph = g;
         if (start_node == null) {
             this.create_points_from_graph (g, this.depth);
+            window.history.pushState(null, null, "");
         }else {
             this.create_points_from_start_node (g, start_node, this.depth);
+            window.history.pushState(null, null, "?sub=" + start_node.id);
         }
         this.create_lines_from_graph (g);
         this.callback_create_from_graph ();
+        this.on_init_audio ();
     }
 
     create_html () {
@@ -661,9 +642,20 @@ class Visual {
     }
 
     init_audio () {
+        this.audioContext = new AudioContext ();
+        this.audioGainNode = this.audioContext.createGain ();
         this.audioGainNode.connect (this.audioContext.destination);
-        this.mute ();
+        this.audioVolume = 0;
+        this.on_init_audio ();
     }
+
+    on_init_audio () {
+        if (this.audioContext) {
+            this.callbacks_init_audio.forEach (e => {
+                e();
+            });
+        }
+    }   
 
     create_points_from_graph (graph, depth) {
         var level_zero_nodes = graph.get_all_nodes_from_level (0);
@@ -693,7 +685,7 @@ class Visual {
             var node = children [i];
             var winkel = i * (2*Math.PI / children.length) + Math.random () * 0.3;
             var { x, y } = this.convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel);
-            var color = parentnode ? parentnode.color : this.get_random_color ();
+            var color = parentnode ? parentnode.color : get_random_rgb_color ();
             this.create_point (x,y, node, "white")
             if (remaining_depth > 0) {
                 this.create_children_points_from_graph_node(graph, node, x, y, radius/RADIUS_LEVEL_FACTOR, remaining_depth-1);
@@ -797,8 +789,16 @@ class Visual {
 
 }
 
+function get_random_rgb_color () {
+    var val = [];
+    for (var i = 0; i<3; i++) {
+        val.push (Math.round (255 * Math.random ()));
+    }
+    return "rgb("+val[0]+", "+val[1]+", "+val[2]+")";
+}
 
-//339
+
+//800
 
 
 
