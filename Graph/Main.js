@@ -1,11 +1,6 @@
 const TEST_MODE = true;
 const RUNNING_IN_LOCAL = false;
 var default_entry_url = "Default.txt";
-const RECORD_COMMAND = "_record";
-const PLAY_COMMAND = "_play";
-const PAUSE_COMMAND = "_pause";
-const RESET_COMMAND = "_reset";
-
 
 var graph;
 var parser;

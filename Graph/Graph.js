@@ -27,6 +27,15 @@ class Graph {
         } 
     }
 
+    get_node_names (parent_id) {
+        var nodes_names = [];
+        var parent_node = this.find_node (parent_id);
+        this.get_children (parent_node).forEach (n => {
+            nodes_names.push (n.name);
+        })
+        return nodes_names_graph;
+    }
+
     find_node (id) {
         var level = Graph.get_node_level_from_id (id);
         if (this.nodes[level] != null) {
@@ -194,4 +203,4 @@ class Edge {
 
 }
 
-//171
+

@@ -4,6 +4,12 @@ const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const DOMAIN_PATH = "https://www.heptagon.network/";
 
+const RECORD_COMMAND = "_record";
+const PLAY_COMMAND = "_play";
+const PAUSE_COMMAND = "_pause";
+const RESET_COMMAND = "_reset";
+
+
 var FONT_SIZE_ZOOM_FACTOR = 1.1; //depends on UI Max Zoom (*1 equals)
 var FONT_SIZE_LEVEL_FACTOR = 1;
 var FONT_SIZE_LEVEL_EXP_FACTOR = 2.2 - 0.4;
@@ -90,9 +96,9 @@ class Point {
         
         this.is_toggle = false;
 
-        this._color = color ? color : "white";
-        this._backgroundColor = "black";
-        this._boxShadowColor = shadow_color ? shadow_color : [255, 255, 255];
+        this._color = color ? color : this.visual.default_point_color;
+        this._backgroundColor = this.visual.default_point_background_color;
+        this._boxShadowColor = shadow_color ? shadow_color : this.visual.default_point_shadow_color;
         this._fontSize;
 
         this._opacity = 1;
@@ -318,7 +324,7 @@ class Point {
         var margin = 0;
         var padding = fontSize/900;
         this.html.style.cursor = "pointer";
-        this.html.style.zIndex = -level;
+        this.html.style.zIndex = 10-level;
         this.html.style.padding = padding + "%";
         this.html.style.margin = margin + "%";
         this.html.style.position = "absolute";
@@ -381,7 +387,9 @@ class Point {
 
     mouse_leave () {
         this.mouse_over_aktiv = true;
-        this.stop ();
+        if (this.typ != "audio" && this.typ != "toogle control") {
+            this.stop ();
+        }
     }    
     
     mouse_over () {
@@ -462,9 +470,9 @@ class Point {
     }
 
     set_playing_style() {
-        this.html.style.backgroundColor = "white";
+        this.html.style.backgroundColor = this.visual.default_point_active_background_color;
         this.boxShadowOpacity = 0.3;
-        this.html.style.color = "black";
+        this.html.style.color = this.visual.default_point_active_color;
         this.html.style.opacity = 1;
     }
 
@@ -535,6 +543,14 @@ class Visual {
         this.audioContext;
         this.audioGainNode;
         this._audioVolume = 0;
+
+        this.default_line_color = "white";
+
+        this.default_point_color = "white";
+        this.default_point_background_color = "black";
+        this.default_point_shadow_color = [255, 255, 255];
+        this.default_point_active_background_color = "white";
+        this.default_point_active_color = "black";
 
         this.default_font_size = 20;
         this._depth = 2;
@@ -686,7 +702,7 @@ class Visual {
             var winkel = i * (2*Math.PI / children.length) + Math.random () * 0.3;
             var { x, y } = this.convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel);
             var color = parentnode ? parentnode.color : get_random_rgb_color ();
-            this.create_point (x,y, node, "white")
+            this.create_point (x,y, node)
             if (remaining_depth > 0) {
                 this.create_children_points_from_graph_node(graph, node, x, y, radius/RADIUS_LEVEL_FACTOR, remaining_depth-1);
             }

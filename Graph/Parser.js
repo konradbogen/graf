@@ -18,8 +18,13 @@ class Lexer {
 
     test_id (line, reg_ex) {
         console.log ("test " + line);
-        if (line.match (reg_ex)) {
-            return true
+        if (line.includes (",")) {
+            return false;
+            console.log ("dont use , in filenames!")
+        }else {
+            if (line.match (reg_ex)) {
+                return true
+            }
         }
         return false;
     }
@@ -117,6 +122,10 @@ class Parser {
         }
     }
 
+    create_graph_from_text (graph, text) {
+        this.read_text (text);
+        this.create_graph (graph);
+    }
 
     read_text (text) {
         this.lexer.categorize_ids (text);
