@@ -2,13 +2,21 @@
 const FARBEN = ["blue", "red", "yellow", "purple", "green", "orange", "pink", "brown", "white"]
 const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
-const UPDATE_RATE = 1000/120;
+const DOMAIN_PATH = "https://www.heptagon.network/";
+
+const RECORD_COMMAND = "_record";
+const PLAY_COMMAND = "_play";
+const PAUSE_COMMAND = "_pause";
+const RESET_COMMAND = "_reset";
+
 
 var FONT_SIZE_ZOOM_FACTOR = 1.1; //depends on UI Max Zoom (*1 equals)
 var FONT_SIZE_LEVEL_FACTOR = 1;
 var FONT_SIZE_LEVEL_EXP_FACTOR = 2.2 - 0.4;
 var RADIUS_LEVEL_FACTOR = 2.6;
 var RADIUS_VALUE = 30;
+
+var AudioContext = window.AudioContext || (window).webkitAudioContext;
 
 class Line {
     constructor (point_a, point_b, strength, visual) {
@@ -78,25 +86,94 @@ class Line {
 }
 
 class Point {
-    constructor (x, y, node, visual, color) {
+    constructor (x, y, node, visual, color, shadow_color) {
         this._x = x;
         this._y = y;
         this.node = node;
         this.visual = visual;
         this.container=visual.container;
         this.html;
-        this.color = color ? color : "white";
-        this.opacity = 1;
-        this.background_color = "black";
+        
+        this.is_toggle = false;
+
+        this._color = color ? color : this.visual.default_point_color;
+        this._backgroundColor = this.visual.default_point_background_color;
+        this._boxShadowColor = shadow_color ? shadow_color : this.visual.default_point_shadow_color;
+        this._fontSize;
+
+        this._opacity = 1;
+        this._boxShadowOpacity;
+        this.defaultBoxShadowOpacity = 1;
+
         this.is_playing = false;
         this.mouse_over_aktiv = true;
-        this.audio;
+
+        this.audio_node = null;
+        this.audio_buffer = null;
+
+        this.start_time; this.end_time; this.playing_duration;
         this._visibility = true;
         this._url = "";
+        this.update_content ();
         this.create_html ();
         this.create_observer ();
-        this.update_content ();
         this.callbacks = [];
+    }
+
+    get boxShadowColor () {
+        return this._boxShadowColor;
+    }
+
+    set boxShadowColor (val) {
+        this._boxShadowColor = val;
+        this.update_html_boxshadow(val);
+    }   
+
+    get boxShadowOpacity () {
+        return this._boxShadowOpacity;
+    }
+
+    set boxShadowOpacity (val) {
+        this._boxShadowOpacity = val;
+        this.update_html_boxshadow(val);
+    }
+
+
+    get opacity () {
+        return this._opacity;
+    }
+
+    set opacity (val) {
+        this._opacity = val;
+        this.html.style.opacity = val;
+    }
+
+    get color () {
+        return this._color;
+    }
+
+    set color (val) {
+        this._color = val;
+        this.html.style.color = val;
+        this.html.style.borderColor = val;
+    }
+
+    get backgroundColor () {
+        return this._backgroundColor;
+    }
+
+    set backgroundColor (val) {
+        this._backgroundColor = val;
+        this.html.style.backgroundColor = val;
+    }
+
+    set fontSize (val) {
+        this._fontSize = val;
+        this.html.style.fontSize = val + "%";
+    }
+
+    get fontSize () {
+        return this._fontSize;
     }
 
     get visibility () {
@@ -148,10 +225,28 @@ class Point {
         return this._y;
     }
 
+    get file_extension () {
+        return this.url.substr (this.url.lastIndexOf ("."));
+    }
+
     get typ () {
-        if (this.url.match (WAV_REGEXP) || this.url.match (MP3_REGEXP)) {
-            return "audio"
-        }else {
+        var ext = this.file_extension;
+        if (ext == ".mp3" || ext == ".wav") {
+            return "audio";
+        }else if (ext == ".jpg" || ext == ".gif" || ext==".png" || ext==".jpeg") {
+            return "image";
+        }else if (ext == ".mp4") {
+            return "video";
+        }else if (ext == ".txt") {
+            return "text";
+        }else if (ext == ".html") {
+            return "html"
+        }else if (this.node.name == RECORD_COMMAND || this.node.name == PAUSE_COMMAND) {
+            return "toogle control"
+        }else if (this.node.name == RESET_COMMAND || this.node.name == PLAY_COMMAND) {
+            return "control"
+        }
+        else {
             return "node"
         }
     }
@@ -159,6 +254,15 @@ class Point {
     get absolute_position () {
         var pos = $(this.html).offset();
         return pos;
+    }
+
+    get relative_level () {
+        return this.node.level - this.visual.start_level;
+    }
+
+    get relative_path () {
+        var path = this.url.substring (DOMAIN_PATH.length - 1);
+        return path;
     }
 
     change_position (newX, newY) {
@@ -172,38 +276,61 @@ class Point {
     }
 
     create_html () {
-        var h = this.node.level + 1;
-        this.html = document.createElement("h"+h);
-        this.html.setAttribute("id", this.node.id)
+        this.create_html_element();
+        this.update_html_position ();
         this.set_html_text();
         this.set_html_style ();
-        this.update_html_position ();
         this.create_event_listeners();
         this.container.appendChild (this.html);
     };
 
+    create_html_element() {
+        var h = this.node.level + 1;
+        this.html = document.createElement("h" + h);
+        this.html.setAttribute("id", this.node.id);
+    }
+
     set_html_style () {
-        var relative_level = this.node.level - this.visual.start_level;
-        var size = 111 / (Math.pow (FONT_SIZE_LEVEL_EXP_FACTOR, relative_level)*FONT_SIZE_LEVEL_FACTOR);
-        this.opacity = 1 - (relative_level-1) * 0.4 + Math.random () * 0.3;
-        //var border_width = size/20;
-        var margin = 0;
-        var padding = size/900;
-        //var padding = size*1.2;
-        this.html.style.cursor = "pointer";
-        this.html.style.color = this.color;
-        this.html.style.border = "solid 1px";
-        this.html.style.zIndex = -this.node.level;
-        this.html.style.opacity = this.opacity;
-        this.html.style.borderColor = this.color;
-        this.html.style.background = this.background_color;
+        this.init_html_font();
+        this.init_html_colors();
+        this.set_html_opacities();
+        this.set_html_box(this.fontSize, this.node.level);
+    }
+
+    init_html_font() {
+        this.fontSize = 111 / (Math.pow(FONT_SIZE_LEVEL_EXP_FACTOR, this.relative_level) * FONT_SIZE_LEVEL_FACTOR);
         this.html.style.fontWeight = "normal";
+    }
+
+    on_load_state_change (state) {
+        if (state == 1) {
+            this.backgroundColor = get_random_rgb_color (); //loaded;
+        }
+    }
+
+    init_html_colors() {
+        this.color = this._color;
+        this.backgroundColor = this._backgroundColor;
+        this.boxShadowColor = this._boxShadowColor;
+    }
+
+    set_html_opacities() {
+        this.opacity = 1 - (this.relative_level - 1) * 0.6 + Math.random() * 0.3;
+        this.defaultBoxShadowOpacity = 0.2 - 0.01 * this.relative_level;
+        this.boxShadowOpacity = this.defaultBoxShadowOpacity;
+    }
+
+    set_html_box(fontSize, level) {
+        var margin = 0;
+        var padding = fontSize/900;
+        this.html.style.cursor = "pointer";
+        this.html.style.zIndex = 10-level;
         this.html.style.padding = padding + "%";
         this.html.style.margin = margin + "%";
         this.html.style.position = "absolute";
         this.html.style.transform = "translate(-50%, -50%)";
-        this.html.style.fontSize = size + "%";
         this.html.style.webkitTransform = "translate(-50%, -50%)";
+        this.html.style.border = "solid 1px";
     }
 
     set_html_text() {
@@ -215,6 +342,13 @@ class Point {
         }
     }
 
+    update_html_boxshadow() {
+        var r = this.boxShadowColor[0] * this.boxShadowOpacity;
+        var g = this.boxShadowColor[1] * this.boxShadowOpacity;
+        var b = this.boxShadowColor[2] * this.boxShadowOpacity;
+        this.html.style.boxShadow = "rgb(" + r + ", " + g + ", " + b + ") 0px 0px 50px 5px";
+    }
+
     create_event_listeners() {
         this.html.addEventListener('mouseover', this.mouse_over.bind(this));
         this.html.addEventListener('mouseleave', this.mouse_leave.bind(this));
@@ -222,36 +356,74 @@ class Point {
     }
 
     click () {
-        if (this.typ == "audio") {
-            if (this.is_playing == true) {
-                this.stop ();
+        if (this.typ == "video" || this.typ == "image" || this.typ == "text" || this.typ == "html") {
+            this.open_content_page();
+        }else if (this.typ == "audio" || this.typ == "toogle control") {
+            this.toggle_play();
+        } else if (this.typ == "control") {
+            this.play ();
+        } else if (this.typ == "node") {
+            if (this.visual.start_node && this.node.id == this.visual.start_node.id) {
+                this.visual.create_from_graph (this.visual.graph, this.node.parent);
             }else {
-                this.play ();
+                this.visual.create_from_graph (this.visual.graph, this.node);
             }
-            this.mouse_over_aktiv = false;
-        }else {
-            this.visual.create_from_graph (this.visual.graph, this.node);
-            window.history.pushState(null, null, "?sub=" + this.id);
         }
-        
+    }
 
-        //this.visual.create_from_graph (this.visual.graph, this.node);
+    toggle_play() {
+        this.mouse_over_aktiv = false;
+        if (this.is_playing == true) {
+            this.stop();
+        } else {
+            this.play();
+        }
+    }
+
+    open_content_page() {
+        var frame_parameter = this.id + this.file_extension;
+        window.open("https://www.heptagon.network/Graph/c?=" + frame_parameter, "_self");
     }
 
     mouse_leave () {
         this.mouse_over_aktiv = true;
+        if (this.typ != "audio" && this.typ != "toogle control") {
+            this.stop ();
+        }
     }    
     
     mouse_over () {
-        if (this.mouse_over_aktiv==true && MOUSE_OVER) {
+        if (this.mouse_over_aktiv==true && MOUSE_OVER && this.typ != "toogle control") {
             this.play ();
         }
     }
 
     update_content () {
         if (this.typ == "audio") {
-            this.audio = new Audio (this.url);
-            this.audio.addEventListener ("ended", this.stop.bind (this));
+            this.is_toggle = true;
+            this.visual.callbacks_init_audio.push (this.load_audio_buffer.bind (this));
+        }else if (this.typ == "toggle control") {
+            this.is_toggle = true;
+        }
+    }
+
+    load_audio_buffer () {
+        if (!this.audio_buffer) {
+            var audioCtx = this.visual.audioContext;
+            var request = new XMLHttpRequest();
+            console.log ("path: " + this.relative_path);
+            request.open('GET', this.relative_path, true);
+            request.responseType = 'arraybuffer';
+            request.onload = function() {
+                var audioData = request.response;  
+                audioCtx.decodeAudioData(audioData, function(buffer) {
+                    this.audio_buffer = buffer;
+                    this.on_load_state_change (1);
+                }.bind (this),        
+                function(e){ console.log("Error with decoding audio data" + e.err); });
+            }.bind (this);
+      
+            request.send();
         }
     }
 
@@ -286,24 +458,59 @@ class Point {
     }
 
     play () {
-        if (this.typ == "audio") {
-            console.log (this.name + " is playing");
+        if (this.is_playing == false) {
             this.is_playing = true;
-            this.audio.play ();
-            this.html.style.backgroundColor = "white";
-            this.html.style.color = "black";
-            this.html.style.opacity = 1;
+            this.set_playing_style();
+            if (this.typ == "audio") {
+                this.play_audio();
+            }
+            this.start_time = new Date ();
+            this.visual.fire_callbacks_point_play (this);
+        }
+    }
+
+    set_playing_style() {
+        this.html.style.backgroundColor = this.visual.default_point_active_background_color;
+        this.boxShadowOpacity = 0.3;
+        this.html.style.color = this.visual.default_point_active_color;
+        this.html.style.opacity = 1;
+    }
+
+    remove_playing_style() {
+        this.html.style.backgroundColor = this.backgroundColor;
+        this.html.style.color = this.color;
+        this.html.style.opacity = this.opacity;
+        this.boxShadowOpacity = this.defaultBoxShadowOpacity;
+    }
+
+    play_audio() {
+        if (this.visual.audioContext) {
+            this.arm_audio_node();
+            this.audio_node.onended = this.stop.bind (this);
+            this.audio_node.start ();
+        }
+    }
+
+    arm_audio_node() {
+        this.audio_node = this.visual.audioContext.createBufferSource();
+        this.audio_node.buffer = this.audio_buffer;
+        this.audio_node.connect(this.visual.audioGainNode);
+    }
+
+    stop_audio() {
+        if (this.audio_node) {
+            this.audio_node.stop();
         }
     }
 
     stop () {
-        if (this.audio) {
+        if (this.is_playing == true) {
             this.is_playing = false;
-            this.audio.pause ();
-            this.audio.currentTime = 0;
-            this.html.style.backgroundColor = this.background_color;
-            this.html.style.color = this.color;
-            this.html.style.opacity = this.opacity;
+            this.remove_playing_style();
+            this.stop_audio();
+            this.end_time = new Date ();
+            this.playing_duration = this.end_time - this.start_time;
+            this.visual.fire_callbacks_point_stop (this, this.playing_duration);
         }
     }
 
@@ -329,9 +536,24 @@ class Visual {
         this.master_container = master_container; 
         this.container;
         this.svg;
-        
+        this.callbacks_point_play = [];
+        this.callbacks_point_stop = [];
+
+        this.callbacks_init_audio = [];
+        this.audioContext;
+        this.audioGainNode;
+        this._audioVolume = 0;
+
+        this.default_line_color = "white";
+
+        this.default_point_color = "white";
+        this.default_point_background_color = "black";
+        this.default_point_shadow_color = [255, 255, 255];
+        this.default_point_active_background_color = "white";
+        this.default_point_active_color = "black";
+
         this.default_font_size = 20;
-        this._depth = 4;
+        this._depth = 2;
         this.start_node;
 
         this.x_center = 50; 
@@ -339,6 +561,7 @@ class Visual {
         this.radius = RADIUS_VALUE;
 
         this.create_html ();
+
     }
 
     get start_level () {
@@ -371,6 +594,15 @@ class Visual {
         this.create_from_graph (this.graph);
     }
 
+    get audioVolume () {
+        return this._audioVolume ();
+    }
+
+    set audioVolume (val) {
+        this.audioGainNode.gain.setValueAtTime(val, this.audioContext.currentTime);
+        this._audioVolume = val;
+    }
+
     reset () {
         this.points = [];
         this.lines = [];
@@ -387,18 +619,33 @@ class Visual {
         this.font_size = this.default_font_size + zoom*FONT_SIZE_ZOOM_FACTOR*100;
     };
 
-    callback_create_from_graph = function () {};
+    callback_create_from_graph () {};
+
+    fire_callbacks_point_play (point) {
+        this.callbacks_point_play.forEach (e => {
+            e(point);
+        })
+    }
+
+    fire_callbacks_point_stop (point, duration) {
+        this.callbacks_point_stop.forEach (e => {
+            e(point, duration);
+        })
+    }
 
     create_from_graph (g, start_node) {
         this.reset ();
         this.graph = g;
         if (start_node == null) {
             this.create_points_from_graph (g, this.depth);
+            window.history.pushState(null, null, "");
         }else {
             this.create_points_from_start_node (g, start_node, this.depth);
+            window.history.pushState(null, null, "?sub=" + start_node.id);
         }
         this.create_lines_from_graph (g);
         this.callback_create_from_graph ();
+        this.on_init_audio ();
     }
 
     create_html () {
@@ -410,6 +657,21 @@ class Visual {
         this.font_size = this.default_font_size;
     }
 
+    init_audio () {
+        this.audioContext = new AudioContext ();
+        this.audioGainNode = this.audioContext.createGain ();
+        this.audioGainNode.connect (this.audioContext.destination);
+        this.audioVolume = 0;
+        this.on_init_audio ();
+    }
+
+    on_init_audio () {
+        if (this.audioContext) {
+            this.callbacks_init_audio.forEach (e => {
+                e();
+            });
+        }
+    }   
 
     create_points_from_graph (graph, depth) {
         var level_zero_nodes = graph.get_all_nodes_from_level (0);
@@ -439,8 +701,8 @@ class Visual {
             var node = children [i];
             var winkel = i * (2*Math.PI / children.length) + Math.random () * 0.3;
             var { x, y } = this.convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel);
-            var color = parentnode ? parentnode.color : this.get_random_color ();
-            this.create_point (x,y, node, "white")
+            var color = parentnode ? parentnode.color : get_random_rgb_color ();
+            this.create_point (x,y, node)
             if (remaining_depth > 0) {
                 this.create_children_points_from_graph_node(graph, node, x, y, radius/RADIUS_LEVEL_FACTOR, remaining_depth-1);
             }
@@ -462,6 +724,9 @@ class Visual {
             var line = new Line (_points [0], _points [1], 1, this);
             line.edge = edge;
             this.lines.push (line);
+            return line;
+        }else {
+            return null;
         }
     }
 
@@ -530,10 +795,26 @@ class Visual {
     }
 
 
+    mute () {
+        this.audioVolume = 0;
+    }
+
+    unmute () {
+        this.audioVolume = 1;
+    }
+
+}
+
+function get_random_rgb_color () {
+    var val = [];
+    for (var i = 0; i<3; i++) {
+        val.push (Math.round (255 * Math.random ()));
+    }
+    return "rgb("+val[0]+", "+val[1]+", "+val[2]+")";
 }
 
 
-//339
+//800
 
 
 

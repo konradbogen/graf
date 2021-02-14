@@ -1,18 +1,48 @@
-class UiInputContainer{
+const VOLUME_ICON_ON = "../Graph/Ressources/Speaker_Icon.png";
+const VOLUME_ICON_OFF = "../Graph/Ressources/Speaker_Icon_Off.png";
+
+class InputContainer{
 
     constructor(){
         this.state = 0;
         this.animation1;
         this.button = document.getElementById('inputButton');
         this.button.addEventListener('click', this.toggleInput.bind(this));
+
+        this.volumeButton = document.getElementById('volumeButton');
+        this.volumeButton.addEventListener('click', this.toggleMute.bind(this));
+        this.volumeImg = document.getElementById('volumeImg');
+
         this.textarea = document.getElementById('input')
         this.textarea.value = "input";
 
+        this._mute = true;
+        this.mute = true;
+    }
 
+    get mute () {
+        return this._mute;
+    }
+    set mute (val) {
+        this._mute = val;
+        if (val==true) {
+            this.volumeImg.src = VOLUME_ICON_OFF;
+        }else {
+            this.volumeImg.src = VOLUME_ICON_ON;
+        }
+        this.onMuteChange (val);
     }
 
     onSubmitClick(text){
         console.log(text);
+    }
+
+    toggleMute () {
+        this.mute = !this.mute;
+    }
+
+    onMuteChange () {
+
     }
 
     toggleInput(){
@@ -55,15 +85,7 @@ class UiInputContainer{
 
 }
 
-class DragAndDrop{
-    constructor(dragElement){
-        
-    }
-
-   
-}
-
-class Zoom{
+class ZoomContainer {
     constructor(){
         this.mobile = false;
         var string =  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/;
@@ -276,7 +298,6 @@ class Zoom{
     setMousePosition(event){
         this.mouseX = (event.clientX - this.left) / (1 + this._zoom_percentage * (this.max_zoom_factor-1)); 
         this.mouseY = (event.clientY - this.top) / (1 + this._zoom_percentage * (this.max_zoom_factor-1));
-        console.log ("mouseX: " + this.mouseX + "Y: " + this.mouseY);
     }
 
     scrollToBottom(){

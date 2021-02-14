@@ -15,14 +15,25 @@ class Graph {
     add_edge (node_a, node_b) {
         var existing_edge = this.find_edge (node_a.id, node_b.id);
         if (existing_edge == null) {
-            var neueVerbindung = new Edge (node_a, node_b, 1);
-            node_a.grad += 1; node_a.edges.push (neueVerbindung);
-            node_b.grad += 1; node_b.edges.push (neueVerbindung);
-            this.edges.push (neueVerbindung);
-            this.edges.push (neueVerbindung.invert());
+            var new_edge = new Edge (node_a, node_b, 1);
+            node_a.grad += 1; node_a.edges.push (new_edge);
+            node_b.grad += 1; node_b.edges.push (new_edge);
+            this.edges.push (new_edge);
+            this.edges.push (new_edge.invert());
+            return new_edge;
         }else {
            existing_edge.strength += 1;
-        }
+           return existing_edge;
+        } 
+    }
+
+    get_node_names (parent_id) {
+        var nodes_names = [];
+        var parent_node = this.find_node (parent_id);
+        this.get_children (parent_node).forEach (n => {
+            nodes_names.push (n.name);
+        })
+        return nodes_names_graph;
     }
 
     find_node (id) {
@@ -192,4 +203,4 @@ class Edge {
 
 }
 
-//171
+

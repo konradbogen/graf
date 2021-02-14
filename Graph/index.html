@@ -1,7 +1,7 @@
 <head>
     <link rel=stylesheet href=style.css> </link>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-        <meta property="og:title" content="heptagon.graph" />
+        <meta property="og:title" content="heptagon" />
         <meta property="og:type" content="article" />
         <meta property="og:url" content="https://heptagon.network/Graph" />
         <meta property="og:image" content="hepta_white.png">
@@ -17,18 +17,20 @@
     <div id=graphContainer>
     </div>       
     <textarea id = "input" name="input"></textarea> 
-    <button id="inputButton">
-    <svg id = "inputSvg" width="50" height="50" viewBox="-15 -15 80 80"xmlns="http://www.w3.org/2000/svg">
-    <circle cx="25" cy="25" r="25" fill="grey"/>
-    <polygon   fill="white" points="10 19, 25 38, 40 19"> </polygon>
-    </svg>
-    </button>
+    <div id="menu">
+        <button id="volumeButton">
+            <img id = "volumeImg" src="../Graph/Ressources/Speaker_Icon.png"></img>
+        </button>
+        <button id="inputButton">
+            <svg id = "inputSvg" width="50" height="50" viewBox="-15 -15 80 80"xmlns="http://www.w3.org/2000/svg">
+                <circle cx="25" cy="25" r="25" fill="grey"/>
+                <polygon fill="white" points="10 19, 25 38, 40 19"> </polygon>
+             </svg>
+        </button>
+    </div>
 </body>
-
-<script src=anime.min.js></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script src=ui.js></script>
-<script src=cssscript.js> </script>
+<script src=anime.min.js></script>
 <script src=FileSystem.js></script>
 <script src=Graph.js></script>
 <script src=Parser.js></script>

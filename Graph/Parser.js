@@ -17,8 +17,14 @@ class Lexer {
     }
 
     test_id (line, reg_ex) {
-        if (reg_ex.test (line)) {
-            return true
+        console.log ("test " + line);
+        if (line.includes (",")) {
+            return false;
+            console.log ("dont use , in filenames!")
+        }else {
+            if (line.match (reg_ex)) {
+                return true
+            }
         }
         return false;
     }
@@ -90,7 +96,7 @@ class Parser {
         var name = id.substring (5);
         pac_system.sequences.forEach(seq => {
             if (seq.name == name) {
-                var pac = new Pac (seq, seq.color);
+                var pac = new PAC (seq, seq.color);
                 pac_system.pacs.push (pac);
             }
         });
@@ -116,6 +122,10 @@ class Parser {
         }
     }
 
+    create_graph_from_text (graph, text) {
+        this.read_text (text);
+        this.create_graph (graph);
+    }
 
     read_text (text) {
         this.lexer.categorize_ids (text);

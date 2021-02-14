@@ -1,13 +1,9 @@
 
 const DATEI_ENDUNG_REGEXP = /\.[a-zA-Z]*/;
 
+const PHP_DIR_PREDECESSOR = "/mnt/sda/public_html/Graph/Content/"
 
-const WAV_REGEXP = /.*.wav/;
-const MP3_REGEXP = /.*.mp3/;
-
-const PHP_DIR_PREDECESSOR = "/var/www/heptagon/public_html/Graph/Content/"
-
-const DIRECTORY = "https://www.hepta.ga/Graph/Content/"
+const DIRECTORY = "https://www.heptagon.network/Graph/Content/"
 
 class FileSystem {
     constructor () {
