@@ -3,11 +3,15 @@ const VOLUME_ICON_OFF = "../Graph/Ressources/Speaker_Icon_Off.png";
 
 class InputContainer{
 
-    constructor(){
-        this.state = 0;
+    constructor(palette){
+        this.state = 1;
         this.animation1;
+        this.animation2;
         this.button = document.getElementById('inputButton');
         this.button.addEventListener('click', this.toggleInput.bind(this));
+
+        this.palette = palette;
+        this.animationIni;
 
         this.volumeButton = document.getElementById('volumeButton');
         this.volumeButton.addEventListener('click', this.toggleMute.bind(this));
@@ -45,7 +49,7 @@ class InputContainer{
 
     }
 
-    toggleInput(){
+    toggleInput2(){
         if (this.state==0){
                 this.animation1 = anime({
                 targets:'#input',
@@ -83,7 +87,112 @@ class InputContainer{
         }
     }
 
-}
+    toggleInput(){
+    if(this.state == 1){
+            //show
+            this.state = 0;
+            this.animation1 = anime({
+                targets:'#input',
+                opacity: '100%',
+                direction: 'normal',
+                delay:'300',
+            })
+            this.animation2 = anime({
+                targets: '#svghept polygon',
+                opacity: {value: '100%',
+                duration:100},
+                points: [
+                    {value: '50 100, 89.092 81.174, 98.746 38.874, 71.694 4.952, 28.306 4.952, 1.254 38.874, 10.908 81.174',
+                    delay:100},
+                ],
+                duration: 1400,
+                easing: 'easeOutElastic(1, 1)',
+            });
+            anime({
+                targets:'#inputSvg polygon',
+                points: '10 31, 25 12, 40 31',
+            })
+            this.animationIni = new BackgroundAnimation(this.palette[Math.floor(Math.random() * this.palette.length)], this.palette[Math.floor(Math.random() * this.palette.length)], 3000, 'stop1', 'stop2');
+            this.animationIni.open();
+                
+        }else{
+        //hide
+        if(this.animation1.completed == true && this.animation2.completed == true){
+        this.state = 1;
+        anime({
+            targets:'#input',
+            opacity: '0',
+            easing: 'linear',
+            duration: '200',
+            delay:'500',
+        })
+        anime({
+            targets: '#svghept polygon',
+            points: [
+                {value: '50 100, 50 50, 98.746 38.874, 50 50, 50 50, 1.254 38.874, 50 50' },
+            ],
+            opacity: {
+                value: 0,
+                delay:300},
+            duration: 800,
+            easing: 'easeInElastic(1, 1)',
+        })
+        anime({
+            targets:'#inputSvg polygon',
+            points: '10 19, 25 38, 40 19',
+        })
+        this.onSubmitClick(this.textarea.value);
+        }
+        else{
+        this.animation1.seek(this.animation1.duration);
+        this.animation2.seek(this.animation2.duration);
+        this.toggleInput();
+        }
+    };
+    };
+};
+    
+
+    class BackgroundAnimation{
+        constructor(gradient1, gradient2, duration, id1, id2){
+            this.ani;
+            this.duration = duration;
+            this.d = 0;
+            this.target1 = document.getElementById(id1);
+            this.target2 = document.getElementById(id2);
+    
+            this.gradients = [
+                gradient1,
+                gradient2
+            ]
+        }
+    
+        open(){
+            this.ani = anime({
+                targets: {
+                    start: this.gradients[0],
+                    end: this.gradients[1]
+                },
+                start: this.gradients[1],
+                end: this.gradients[0],
+                duration: this.duration,
+                easing: 'easeOutQuad',
+                round: 1,
+                loop: true,
+                direction: 'alternate',
+                update: this.animation.bind(this),            
+              });
+        }
+    
+        animation(){
+            var value1 = this.ani.animations[0].currentValue;
+            var value2 = this.ani.animations[1].currentValue;
+    
+            this.target1.setAttribute('style', 'stop-color:'+value1+';stop-opacity:.6');
+            this.target2.setAttribute('style', 'stop-color:'+value2+';stop-opacity:.6');
+        }
+        
+    }
 
 class ZoomContainer {
     constructor(){

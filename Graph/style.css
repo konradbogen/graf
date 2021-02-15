@@ -50,14 +50,16 @@ body{
 
 #input{
     position:fixed;
-    background:white;
-    width:50%;
-    height:0;
+    background:none;
+    width:30%;
+    height:58%;
     opacity:0;
     left:50%;
     top:50%;
     transform:translate(-50%, -50%);
     text-align:center;
+    color:white;
+    border:none;
 }
 
 #inputButton{
@@ -92,6 +94,20 @@ body{
     transform:translateX(-25%);
     bottom:0;
     cursor: pointer;
+}
+
+.fixedcontainer{
+    top:0;
+    left:0;
+    width:100vw;
+    height:100vh;
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fixedcontainer textarea{
+    height:100%;
 }
 
   

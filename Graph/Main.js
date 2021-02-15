@@ -1,5 +1,14 @@
 const TEST_MODE = true;
-const RUNNING_IN_LOCAL = false;
+const RUNNING_IN_LOCAL = true;
+
+const PALETTE = [
+    '#004F2D',
+    '#247BA0',
+    '#e6af2e',
+    '#F76F8E',
+    '#550C18',
+    '#3B429F']; //in # and ' for anime.js compatibility; 
+
 var default_entry_url = "Default.txt";
 
 var graph;
@@ -109,7 +118,7 @@ function update_document_title () {
 }
 
 function create_ui() {
-    ui_input_container = new InputContainer();
+    ui_input_container = new InputContainer(PALETTE);
     ui_input_container.onSubmitClick = function (val) {
         parser.read_text(val);
         sessionStorage.setItem('graph_entry', val);
