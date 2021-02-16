@@ -109,3 +109,16 @@ function create_from_video_file (url) {
 function create_from_image_file (url) {
     document.getElementById ("content").innerHTML =  "<img src=\" " + url + "\">";
 }    
+
+const PALETTE =  [
+    '#004F2D',
+    '#247BA0',
+    '#e6af2e',
+    '#F76F8E',
+    '#550C18',
+    '#3B429F']; //in # and ' for anime.js compatibility; 
+
+    
+
+var backgroundAnimationINI = new BackgroundAnimation(PALETTE[Math.floor(Math.random() * PALETTE.length)], PALETTE[Math.floor(Math.random() * PALETTE.length)], 3000, 'stop1', 'stop2');
+backgroundAnimationINI.open();

@@ -49,17 +49,24 @@ body{
 }
 
 #input{
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     position:fixed;
     background:none;
-    width:30%;
-    height:58%;
+    width:50%;
+    height:100%;
+    top:-10%;
     opacity:0;
-    left:50%;
-    top:50%;
-    transform:translate(-50%, -50%);
-    text-align:center;
     color:white;
     border:none;
+    display:none;
+    background:none;
+}
+
+#input div{
+    text-align:center;
+    width:100%;
 }
 
 #inputButton{
@@ -96,18 +103,21 @@ body{
     cursor: pointer;
 }
 
-.fixedcontainer{
+
+
+#fixedcontainer{
+    display:none;
+    background:none;
+    position:fixed;
     top:0;
-    left:0;
-    width:100vw;
-    height:100vh;
-    display:flex;
+    left:50%;
+    margin-left:-50vmin;
+    width:100vmin;
+    height:100vmin;
     align-items: center;
     justify-content: center;
+    clip-path: url(#heptagonClip);
 }
 
-.fixedcontainer textarea{
-    height:100%;
-}
 
   

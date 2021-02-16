@@ -16,20 +16,24 @@
 <body>
     <div id=graphContainer>
     </div>
-
-    <div class="fixedcontainer">
-    <svg id=svghept width=100vmin height=100vmin viewBox="-25 -25 150 150">
+    <div id=fixedcontainer>
+    <svg id=svghept width=100vmin height=100vmin viewBox="0 0 100 100">
         <defs>
           <linearGradient id=grad1 x1="0%" y1="0%" x2="100%" y2="0%">
             <stop id=stop1 offset="20%"/>
             <stop id=stop2 offset="80%"/>
           </linearGradient>
         </defs>
-          <polygon style='opacity:0;'class=svghept stroke=white fill="url(#grad1)" points='50 100, 50 50, 98.746 38.874, 50 50, 50 50, 1.254 38.874, 50 50'></polygon>
+          <polygon id=heptpolygon style='opacity:0;'class=svghept stroke=white fill="url(#grad1)" points='50 100, 50 50, 98.746 38.874, 50 50, 50 50, 1.254 38.874, 50 50'></polygon>
+        <defs>
+            <clipPath id=heptagonClip clipPathUnits="objectBoundingBox">
+                <polygon points='0.50 1, 0.89092 0.81174, 0.98746 0.38874, 0.71694 0.04952, 0.28306 0.04952, 0.01254 0.38874, 0.10908 0.81174'></polygon>
+            </clipPath>
+        </defs>
       </svg>
-      <textarea id = "input" name="input"></textarea> 
+      <!-- <textarea id = "input" name="input"></textarea>  -->
+      <div contenteditable="true" id = "input">input</div>
     </div>
-
 
     <div id="menu">
         <button id="volumeButton">

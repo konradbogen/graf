@@ -49,43 +49,43 @@ class InputContainer{
 
     }
 
-    toggleInput2(){
-        if (this.state==0){
-                this.animation1 = anime({
-                targets:'#input',
-                backgroundColor: '#ffffff',
-                height: '50%',
-                opacity: '50%',
-                direction: 'normal',
-            })
-            anime({
-                targets:'#inputSvg polygon',
-                points: '10 31, 25 12, 40 31',
-            })
-            this.state++;
-        }
-        else{
-            if(this.animation1.completed == true){
-            anime({
-                targets:'#input',
-                height: '0',
-                opacity: '0',
-                easing: 'linear',
-                duration: '200',
-            })
-            anime({
-                targets:'#inputSvg polygon',
-                points: '10 19, 25 38, 40 19',
-            })
-            this.state=0
-            this.onSubmitClick(this.textarea.value);
-            }
-            else{
-                this.animation1.seek(this.animation1.duration);
-                this.toggleInput();
-            }
-        }
-    }
+    // toggleInput2(){
+    //     if (this.state==0){
+    //             this.animation1 = anime({
+    //             targets:'#input',
+    //             backgroundColor: '#ffffff',
+    //             height: '50%',
+    //             opacity: '50%',
+    //             direction: 'normal',
+    //         })
+    //         anime({
+    //             targets:'#inputSvg polygon',
+    //             points: '10 31, 25 12, 40 31',
+    //         })
+    //         this.state++;
+    //     }
+    //     else{
+    //         if(this.animation1.completed == true){
+    //         anime({
+    //             targets:'#input',
+    //             height: '0',
+    //             opacity: '0',
+    //             easing: 'linear',
+    //             duration: '200',
+    //         })
+    //         anime({
+    //             targets:'#inputSvg polygon',
+    //             points: '10 19, 25 38, 40 19',
+    //         })
+    //         this.state=0
+    //         this.onSubmitClick(this.textarea.value);
+    //         }
+    //         else{
+    //             this.animation1.seek(this.animation1.duration);
+    //             this.toggleInput();
+    //         }
+    //     }
+    // }
 
     toggleInput(){
     if(this.state == 1){
@@ -98,7 +98,7 @@ class InputContainer{
                 delay:'300',
             })
             this.animation2 = anime({
-                targets: '#svghept polygon',
+                targets: '#heptpolygon',
                 opacity: {value: '100%',
                 duration:100},
                 points: [
@@ -107,6 +107,10 @@ class InputContainer{
                 ],
                 duration: 1400,
                 easing: 'easeOutElastic(1, 1)',
+                begin: function() {
+                    document.querySelector('#input').style.display = 'flex';
+                    document.querySelector('#fixedcontainer').style.display = 'flex';
+                  },
             });
             anime({
                 targets:'#inputSvg polygon',
@@ -127,7 +131,7 @@ class InputContainer{
             delay:'500',
         })
         anime({
-            targets: '#svghept polygon',
+            targets: '#heptpolygon',
             points: [
                 {value: '50 100, 50 50, 98.746 38.874, 50 50, 50 50, 1.254 38.874, 50 50' },
             ],
@@ -136,12 +140,17 @@ class InputContainer{
                 delay:300},
             duration: 800,
             easing: 'easeInElastic(1, 1)',
+            complete: function() {
+                document.querySelector('#input').style.display = 'none';
+                document.querySelector('#fixedcontainer').style.display = 'none';
+              },
         })
         anime({
             targets:'#inputSvg polygon',
             points: '10 19, 25 38, 40 19',
         })
         this.onSubmitClick(this.textarea.value);
+        document.getElementById("input").style.display="none";
         }
         else{
         this.animation1.seek(this.animation1.duration);
@@ -150,6 +159,8 @@ class InputContainer{
         }
     };
     };
+
+
 };
     
 

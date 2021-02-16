@@ -14,11 +14,17 @@
     </head>
     <body> 
         <div id="header">
-                <svg id = "heptagon" viewBox="-25 -25 150 150" href="https://www.heptagon.network/Graph">
-                    <a href = "https://www.heptagon.network/Graph">
-                        <polygon style='opacity:100;' class=svghept stroke=black fill="white" points="50 100, 89.092 81.174, 98.746 38.874, 71.694 4.952, 28.306 4.952, 1.254 38.874, 10.908 81.174" />
-                    </a>
-                </svg>
+            <svg id = "heptagon" viewBox="-25 -25 150 150" href="https://www.heptagon.network/Graph">
+                <defs>
+                <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop id=stop1 offset="20%"/>
+                    <stop id=stop2 offset="80%"/>
+                </linearGradient>
+                </defs>
+                <a href = "https://www.heptagon.network/Graph">
+                    <polygon style='opacity:100%;' class=svghept stroke=white fill="url(#grad)" points="50 100, 89.092 81.174, 98.746 38.874, 71.694 4.952, 28.306 4.952, 1.254 38.874, 10.908 81.174" />
+                </a>
+            </svg>
         </div> 
         <div id="title">
             <h1>Title</h1>
@@ -29,6 +35,8 @@
         </body>
 
     </body>
+    <script src="../anime.min.js"></script>
+    <script src="../UI.js"></script>
     <script src="Frame.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </html> 
