@@ -1,5 +1,5 @@
 const TEST_MODE = true;
-const RUNNING_IN_LOCAL = true;
+const RUNNING_IN_LOCAL = false;
 
 const PALETTE = [
     '#004F2D',
@@ -32,6 +32,7 @@ function init () {
     if (RUNNING_IN_LOCAL == false) {
         files.read_directory (); 
     }
+    visual.connect_with_file_system(files);
     load_default_entry ();
 }
 
@@ -81,7 +82,6 @@ function set_visual_callbacks () {
     visual.callback_create_from_graph = function () {
         zoom_container.reset_zoom();
         update_document_title ();
-        visual.connect_with_file_system(files);
     };
     set_command_node_callbacks();
     zoom_container.callbacks.push (visual.on_zoom_change.bind (visual));

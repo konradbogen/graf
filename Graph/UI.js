@@ -18,6 +18,7 @@ class InputContainer{
         this.volumeImg = document.getElementById('volumeImg');
 
         this.textarea = document.getElementById('input')
+        this.textarea.style.cursor = "pointer";
         this.textarea.value = "input";
 
         this._mute = true;
