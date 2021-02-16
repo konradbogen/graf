@@ -87,14 +87,17 @@ class Line {
 
 class Point {
     constructor (x, y, node, visual, color, shadow_color) {
+        this.init_point(x, y, node, visual, color, shadow_color);
+    }
+
+    init_point(x, y, node, visual, color, shadow_color) {
         this._x = x;
         this._y = y;
         this.node = node;
         this.visual = visual;
-        this.container=visual.container;
+        this.container = visual.container;
         this.html;
-        
-        this.is_toggle = false;
+
 
         this._color = color ? color : this.visual.default_point_color;
         this._backgroundColor = this.visual.default_point_background_color;
@@ -105,18 +108,16 @@ class Point {
         this._boxShadowOpacity;
         this.defaultBoxShadowOpacity = 1;
 
-        this.is_playing = false;
-        this.mouse_over_aktiv = true;
+        this.is_toggle = false;
+        this._is_active = false;
+        this.mouse_over_enabled = true;
+        this.prevent_mouse_over_flag = false;
 
-        this.audio_node = null;
-        this.audio_buffer = null;
-
-        this.start_time; this.end_time; this.playing_duration;
         this._visibility = true;
         this._url = "";
-        this.update_content ();
-        this.create_html ();
-        this.create_observer ();
+
+        this.create_html();
+        this.create_observer();
         this.callbacks = [];
     }
 
@@ -198,7 +199,7 @@ class Point {
 
     set url (val) {
         this._url = val;
-        this.update_content ();
+        this.on_update_url ();
         this.set_html_text ();
     }
 
@@ -225,32 +226,6 @@ class Point {
         return this._y;
     }
 
-    get file_extension () {
-        return this.url.substr (this.url.lastIndexOf ("."));
-    }
-
-    get typ () {
-        var ext = this.file_extension;
-        if (ext == ".mp3" || ext == ".wav") {
-            return "audio";
-        }else if (ext == ".jpg" || ext == ".gif" || ext==".png" || ext==".jpeg") {
-            return "image";
-        }else if (ext == ".mp4") {
-            return "video";
-        }else if (ext == ".txt") {
-            return "text";
-        }else if (ext == ".html") {
-            return "html"
-        }else if (this.node.name == RECORD_COMMAND || this.node.name == PAUSE_COMMAND) {
-            return "toogle control"
-        }else if (this.node.name == RESET_COMMAND || this.node.name == PLAY_COMMAND) {
-            return "control"
-        }
-        else {
-            return "node"
-        }
-    }
-
     get absolute_position () {
         var pos = $(this.html).offset();
         return pos;
@@ -263,6 +238,19 @@ class Point {
     get relative_path () {
         var path = this.url.substring (DOMAIN_PATH.length - 1);
         return path;
+    }
+
+    get is_active () {
+        return this.is_active;
+    }
+
+    set is_active (val) {
+        this._is_active = val;
+        if (val == false) {
+            this.remove_active_style ();
+        }else {
+            this.set_active_style ();
+        }
     }
 
     change_position (newX, newY) {
@@ -300,12 +288,6 @@ class Point {
     init_html_font() {
         this.fontSize = 111 / (Math.pow(FONT_SIZE_LEVEL_EXP_FACTOR, this.relative_level) * FONT_SIZE_LEVEL_FACTOR);
         this.html.style.fontWeight = "normal";
-    }
-
-    on_load_state_change (state) {
-        if (state == 1) {
-            this.backgroundColor = get_random_rgb_color (); //loaded;
-        }
     }
 
     init_html_colors() {
@@ -356,75 +338,58 @@ class Point {
     }
 
     click () {
-        if (this.typ == "video" || this.typ == "image" || this.typ == "text" || this.typ == "html") {
-            this.open_content_page();
-        }else if (this.typ == "audio" || this.typ == "toogle control") {
-            this.toggle_play();
-        } else if (this.typ == "control") {
-            this.play ();
-        } else if (this.typ == "node") {
-            if (this.visual.start_node && this.node.id == this.visual.start_node.id) {
-                this.visual.create_from_graph (this.visual.graph, this.node.parent);
-            }else {
-                this.visual.create_from_graph (this.visual.graph, this.node);
-            }
-        }
+        this.on_click ();
     }
 
-    toggle_play() {
-        this.mouse_over_aktiv = false;
-        if (this.is_playing == true) {
-            this.stop();
-        } else {
-            this.play();
-        }
-    }
+    on_click () {
 
-    open_content_page() {
-        var frame_parameter = this.id + this.file_extension;
-        window.open("https://www.heptagon.network/Graph/c?=" + frame_parameter, "_self");
     }
 
     mouse_leave () {
-        this.mouse_over_aktiv = true;
-        if (this.typ != "audio" && this.typ != "toogle control") {
-            this.stop ();
+        if (this.mouse_over_enabled && this.prevent_mouse_over_flag == true) {
+            this.prevent_mouse_over_flag = false;
+            this.on_mouse_leave();
         }
     }    
+
+    on_mouse_leave () {
+
+    };
     
     mouse_over () {
-        if (this.mouse_over_aktiv==true && MOUSE_OVER && this.typ != "toogle control") {
-            this.play ();
+        if (this.mouse_over_enabled && !this.prevent_mouse_over_flag) {
+            this.prevent_mouse_over_flag = true;
+            this.on_mouse_over ();
         }
     }
 
-    update_content () {
-        if (this.typ == "audio") {
-            this.is_toggle = true;
-            this.visual.callbacks_init_audio.push (this.load_audio_buffer.bind (this));
-        }else if (this.typ == "toggle control") {
-            this.is_toggle = true;
-        }
+    on_mouse_over () {};
+
+    on_update_url () {
+    
     }
 
-    load_audio_buffer () {
-        if (!this.audio_buffer) {
-            var audioCtx = this.visual.audioContext;
-            var request = new XMLHttpRequest();
-            console.log ("path: " + this.relative_path);
-            request.open('GET', this.relative_path, true);
-            request.responseType = 'arraybuffer';
-            request.onload = function() {
-                var audioData = request.response;  
-                audioCtx.decodeAudioData(audioData, function(buffer) {
-                    this.audio_buffer = buffer;
-                    this.on_load_state_change (1);
-                }.bind (this),        
-                function(e){ console.log("Error with decoding audio data" + e.err); });
-            }.bind (this);
-      
-            request.send();
-        }
+    play () {
+        this.start_time = new Date ();
+        this.is_active = true;
+        this.visual.fire_callbacks_point_play (this);
+        this.on_play ();
+    }
+
+    stop () {
+        this.stop_time = new Date ();
+        this.is_active = false;
+        this.visual.fire_callbacks_point_stop (this);
+        this.on_stop ();
+
+    }
+
+    on_play () {
+
+    }
+
+    on_stop () {
+
     }
 
     create_observer (callback) {
@@ -457,61 +422,19 @@ class Point {
         }    
     }
 
-    play () {
-        if (this.is_playing == false) {
-            this.is_playing = true;
-            this.set_playing_style();
-            if (this.typ == "audio") {
-                this.play_audio();
-            }
-            this.start_time = new Date ();
-            this.visual.fire_callbacks_point_play (this);
-        }
-    }
 
-    set_playing_style() {
+    set_active_style() {
         this.html.style.backgroundColor = this.visual.default_point_active_background_color;
         this.boxShadowOpacity = 0.3;
         this.html.style.color = this.visual.default_point_active_color;
         this.html.style.opacity = 1;
     }
 
-    remove_playing_style() {
+    remove_active_style() {
         this.html.style.backgroundColor = this.backgroundColor;
         this.html.style.color = this.color;
         this.html.style.opacity = this.opacity;
         this.boxShadowOpacity = this.defaultBoxShadowOpacity;
-    }
-
-    play_audio() {
-        if (this.visual.audioContext) {
-            this.arm_audio_node();
-            this.audio_node.onended = this.stop.bind (this);
-            this.audio_node.start ();
-        }
-    }
-
-    arm_audio_node() {
-        this.audio_node = this.visual.audioContext.createBufferSource();
-        this.audio_node.buffer = this.audio_buffer;
-        this.audio_node.connect(this.visual.audioGainNode);
-    }
-
-    stop_audio() {
-        if (this.audio_node) {
-            this.audio_node.stop();
-        }
-    }
-
-    stop () {
-        if (this.is_playing == true) {
-            this.is_playing = false;
-            this.remove_playing_style();
-            this.stop_audio();
-            this.end_time = new Date ();
-            this.playing_duration = this.end_time - this.start_time;
-            this.visual.fire_callbacks_point_stop (this, this.playing_duration);
-        }
     }
 
     show () {
@@ -530,16 +453,18 @@ class Visual {
     
     constructor (master_container) {
         this.graph;
+        this.url_list = [];
 
         this.points = [];
         this.lines = [];
         this.master_container = master_container; 
         this.container;
         this.svg;
+
         this.callbacks_point_play = [];
         this.callbacks_point_stop = [];
-
         this.callbacks_init_audio = [];
+        
         this.audioContext;
         this.audioGainNode;
         this._audioVolume = 0;
@@ -684,7 +609,7 @@ class Visual {
 
     create_points_from_start_node (graph, start_node, depth) {
         this.start_node = start_node;
-        this.create_point (this.x_center, this.y_center, start_node);
+        this.add_point (this.x_center, this.y_center, start_node);
         this.create_children_points_from_graph_node (graph,start_node, this.x_center, this.y_center, this.radius, depth-1);
     }
 
@@ -702,20 +627,41 @@ class Visual {
             var winkel = i * (2*Math.PI / children.length) + Math.random () * 0.3;
             var { x, y } = this.convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel);
             var color = parentnode ? parentnode.color : get_random_rgb_color ();
-            this.create_point (x,y, node)
+            this.add_point (x,y, node)
             if (remaining_depth > 0) {
                 this.create_children_points_from_graph_node(graph, node, x, y, radius/RADIUS_LEVEL_FACTOR, remaining_depth-1);
             }
         }
     }
 
-    create_point (x,y, node, color) {
-        var p = new Point (x,y, node, this, color);
+    add_point (x,y, node, color) {
+        var p = this.create_point(node, x, y, color);
         var level = node.level;
         if (!this.points[level]) {
             this.points[level] = [];
         }
         this.points[level].push (p);
+    }
+
+    create_point(node, x, y, color) {
+        var p;
+        var url = this.url_list [node.id];
+        if (url && is_audio_url(url)) {
+            p = new AudioPoint (x, y, node, this, color);
+            p.url = url;
+        } else if (url) {
+            p = new FilePoint(x, y, node, this, color);
+            p.url = url;
+        } else if (node.name == "_control") { //array
+            p = new FilePoint(x, y, node, this, color);
+        } else if (node.name == "_speaker") {
+            p = new StreamIOPoint (x, y, node, this, color)
+        } else if (node.name == "_auction") {
+            p = new AuctionPoint  (x, y, node, this, color)
+        } else {
+            p = new NodePoint (x, y, node, this, color)
+        }
+        return p;
     }
 
     create_line (edge) {
@@ -781,17 +727,10 @@ class Visual {
         return FARBEN [i];
     }
 
-    add_urls_to_points (urls, ids) {
-        for (var i = 0; i<ids.length; i++) {
-            var point = this.find_point (ids [i]);
-            if (point) {
-                point.url = urls [i];
-            }
+    connect_with_file_system (filesystem) {
+        for (var i = 0; i<filesystem.node_ids.length; i++) {
+            this.url_list [filesystem.node_ids[i]] = filesystem.urls [i];
         };
-    }
-
-    connect_with_file_system (file_system) {
-        this.add_urls_to_points (file_system.urls, file_system.node_ids);
     }
 
 
@@ -813,6 +752,22 @@ function get_random_rgb_color () {
     return "rgb("+val[0]+", "+val[1]+", "+val[2]+")";
 }
 
+function get_file_extension_from_url (url) {
+    if (url) {
+        return url.substr (url.lastIndexOf ("."));
+    }else {
+        return null;
+    }
+}
+
+function is_audio_url (url) {
+    var ext = get_file_extension_from_url (url);
+    if (ext == ".mp3" || ext == ".wav" || ext == ".flac") {
+        return true; 
+    }else {
+        return false;
+    }
+}
 
 //800
 
