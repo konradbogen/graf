@@ -38,7 +38,7 @@ function init () {
 
 
 function set_entry (input) {
-    ui_input_container.textarea.value = input;
+    ui_input_container.textarea.innerHTML = input;
     sessionStorage.setItem('graph_entry', input);
     parser = new Parser ();
     parser.read_text (input);
@@ -90,11 +90,19 @@ function set_visual_callbacks () {
 function set_command_node_callbacks() {
     visual.callbacks_point_play.push(function (point) {
         if (point.node.name == RECORD_COMMAND) {
-            pacs.start_recording ();
+            if (point.is_active) {
+                pacs.start_recording ();
+            }else {
+                pacs.stop_recording ();
+            }
         }else if (point.node.name == PLAY_COMMAND) {
             pacs.play_recorded ();
         }else if (point.node.name == PAUSE_COMMAND) {
-            pacs.stop_all_pacs ();
+            if (point.is_active) {
+                pacs.stop_all_pacs ();
+            }else {
+                pacs.start_all_pacs ();
+            }
         }else if (point.node.name == RESET_COMMAND) {
             pacs.delete_all_pacs ();
             pacs.init_recorded_sequence ();

@@ -18,8 +18,10 @@ class InputContainer{
         this.volumeImg = document.getElementById('volumeImg');
 
         this.textarea = document.getElementById('input')
-        this.textarea.style.cursor = "pointer";
         this.textarea.value = "input";
+        this.textarea.style.overflowY = "scroll";
+        this.textarea.style.textAlign = "center";
+
 
         this._mute = true;
         this.mute = true;
@@ -150,7 +152,7 @@ class InputContainer{
             targets:'#inputSvg polygon',
             points: '10 19, 25 38, 40 19',
         })
-        this.onSubmitClick(this.textarea.value);
+        this.onSubmitClick(this.textarea.innerHTML);
         document.getElementById("input").style.display="none";
         }
         else{

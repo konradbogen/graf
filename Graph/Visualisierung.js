@@ -241,7 +241,7 @@ class Point {
     }
 
     get is_active () {
-        return this.is_active;
+        return this._is_active;
     }
 
     set is_active (val) {
@@ -338,6 +338,9 @@ class Point {
     }
 
     click () {
+        if (this.is_toggle = true) {
+            this.is_active = !this.is_active;
+        }
         this.on_click ();
     }
 
@@ -652,8 +655,8 @@ class Visual {
         } else if (url) {
             p = new FilePoint(x, y, node, this, color);
             p.url = url;
-        } else if (node.name == "_control") { //array
-            p = new FilePoint(x, y, node, this, color);
+        } else if (node.name == RECORD_COMMAND || node.name == RESET_COMMAND ||node.name == PLAY_COMMAND || node.name == PAUSE_COMMAND) { //array
+            p = new ControlPoint (x, y, node, this, color);
         } else if (node.name == "_speaker") {
             p = new StreamIOPoint (x, y, node, this, color)
         } else if (node.name == "_auction") {

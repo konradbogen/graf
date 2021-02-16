@@ -99,7 +99,23 @@ class AudioPoint extends Point {
 class ControlPoint extends Point {
     constructor (x, y, node, visual, color) {
         super (x, y, node, visual, color);
-        this.is_toggle = true;
+        if (this.node.name != "_play") {
+            this.is_toggle = true;
+            this.mouse_over_enabled = false;
+        }else {
+            this.mouse_over_enabled = true;
+        }
+    }
+
+    on_mouse_over = function () {
+        this.is_active = true;
+        if (this.mouse_over_enabled) {
+            this.on_click ();
+        }
+    }
+
+    on_mouse_leave = function () {
+        this.is_active = false;
     }
 
     on_click = function () {
