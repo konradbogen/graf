@@ -338,7 +338,7 @@ class Point {
     }
 
     click () {
-        if (this.is_toggle = true) {
+        if (this.is_toggle == true) {
             this.is_active = !this.is_active;
         }
         this.on_click ();

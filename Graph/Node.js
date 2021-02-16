@@ -20,7 +20,7 @@ class AudioPoint extends Point {
         this.start_time; this.end_time; this.playing_duration;
         
         this.url = url;
-        this.is_toggle = true;
+        this.is_toggle = false;
         this.visual.callbacks_init_audio.push (this.load_audio_buffer.bind (this));
     }
 
@@ -40,7 +40,9 @@ class AudioPoint extends Point {
     }
 
     on_mouse_over = function () {
-        this.play ();
+        if (!this.is_active) {
+            this.play ();
+        }
     }
 
     on_play  = function () {
@@ -48,6 +50,7 @@ class AudioPoint extends Point {
             this.arm_audio_node();
             this.audio_node.onended = this.stop.bind(this);
             this.audio_node.start();
+            this.is_active = true;
         }
     }
 
