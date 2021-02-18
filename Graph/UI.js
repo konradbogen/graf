@@ -32,7 +32,7 @@ class InputContainer{
     }
     set mute (val) {
         this._mute = val;
-        if (val==true) {
+        if (val==true) {
             this.volumeImg.src = VOLUME_ICON_OFF;
         }else {
             this.volumeImg.src = VOLUME_ICON_ON;
@@ -152,7 +152,7 @@ class InputContainer{
             targets:'#inputSvg polygon',
             points: '10 19, 25 38, 40 19',
         })
-        this.onSubmitClick(this.textarea.innerHTML);
+        this.onSubmitClick(this.get_entry_text());
         document.getElementById("input").style.display="none";
         }
         else{
@@ -163,6 +163,10 @@ class InputContainer{
     };
     };
 
+    get_entry_text () {
+        var text = this.textarea.innerText;
+        return text;
+    }   
 
 };
     

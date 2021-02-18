@@ -4,10 +4,8 @@ const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const DOMAIN_PATH = "https://www.heptagon.network/";
 
-const RECORD_COMMAND = "_record";
-const PLAY_COMMAND = "_play";
-const PAUSE_COMMAND = "_pause";
-const RESET_COMMAND = "_reset";
+const CONTROL_NAMES = ["record", "play", "pause", "reset"];
+
 
 
 var FONT_SIZE_ZOOM_FACTOR = 1.1; //depends on UI Max Zoom (*1 equals)
@@ -94,6 +92,7 @@ class Point {
         this._x = x;
         this._y = y;
         this.node = node;
+        this.type = "point"
         this.visual = visual;
         this.container = visual.container;
         this.html;
@@ -188,6 +187,11 @@ class Point {
             this.hide ();
         }
     } 
+
+    get name_arguments () {
+        var parts = this.node.name.split ("_");
+        return parts;
+    }
 
     get id () {
         return this.node.id;
@@ -338,9 +342,6 @@ class Point {
     }
 
     click () {
-        if (this.is_toggle == true) {
-            this.is_active = !this.is_active;
-        }
         this.on_click ();
     }
 
@@ -351,6 +352,7 @@ class Point {
     mouse_leave () {
         if (this.mouse_over_enabled && this.prevent_mouse_over_flag == true) {
             this.prevent_mouse_over_flag = false;
+            if (!this.is_toggle) {this.is_active = false;}
             this.on_mouse_leave();
         }
     }    
@@ -362,6 +364,7 @@ class Point {
     mouse_over () {
         if (this.mouse_over_enabled && !this.prevent_mouse_over_flag) {
             this.prevent_mouse_over_flag = true;
+            if (!this.is_toggle) {this.is_active = true;}
             this.on_mouse_over ();
         }
     }
@@ -373,8 +376,12 @@ class Point {
     }
 
     play () {
+        if (this.is_toggle) {
+            this.is_active = !this.is_active;
+        }else {
+            this.is_active = true;
+        }
         this.start_time = new Date ();
-        this.is_active = true;
         this.visual.fire_callbacks_point_play (this);
         this.on_play ();
     }
@@ -649,22 +656,36 @@ class Visual {
     create_point(node, x, y, color) {
         var p;
         var url = this.url_list [node.id];
+        var is_control_node = this.is_control_node(node);
         if (url && is_audio_url(url)) {
             p = new AudioPoint (x, y, node, this, color);
             p.url = url;
         } else if (url) {
             p = new FilePoint(x, y, node, this, color);
-            p.url = url;
-        } else if (node.name == RECORD_COMMAND || node.name == RESET_COMMAND ||node.name == PLAY_COMMAND || node.name == PAUSE_COMMAND) { //array
+            p.file_extension = get_file_extension_from_url (url);
+        } else if (is_control_node) { //array
             p = new ControlPoint (x, y, node, this, color);
         } else if (node.name == "_speaker") {
             p = new StreamIOPoint (x, y, node, this, color)
         } else if (node.name == "_auction") {
             p = new AuctionPoint  (x, y, node, this, color)
-        } else {
+        } else if (node.name.startsWith ("_sing") || node.name.startsWith ("_listen") ) {
+            p = new StreamPoint  (x, y, node, this, color)
+        }
+        else {
             p = new NodePoint (x, y, node, this, color)
         }
         return p;
+    }
+
+    is_control_node(node) {
+        var is_control_node = false;
+        CONTROL_NAMES.forEach (n => {
+            if (node.name.startsWith ("_" + n)) {
+                is_control_node = true;
+            }
+        });
+        return is_control_node;
     }
 
     create_line (edge) {

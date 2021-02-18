@@ -1,5 +1,5 @@
 const TEST_MODE = true;
-const RUNNING_IN_LOCAL = false;
+const RUNNING_IN_LOCAL = true;
 
 const PALETTE = [
     '#004F2D',
@@ -38,7 +38,7 @@ function init () {
 
 
 function set_entry (input) {
-    ui_input_container.textarea.innerHTML = input;
+    ui_input_container.textarea.innerText = input;
     sessionStorage.setItem('graph_entry', input);
     parser = new Parser ();
     parser.read_text (input);
@@ -71,7 +71,6 @@ function set_entry_from_default_txt () {
     jsonFile.onreadystatechange = function () {
         if (jsonFile.readyState == 4 && jsonFile.status == 200) {
             this.default_entry = jsonFile.responseText;
-            console.log("Default Entry From File: " + this.default_entry);
             set_entry(files.get_all_ids_entry_text() + "\n" + this.default_entry);
         }
     };
@@ -89,24 +88,27 @@ function set_visual_callbacks () {
 
 function set_command_node_callbacks() {
     visual.callbacks_point_play.push(function (point) {
-        if (point.node.name == RECORD_COMMAND) {
-            if (point.is_active) {
-                pacs.start_recording ();
-            }else {
-                pacs.stop_recording ();
+        if (point.type == "control") {
+            if (point.control_type == "record") {
+                if (point.is_active) {
+                    pacs.start_recording (point.control_target);
+                }else {
+                    pacs.stop_recording ();
+                }
+            }else if (point.control_type == "play") {
+                pacs.play_recorded (point.control_target);
+            }else if (point.control_type == "pause") {
+                if (point.is_active) {
+                    pacs.stop_all_pacs ();
+                }else {
+                    pacs.start_all_pacs ();
+                }
+            }else if (point.control_type == "reset") {
+                pacs.delete_all_pacs ();
+                pacs.init_recording_sequence (point.control_target);
             }
-        }else if (point.node.name == PLAY_COMMAND) {
-            pacs.play_recorded ();
-        }else if (point.node.name == PAUSE_COMMAND) {
-            if (point.is_active) {
-                pacs.stop_all_pacs ();
-            }else {
-                pacs.start_all_pacs ();
-            }
-        }else if (point.node.name == RESET_COMMAND) {
-            pacs.delete_all_pacs ();
-            pacs.init_recorded_sequence ();
         }
+        
     });
     visual.callbacks_point_stop.push(function (point, duration) {
         if (point.node.name == RECORD_COMMAND) {

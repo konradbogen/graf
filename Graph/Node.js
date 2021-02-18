@@ -1,6 +1,7 @@
 class NodePoint extends Point {
     constructor (x, y, node, visual) {
         super (x, y, node, visual);
+        this.type = "node";
     }
 
     on_click = function() {
@@ -10,11 +11,16 @@ class NodePoint extends Point {
             this.visual.create_from_graph (this.visual.graph, this.node);
         }
     }
+
+    on_mouse_over = function () {
+        this.play ();
+    }
 }
 
 class AudioPoint extends Point {
     constructor (x, y, node, visual, url) {
         super (x, y, node, visual);
+        this.type = "audio";
         this.audio_node = null;
         this.audio_buffer = null;
         this.start_time; this.end_time; this.playing_duration;
@@ -102,51 +108,104 @@ class AudioPoint extends Point {
 class ControlPoint extends Point {
     constructor (x, y, node, visual, color) {
         super (x, y, node, visual, color);
-        if (this.node.name != "_play") {
-            this.is_toggle = true;
-            this.mouse_over_enabled = false;
-        }else {
+        this.type = "control";
+        if (this.control_type == "play") {
             this.mouse_over_enabled = true;
         }
+        else {
+            if (this.control_type != "reset") {this.is_toggle = true;};
+            this.mouse_over_enabled = false;
+        }
+    }
+
+    get control_type () {
+        return this.name_arguments [1];
+    }
+
+    get control_target () {
+        return this.name_arguments [2];
     }
 
     on_mouse_over = function () {
-        this.is_active = true;
         if (this.mouse_over_enabled) {
-            this.on_click ();
+            this.play ();
         }
     }
 
-    on_mouse_leave = function () {
-        this.is_active = false;
-    }
-
     on_click = function () {
-        this.visual.fire_callbacks_point_play (this);
+        this.play ();
     }
 }
 
 class AuctionPoint extends Point {
     constructor (x, y, node, visual, color) {
         super(x, y, node, visual, color);
+        this.type = "auction";
     }
 }
 
-class PlatformPoint extends Point {
+class StreamPoint extends Point {
     constructor (x, y, node, visual) {
         super (x, y, node, visual);
+        this.is_toggle = true;
+        this.audio;
     }
+
+    get stream_type () {
+        return this.name_arguments [1];
+    }
+
+    get stream_id () {
+        return this.name_arguments [2];
+    }
+
+    create_audio (id) {
+        this.audio = new Audio ();
+        document.body.appendChild (this.audio)
+        this.audio.play ();
+    }
+
+    on_click = function () {
+        this.play ();
+    }
+
+    on_play = function () {
+        if (this.is_active) {
+            this.start ();
+        }else {
+            this.stop ();
+        }
+    }
+
+    start () {  
+        console.log ("start " + this.stream_type + " as " + this.stream_id)  
+        if (this.stream_type == "sing") {
+            createPeer (this.stream_id);
+        }else if (this.stream_type == "listen") {
+            this.create_audio ();
+            this.audio.muted = false;
+            call (this.stream_id, this.audio);
+        }
+    }
+
+    stop () {
+        console.log ("stop " + this.stream_type + " as " + this.stream_id)
+        if (this.stream_type == "sing") {
+            stopStreaming ();
+        }else if (this.stream_type == "listen") {
+            if (this.audio) {
+                this.audio.muted = true;
+            }
+        }
+    }
+
 }
 
-class StreamIOPoint extends Point {
-    constructor (x, y, node, visual) {
-        super (x, y, node, visual);
-    }
-}
 
 class FilePoint extends Point {
     constructor (x, y, node, visual, file_extension) {
         super (x, y, node, visual);
+        this.type = "file";
         this.file_extension = file_extension;
     }
 
@@ -154,9 +213,10 @@ class FilePoint extends Point {
         this.open_content_page();
     }
 
-    open_conten_page () {
+    open_content_page () {
         var frame_parameter = this.id + this.file_extension;
         window.open("https://www.heptagon.network/Graph/c?=" + frame_parameter, "_self");
     }
 }
+
 

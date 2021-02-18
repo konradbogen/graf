@@ -17,7 +17,6 @@ class Lexer {
     }
 
     test_id (line, reg_ex) {
-        console.log ("test " + line);
         if (line.includes (",")) {
             return false;
             console.log ("dont use , in filenames!")

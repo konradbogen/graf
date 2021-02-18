@@ -45,7 +45,7 @@ class Sequence {
     play (index) {
         if (index < this.lines.length) {
             var point = this.lines[index].point_a;
-            if (point.node.name != RECORD_COMMAND) {
+            if (point.control_type != "record") {
                 point.play ();
             }
         }
@@ -87,14 +87,14 @@ class Sequence {
 
 class PACSystem {
     constructor (visual, graph) {
+        this.recording_sequence;
         this.visual = visual;
         this.pacs = [];
         this.sequences = [];
         this.date = new Date(); 
         this.last_date = new Date ();
         this.is_recording = false;
-        this.init_recorded_sequence ();
-        this.sequences [0] = this.recorded_sequence;
+        this.init_recording_sequence ();
         this.speed = 10;
         this.timer = setInterval (this.update_pacs.bind (this), UPDATE_RATE)
         this.visual.callbacks_point_play.push (this.add_recorded_point.bind (this));
@@ -138,32 +138,40 @@ class PACSystem {
             if (this.last_date == null) {this.last_date = this.date};
             var duration = (this.date - this.last_date) * 10;
             this.last_date = this.date;
-            this.recorded_sequence.add_point (point, duration);
+            this.recording_sequence.add_point (point, duration);
         }
     }
 
-    init_recorded_sequence () {
-        if (this.recorded_sequence) {this.recorded_sequence.hide ();};
-        this.recorded_sequence = new Sequence ("recorded"); 
-        this.recorded_sequence.visual = this.visual;
-        this.recorded_sequence.color = "red";
+    init_recording_sequence (_seq_name) {
+        var seq_name = _seq_name || "recorded";
+        if (this.sequences[seq_name]) {this.sequences[seq_name].hide ();};
+        this.sequences[seq_name] = new Sequence ("name"); 
+        this.sequences[seq_name].visual = this.visual;
+        if (is_color (seq_name)) {
+            this.sequences[seq_name].color = seq_name;
+        }else {
+            this.sequences[seq_name].color = "red";
+        }
+        this.recording_sequence = this.sequences[seq_name];
     }
 
-    play_recorded () {
-        this.stop_recording ();
-        var pac = new PAC (this.recorded_sequence, "red");
-        this.pacs.push (pac);
+    play_recorded (_seq_name) {
+        var seq_name = _seq_name || "recorded";
+        if (this.sequences[seq_name]) {
+            var pac = new PAC (this.sequences[seq_name], this.sequences[seq_name].color);
+            this.pacs.push (pac);
+        }
     }
 
-    start_recording () {
+    start_recording (_seq_name) {
         this.date = null; this.last_date = null;
-        this.init_recorded_sequence ();
+        this.init_recording_sequence (_seq_name);
         this.is_recording = true;
     }
 
     stop_recording () {
         this.is_recording = false;
-        this.recorded_sequence.show ();
+        this.recording_sequence.show ();
     }
 
 }
@@ -261,4 +269,12 @@ class PAC {
         }
     }
 
+}
+
+function is_color (string) {
+    if (string == ("blue" || "red" || "yellow" || "green" || "pink" || "orange" || "purple" )) {
+        return true;
+    }else {
+        return false;
+    }
 }
