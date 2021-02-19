@@ -149,13 +149,14 @@ class StreamPoint extends Point {
         super (x, y, node, visual);
         this.is_toggle = true;
         this.audio;
+        this.peer;
     }
 
-    get stream_type () {
+    get type_argument () {
         return this.name_arguments [1];
     }
 
-    get stream_id () {
+    get id_argument () {
         return this.name_arguments [2];
     }
 
@@ -178,21 +179,21 @@ class StreamPoint extends Point {
     }
 
     start () {  
-        console.log ("start " + this.stream_type + " as " + this.stream_id)  
-        if (this.stream_type == "sing") {
-            createPeer (this.stream_id);
-        }else if (this.stream_type == "listen") {
+        console.log ("start " + this.type_argument + " as " + this.id_argument)  
+        if (this.type_argument == "sing") {
+            this.peer = answerCallsToIdWithMic (this.id_argument)
+        }else if (this.type_argument == "listen") {
             this.create_audio ();
             this.audio.muted = false;
-            call (this.stream_id, this.audio);
+            this.peer = feedStreamFromIdIntoAudio (this.id_argument, this.audio, this.peer);
         }
     }
 
     stop () {
-        console.log ("stop " + this.stream_type + " as " + this.stream_id)
-        if (this.stream_type == "sing") {
-            stopStreaming ();
-        }else if (this.stream_type == "listen") {
+        console.log ("stop " + this.type_argument + " as " + this.id_argument)
+        if (this.type_argument == "sing") {
+            this.peer.destroy ();
+        }else if (this.type_argument == "listen") {
             if (this.audio) {
                 this.audio.muted = true;
             }

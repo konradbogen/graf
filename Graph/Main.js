@@ -1,5 +1,5 @@
 const TEST_MODE = true;
-const RUNNING_IN_LOCAL = true;
+const RUNNING_IN_LOCAL = false;
 
 const PALETTE = [
     '#004F2D',
@@ -49,6 +49,7 @@ function update () {
     graph = new Graph ();
     parser.create_graph (graph);
     update_visual();
+    destroyAllStreamPeers ();
     init_pacsystem();
 }
 
