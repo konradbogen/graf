@@ -109,11 +109,14 @@ class ControlPoint extends Point {
     constructor (x, y, node, visual, color) {
         super (x, y, node, visual, color);
         this.type = "control";
-        if (this.control_type == "play") {
+        this.sequences = [];
+        this.pacs = [];
+
+        if (this.control_type == "play" || this.control_type == "seqr") {
             this.mouse_over_enabled = true;
         }
         else {
-            if (this.control_type != "reset") {this.is_toggle = true;};
+            if (this.control_type != "reset" || this.control_type == "bang") {this.is_toggle = true;};
             this.mouse_over_enabled = false;
         }
     }
@@ -124,6 +127,18 @@ class ControlPoint extends Point {
 
     get control_target () {
         return this.name_arguments [2];
+    }
+
+    stop_all_pacs () {
+        this.pacs.forEach (p => {
+            p.active = false;
+        })
+    }
+
+    start_all_pacs () {
+        this.pacs.forEach (p => {
+            p.active = true;
+        })
     }
 
     on_mouse_over = function () {

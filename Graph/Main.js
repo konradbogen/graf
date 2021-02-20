@@ -1,5 +1,5 @@
 const TEST_MODE = true;
-const RUNNING_IN_LOCAL = false;
+const RUNNING_IN_LOCAL = true;
 
 const PALETTE = [
     '#004F2D',
@@ -98,7 +98,39 @@ function set_command_node_callbacks() {
                 }
             }else if (point.control_type == "play") {
                 pacs.play_recorded (point.control_target);
-            }else if (point.control_type == "pause") {
+            }else if (point.control_type == "seqr") {
+                var neighbours = point.node.get_neighbours ();
+                for (var i = 0; i < neighbours.length; i++) {
+                    if (!point.sequences [i]) {point.sequences [i] = new Sequence (point.id+neighbours[i].id, visual)}
+                    var s = point.sequences [i]; 
+                    s.create_randomly_from_children_nodes (neighbours[i].id, point.name_arguments[2], point.name_arguments[3]);
+                    var p = new PAC (s);
+                    pacs.pacs.push (p);
+                }
+            }else if (point.control_type == "bang") {
+                if (point.is_active) {
+                    if (point.pacs.length > 0) {
+                        point.start_all_pacs ();
+                    }else 
+                    {
+                        var neighbours = point.node.get_neighbours ();
+                        for (var i = 0; i < neighbours.length; i++) {
+                            if (!point.sequences [i]) {point.sequences [i] = new Sequence (point.id+neighbours[i].id, visual)}
+                            var time_interval = point.name_arguments[2] ? point.name_arguments[2] : 1000
+                            point.sequences [i].push ([point.id, neighbours[i].id], time_interval, true);
+                            point.sequences [i].show ();
+                            var p = new PAC (point.sequences [i], true);
+                            pacs.pacs.push (p);
+                            point.pacs.push (p);
+                        }
+                    }
+                    
+                }else {
+                    point.stop_all_pacs ();
+                }
+                
+            }
+            else if (point.control_type == "pause") {
                 if (point.is_active) {
                     pacs.stop_all_pacs ();
                 }else {
@@ -119,6 +151,8 @@ function set_command_node_callbacks() {
         }
     });
 }
+
+
 
 function update_document_title () {
     if (visual.start_node) {

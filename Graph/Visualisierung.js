@@ -4,7 +4,7 @@ const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const DOMAIN_PATH = "https://www.heptagon.network/";
 
-const CONTROL_NAMES = ["record", "play", "pause", "reset"];
+const CONTROL_NAMES = ["record", "play", "pause", "reset", "seqr", "bang"];
 
 
 
@@ -24,6 +24,7 @@ class Line {
         this.point_b.callbacks.push (this.callback.bind(this));
         this.strength = strength;
         this.color = "white";
+        this.opacity = 0.1 + Math.random ()*0.4;
         this.visual = visual;
         this.svg = visual.svg;
         this.create_html ();
@@ -54,7 +55,7 @@ class Line {
         this.html.setAttribute("x2",this.x2+"%");
         this.html.setAttribute("y2",this.y2+"%");
         this.html.style.stroke = this.color;
-        this.html.style.strokeOpacity = 0.1 + Math.random ()*0.4;
+        this.html.style.strokeOpacity = this.opacity;
         this.html.style.strokeWidth = this.strength*2;
         this.svg.appendChild(this.html);
     }
@@ -118,6 +119,10 @@ class Point {
         this.create_html();
         this.create_observer();
         this.callbacks = [];
+    }
+
+    get children () {
+        return this.visual.get_children_points (this.node.id);
     }
 
     get boxShadowColor () {
@@ -383,15 +388,29 @@ class Point {
         }
         this.start_time = new Date ();
         this.visual.fire_callbacks_point_play (this);
+        //this.play_all_children ()
         this.on_play ();
     }
 
     stop () {
         this.stop_time = new Date ();
+        //this.stop_all_children ();
         this.is_active = false;
         this.visual.fire_callbacks_point_stop (this);
         this.on_stop ();
 
+    }
+
+    play_all_children () {
+        this.children.forEach (c => {
+            c.play ();
+        })
+    }
+
+    stop_all_children () {
+        this.children.forEach (c => {
+            c.stop ();
+        })
     }
 
     on_play () {
@@ -634,7 +653,7 @@ class Visual {
         var children = graph.get_children_nodes (parentnode);
         for (var i=0; i<children.length; i++) {
             var node = children [i];
-            var winkel = i * (2*Math.PI / children.length) + Math.random () * 0.3;
+            var winkel = i * (2*Math.PI / children.length) + Math.random () * 0.0;
             var { x, y } = this.convert_polar_into_cartesian_coordinates (x_center, y_center, radius, winkel);
             var color = parentnode ? parentnode.color : get_random_rgb_color ();
             this.add_point (x,y, node)
@@ -686,6 +705,16 @@ class Visual {
             }
         });
         return is_control_node;
+    }
+
+    get_children_points (parentnode_id) {
+        var parent_node = this.graph.find_node (parentnode_id);
+        var children_points = [];
+        parent_node.children.forEach (c => {
+            var point = this.find_point (c.id);
+            children_points.push (point);
+        })
+        return children_points;
     }
 
     create_line (edge) {

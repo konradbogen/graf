@@ -3,13 +3,13 @@ const UPDATE_RATE = 1000/120;
 const DEFAULT_LINE_COLOUR = "white";
 
 class Sequence {
-    constructor (name) {
+    constructor (name, visual) {
         this.name = name;
-        this.color = "white";
+        this.color = "red";
         this.lines = [];
         this.durations = [];
         this.node_playing_times = [];
-        this.visual;
+        this.visual = visual;
     }
     
     get last_point () {
@@ -33,19 +33,21 @@ class Sequence {
     show_line (line) {
         line.html.style.stroke = this.color;
         line.html.style.strokeWidth = line.strength*4;
+        line.html.style.opacity = 1;
     }
 
     hide () {
-        this.lines.forEach (linie => {
-            linie.html.style.stroke = DEFAULT_LINE_COLOUR;
-            linie.html.style.strokeWidth = linie.dicke*2;
+        this.lines.forEach (line => {
+            line.html.style.stroke = DEFAULT_LINE_COLOUR;
+            line.html.style.strokeWidth = line.dicke*2;
+            line.html.style.opacity = line.opacity;
         })
     }
 
-    play (index) {
+    play (index, take_point_b=false) {
         if (index < this.lines.length) {
-            var point = this.lines[index].point_a;
-            if (point.control_type != "record") {
+            var point = take_point_b ? this.lines[index].point_b : this.lines[index].point_a;
+            if (point.control_type != "record" && point.control_type != "bang") {
                 point.play ();
             }
         }
@@ -57,7 +59,7 @@ class Sequence {
         }
     } 
 
-    push (node_ids, duration, show) {
+    push (node_ids, duration=1000, show) {
         this.durations.push (duration);
         var line = this.visual.find_line (node_ids [0], node_ids [1])
         if (line == null) {
@@ -73,6 +75,9 @@ class Sequence {
     add_point (point, duration) { 
         if (this.last_point) {
             this.push ([this.last_point.node.id, point.node.id], duration);
+            if (this.lines[0].edge.node_a == this.lines[0].edge.node_b) {
+                this.shift ();
+            }
         }else {
             this.push ([point.node.id, point.node.id], duration);
         }
@@ -83,6 +88,31 @@ class Sequence {
         this.durations.shift ();
     }
 
+    
+
+    clear () {
+        this.hide ();
+        this.lines = [];
+        this.duration = [];
+    }
+
+    create_randomly_from_children_nodes (parent_node_id, length=3, duration=2000) {
+        this.clear ();
+        var children_points = this.visual.get_children_points (parent_node_id);
+        this.add_point (this.visual.find_point (parent_node_id), duration);
+        var available_indexes = [];
+        for (var i = 0; i < children_points.length; i++) {
+            available_indexes.push (i);
+        }
+        for (var i = 0; i<length;i++) {
+            if (available_indexes.length == 0) {
+                break;
+            }
+            var r = Math.round (Math.random () * (available_indexes.length-1));
+            var randomIndex = available_indexes [r]; available_indexes.splice (r, 1)
+            this.add_point (children_points [randomIndex], duration)
+        }
+    }
 }
 
 class PACSystem {
@@ -95,7 +125,7 @@ class PACSystem {
         this.last_date = new Date ();
         this.is_recording = false;
         this.init_recording_sequence ();
-        this.speed = 10;
+        this.speed = 1;
         this.timer = setInterval (this.update_pacs.bind (this), UPDATE_RATE)
         this.visual.callbacks_point_play.push (this.add_recorded_point.bind (this));
     }
@@ -145,7 +175,7 @@ class PACSystem {
     init_recording_sequence (_seq_name) {
         var seq_name = _seq_name || "recorded";
         if (this.sequences[seq_name]) {this.sequences[seq_name].hide ();};
-        this.sequences[seq_name] = new Sequence ("name"); 
+        this.sequences[seq_name] = new Sequence ("name", this.visual); 
         this.sequences[seq_name].visual = this.visual;
         if (is_color (seq_name)) {
             this.sequences[seq_name].color = seq_name;
@@ -158,7 +188,7 @@ class PACSystem {
     play_recorded (_seq_name) {
         var seq_name = _seq_name || "recorded";
         if (this.sequences[seq_name]) {
-            var pac = new PAC (this.sequences[seq_name], this.sequences[seq_name].color);
+            var pac = new PAC (this.sequences[seq_name]);
             this.pacs.push (pac);
         }
     }
@@ -177,11 +207,13 @@ class PACSystem {
 }
 
 class PAC {
-    constructor (sequence, color) {
-        this.sequence = this.copy_sequence (sequence);
-        this.color = color;
+    constructor (sequence, looping = false) {
+        this.playing_sequence = this.copy_sequence (sequence);
+        this.stored_sequence = sequence;
+        this.color = sequence.color;
         this.local_progress = 0;
         this.active = true;
+        this.is_looping = looping;
         this.svg_container = sequence.visual.svg;
         this.svg_element;
         this.erstelle_svg ();
@@ -189,8 +221,8 @@ class PAC {
     }
 
     copy_sequence (sequence) {
-        var new_sequence = new Sequence (sequence.name, sequence.color)
-        new_sequence.visual = sequence.visual;
+        var new_sequence = new Sequence (sequence.name, sequence.visual)
+        new_sequence.color = sequence.color;
         sequence.lines.forEach(line => {
             new_sequence.lines.push (line);
         })
@@ -204,28 +236,28 @@ class PAC {
     }
 
     get x () {
-        if (this.sequence) {
-            var linie = this.sequence.lines[0];
+        if (this.playing_sequence) {
+            var linie = this.playing_sequence.lines[0];
             if (linie) {return linie.x1 + (linie.x2-linie.x1)*this.local_progress;}
         }
     }
 
     get y () {
-        if (this.sequence) {
-            var linie = this.sequence.lines[0];
+        if (this.playing_sequence) {
+            var linie = this.playing_sequence.lines[0];
             if (linie) {return linie.y1 + (linie.y2-linie.y1)*this.local_progress;}
         }
     }
 
     delete () {
         this.active = false;
-        this.sequence = new Sequence ();
+        this.playing_sequence = new Sequence ("", this.visual);
         this.svg_element = null;
     }
 
     update (elapsed_time) {
         if (this.active) {
-            this.local_progress += elapsed_time/this.sequence.durations[0];
+            this.local_progress += elapsed_time/this.playing_sequence.durations[0];
             if (this.local_progress >= 1) {
                 this.stop ();
                 this.fetch();
@@ -236,20 +268,36 @@ class PAC {
     }
 
     fetch () {
-        this.sequence.shift ();
-        this.sequence.stop
-        this.local_progress = 0;
-        if (this.sequence.length==0) {
-            this.active=false;
+        if (this.playing_sequence.length==1) {
+            this.exec_last ();
         }
+        this.playing_sequence.shift ();
+        this.playing_sequence.stop
+        this.local_progress = 0;
+        if (this.playing_sequence.length==0) {
+            if (this.is_looping) {
+                this.reset ();
+            }else {
+                this.active=false;
+            }
+        }
+    }
+ 
+    reset () {
+        this.playing_sequence = this.copy_sequence (this.stored_sequence);
+        this.local_progress = 0;
+    }
+
+    exec_last () {
+        this.playing_sequence.play (0, true);
     }
 
     exec () {
-        this.sequence.play (0);
+        this.playing_sequence.play (0);
     }
 
     stop () {
-        this.sequence.stop (0);
+        this.playing_sequence.stop (0);
     }
 
     erstelle_svg () {

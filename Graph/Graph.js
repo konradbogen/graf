@@ -172,6 +172,18 @@ class Node {
         this.grad = 0;
         this.edges = [];
     }
+
+    get_neighbours () {
+        var neighbours = [];
+        this.edges.forEach (e => {
+            if (e.node_a.id != this.id) {
+                neighbours.push (e.node_a);
+            }else {
+                neighbours.push (e.node_b)
+            }
+        })
+        return neighbours;
+    }
 }
 
 class Edge {
