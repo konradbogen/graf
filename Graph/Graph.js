@@ -161,6 +161,68 @@ class Graph {
 
 }   
 
+class Sequence {
+    constructor () {
+        this.edges = [];
+        this.nodes = [];
+    }
+
+    get lastNode () {
+        if (this.nodes [this.nodes.length-1]) {
+            return this.nodes [this.nodes.length-1];
+        }else {
+            return null;
+        }
+    }
+
+    push (node) {
+        if (this.lastNode) {
+            var edge = new Edge (this.lastNode, node)
+            this.edges.push (edge);
+        }
+        this.nodes.push (node);
+    }
+
+    push_edge (edge) {
+        if (this.edges.length == 0) {
+            this.nodes.push (edge.node_a);
+        }
+        this.nodes.push (edge.node_b)
+        this.edges.push (edge);
+    }
+
+    permutate () {
+        //gap: per index heraussuchen
+        var newSequence = new Sequence ();
+        var predecessor_node = this.nodes [0];
+        this.nodes.forEach (node => {
+            var newNode;
+            if (node.level == predecessor_node.level)
+                newNode = choose (node.parent.children);
+            else if (node.level > predecessor_node.level) {
+                if (node.parent == predecessor_node) {
+                    newNode = choose (node.parent.children);
+                }else {
+                    var parent = choose (node.parent.parent.children, true);
+                    while (parent.children.length == 0) {    
+                        parent = choose (node.parent.parent.children, true)
+                    }
+                    newNode = choose (parent.children) 
+                }
+            }else if (node.level < predecessor_node.level) {
+                if (node = predecessor_node.parent) {
+                    newNode = node;
+                }else {
+                    newNode = choose (node.parent.children)
+                }
+            }
+            newSequence.push (newNode);
+            predecessor_node = newNode;
+        });
+        return newSequence;
+    }
+}
+
 class Node {
     constructor (id, name, parent, level) {
         this.name = name;
@@ -215,4 +277,7 @@ class Edge {
 
 }
 
-
+function choose (array) {
+    var i = Math.round (Math.random () * (array.length-1));
+    return array [i];
+}

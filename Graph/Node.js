@@ -116,7 +116,9 @@ class ControlPoint extends Point {
             this.mouse_over_enabled = true;
         }
         else {
-            if (this.control_type != "reset" || this.control_type == "bang") {this.is_toggle = true;};
+            if (this.control_type != "reset" && this.control_type != "perm") {
+                this.is_toggle = true;
+            };
             this.mouse_over_enabled = false;
         }
     }

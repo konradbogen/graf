@@ -2,11 +2,13 @@
 const UPDATE_RATE = 1000/120;
 const DEFAULT_LINE_COLOUR = "white";
 
-class Sequence {
+class PACSequence {
     constructor (name, visual) {
+        this.sequence = new Sequence ();
         this.name = name;
         this.color = "red";
         this.lines = [];
+        this.start_point;
         this.durations = [];
         this.node_playing_times = [];
         this.visual = visual;
@@ -22,6 +24,24 @@ class Sequence {
 
     get length () {
         return this.lines.length;
+    }
+
+    get_point_at_index (i) {
+        if (i == this.lines.length) {
+           return this.line[i-1].point_b;
+        }else if (i < 0){
+            return null;
+        }else {
+            node = this.line[i].point_a;
+        }
+    }
+
+    create_from_sequence (sequence, durations) {
+        this.sequence = sequence;
+        var i; sequence.edges.forEach (e => {
+            this.push ([e.node_a.id, e.node_b.id], durations [i], false);
+            i++;
+        })
     }
 
     show () {
@@ -59,7 +79,7 @@ class Sequence {
         }
     } 
 
-    push (node_ids, duration=1000, show) {
+    push (node_ids, duration=1000, push_edge_to_sequence=true) {
         this.durations.push (duration);
         var line = this.visual.find_line (node_ids [0], node_ids [1])
         if (line == null) {
@@ -68,32 +88,34 @@ class Sequence {
             var edge = this.visual.graph.add_edge (node_a, node_b);
             line = this.visual.create_line (edge);
         }
+        if (push_edge_to_sequence) {this.sequence.push_edge (line.edge);}
         this.lines.push (line);
         this.show_line (line);
     }
 
     add_point (point, duration) { 
-        if (this.last_point) {
-            this.push ([this.last_point.node.id, point.node.id], duration);
-            if (this.lines[0].edge.node_a == this.lines[0].edge.node_b) {
-                this.shift ();
+        if (this.lines.length == 0) {
+            if (this.start_point) {
+                this.push ([this.start_point.node.id, point.node.id], duration);
+            }else {
+                this.start_point = point;
             }
         }else {
-            this.push ([point.node.id, point.node.id], duration);
+            this.push ([this.last_point.node.id, point.node.id], duration);
         }
     }
 
     shift () {
         this.lines.shift ();
+        this.sequence.edges.shift ();
         this.durations.shift ();
     }
-
-    
 
     clear () {
         this.hide ();
         this.lines = [];
-        this.duration = [];
+        this.durations = [];
+        this.sequence = [];
     }
 
     create_randomly_from_children_nodes (parent_node_id, length=3, duration=2000) {
@@ -112,6 +134,13 @@ class Sequence {
             var randomIndex = available_indexes [r]; available_indexes.splice (r, 1)
             this.add_point (children_points [randomIndex], duration)
         }
+    }
+
+    permutate () {
+        var newSequence = this.sequence.permutate ();
+        var old_durations = this.durations.slice ();
+        this.clear (true);
+        this.create_from_sequence (newSequence, old_durations);
     }
 }
 
@@ -132,7 +161,7 @@ class PACSystem {
 
     delete_all_pacs () {
         this.pacs.forEach (pac => {
-            pac.svg_element.remove();
+            pac.delete ();
             pac = [];
         });
         this.pacs = [];
@@ -166,16 +195,18 @@ class PACSystem {
         if (this.is_recording) {
             this.date = new Date ();
             if (this.last_date == null) {this.last_date = this.date};
-            var duration = (this.date - this.last_date) * 10;
+            var duration = (this.date - this.last_date);
             this.last_date = this.date;
-            this.recording_sequence.add_point (point, duration);
+            if (!(this.recording_sequence.length == 0 && point.control_type == "record")) {
+                this.recording_sequence.add_point (point, duration);
+            }
         }
     }
 
     init_recording_sequence (_seq_name) {
         var seq_name = _seq_name || "recorded";
         if (this.sequences[seq_name]) {this.sequences[seq_name].hide ();};
-        this.sequences[seq_name] = new Sequence ("name", this.visual); 
+        this.sequences[seq_name] = new PACSequence (_seq_name, this.visual); 
         this.sequences[seq_name].visual = this.visual;
         if (is_color (seq_name)) {
             this.sequences[seq_name].color = seq_name;
@@ -185,12 +216,43 @@ class PACSystem {
         this.recording_sequence = this.sequences[seq_name];
     }
 
-    play_recorded (_seq_name) {
+    add_pac_to_sequence (_seq_name, loop) {
         var seq_name = _seq_name || "recorded";
         if (this.sequences[seq_name]) {
-            var pac = new PAC (this.sequences[seq_name]);
+            var pac = new PAC (this.sequences[seq_name], loop);
             this.pacs.push (pac);
         }
+    }
+
+    get_pacs_on_sequence (_seq_name) {
+        var matching_pacs;
+        this.pacs.forEach (p => {
+            if (p.playing_sequence.name == _seq_name) {
+                matching_pacs.push (p);
+            }
+        });
+        return matching_pacs;
+    }
+
+    delete_on_sequence (_seq_name) {
+        var pacs = this.get_pacs_on_sequence (seq_name);
+        pacs.forEach (p => {
+            p.delete ();
+        })
+    }
+
+    play_on_sequence (_seq_name) {
+        var pacs = this.get_pacs_on_sequence (seq_name);
+        pacs.forEach (p => {
+            p.is_active = true;
+        })
+    }
+
+    stop_on_sequence (_seq_name) {
+        var pacs = this.get_pacs_on_sequence (seq_name);
+        pacs.forEach (p => {
+            p.is_active = false;
+        })
     }
 
     start_recording (_seq_name) {
@@ -221,7 +283,7 @@ class PAC {
     }
 
     copy_sequence (sequence) {
-        var new_sequence = new Sequence (sequence.name, sequence.visual)
+        var new_sequence = new PACSequence (sequence.name, sequence.visual)
         new_sequence.color = sequence.color;
         sequence.lines.forEach(line => {
             new_sequence.lines.push (line);
@@ -251,7 +313,8 @@ class PAC {
 
     delete () {
         this.active = false;
-        this.playing_sequence = new Sequence ("", this.visual);
+        this.svg_element.remove();
+        this.playing_sequence = new PACSequence ("", this.visual);
         this.svg_element = null;
     }
 

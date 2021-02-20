@@ -4,7 +4,7 @@ const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const DOMAIN_PATH = "https://www.heptagon.network/";
 
-const CONTROL_NAMES = ["record", "play", "pause", "reset", "seqr", "bang"];
+const CONTROL_NAMES = ["record", "play", "pause", "reset", "seqr", "bang", "loop", "perm"];
 
 
 
@@ -385,6 +385,7 @@ class Point {
             this.is_active = !this.is_active;
         }else {
             this.is_active = true;
+            if (!this.mouse_over_enabled) {setTimeout (function () {this.is_active = false}.bind (this), 100)};
         }
         this.start_time = new Date ();
         this.visual.fire_callbacks_point_play (this);
