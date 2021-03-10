@@ -1,5 +1,5 @@
 const TEST_MODE = true;
-const RUNNING_IN_LOCAL = true;
+const RUNNING_IN_LOCAL = false;
 
 const PALETTE = [
     '#004F2D',
@@ -9,7 +9,7 @@ const PALETTE = [
     '#550C18',
     '#3B429F']; //in # and ' for anime.js compatibility; 
 
-var default_entry_url = "Default.txt";
+var default_entry_url = "/Stored/Default.txt";
 
 var graph;
 var parser;
@@ -93,24 +93,55 @@ function set_command_node_callbacks() {
             if (point.control_type == "record") {
                 if (point.is_active) {
                     pacs.start_recording (point.control_target);
+                    if (point.name_arguments [3]) {
+                        pacs.fixed_recording_duration = point.name_arguments [3];
+                    }
                 }else {
                     pacs.stop_recording ();
                 }
             }else if (point.control_type == "play") {
                 pacs.add_pac_to_sequence (point.control_target, false);
+                console.log (pacs.sequences[point.control_target].sequence.get_print_text ());
             }else if (point.control_type == "loop") {
+                if (point.is_active) {
                     pacs.add_pac_to_sequence (point.control_target, true);
+                }else {
+                    pacs.stop_loops_on_sequence (point.control_target);
+                }
+            }else if (point.control_type == "pendel") {
+                if (point.is_active) {
+                    var p = pacs.add_pac_to_sequence (point.control_target, true);
+                    if (p) {p.is_pendel = true;}
+                }else {
+                    pacs.stop_loops_on_sequence (point.control_target);
+                }
             }else if (point.control_type == "perm") {
-                pacs.recording_sequence.permutate ();
+                if (point.name_arguments [2]) {
+                    if (pacs.sequences [point.name_arguments [2]]) {
+                        pacs.sequences [point.name_arguments [2]].permutate ();
+                    }
+                }else {
+                    pacs.recording_sequence.permutate ();
+                }
+            }else if (point.control_type == "dev") {
+                if (point.name_arguments [2]) {
+                    if (pacs.sequences [point.name_arguments [2]]) {
+                        pacs.sequences [point.name_arguments [2]].permutate (pacs.sequences [point.name_arguments [2]].last_point);
+                    }
+                }else {
+                    pacs.recording_sequence.permutate (pacs.recording_sequence.last_point);
+                }
             }
             else if (point.control_type == "seqr") {
                 var neighbours = point.node.get_neighbours ();
                 for (var i = 0; i < neighbours.length; i++) {
-                    if (!point.sequences [i]) {point.sequences [i] = new PACSequence (point.id+neighbours[i].id, visual)}
-                    var s = point.sequences [i]; 
-                    s.create_randomly_from_children_nodes (neighbours[i].id, point.name_arguments[2], point.name_arguments[3]);
-                    var p = new PAC (s);
-                    pacs.pacs.push (p);
+                    if (neighbours[i].node != point.node.parent) {
+                        if (!point.sequences [i]) {point.sequences [i] = new PACSequence (point.name_arguments[2], visual)}
+                        var s = point.sequences [i]; 
+                        s.create_randomly_from_children_nodes (neighbours[i].id, point.name_arguments[3], point.name_arguments[4]);
+                        var p = new PAC (s);
+                        pacs.pacs.push (p);
+                    }
                 }
             }else if (point.control_type == "bang") {
                 if (point.is_active) {
@@ -138,15 +169,15 @@ function set_command_node_callbacks() {
             else if (point.control_type == "pause") {
                     if (point.is_active) {
                         if (point.name_arguments [2]) {
-                            pacs.stop_all_pacs ();
-                        }else {
                             pacs.stop_on_sequence (point.name_arguments [2]);
+                        }else {
+                            pacs.stop_all_pacs ();
                         }
                     }else {
                         if (point.name_arguments [2]) {
-                            pacs.start_all_pacs ();
-                        }else {
                             pacs.play_on_sequence (point.name_arguments [2]);
+                        }else {
+                            pacs.start_all_pacs ();
                         }
                     }
             }else if (point.control_type == "reset") {
@@ -157,9 +188,9 @@ function set_command_node_callbacks() {
         
     });
     visual.callbacks_point_stop.push(function (point, duration) {
-        if (point.node.name == RECORD_COMMAND) {
+        if (point.name_arguments [1] == "record") {
             pacs.stop_recording ();
-        }else if (point.node.name == PAUSE_COMMAND) {
+        }else if (point.name_arguments [1] == "pause") {
             pacs.start_all_pacs ();
         }
     });

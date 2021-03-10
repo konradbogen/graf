@@ -1,3 +1,5 @@
+var FADE_OUT_TIME = 0.3;
+
 class NodePoint extends Point {
     constructor (x, y, node, visual) {
         super (x, y, node, visual);
@@ -22,9 +24,11 @@ class AudioPoint extends Point {
         super (x, y, node, visual);
         this.type = "audio";
         this.audio_node = null;
+        this.gain_node = null;
         this.audio_buffer = null;
+        this.is_playing = false;
         this.start_time; this.end_time; this.playing_duration;
-        
+        this.mouse_over_enabled = true;
         this.url = url;
         this.is_toggle = false;
         this.visual.callbacks_init_audio.push (this.load_audio_buffer.bind (this));
@@ -38,26 +42,38 @@ class AudioPoint extends Point {
 
     on_click = function () {
         this.prevent_mouse_over_flag = true;
-        if (this.is_active == true) {
-            this.stop();
-        } else {
+        if (this.is_playing == true) {
             this.play();
+        } else {
+            this.on_stop();
         }
     }
 
     on_mouse_over = function () {
-        if (!this.is_active) {
+        if (this.is_active) {
             this.play ();
         }
     }
 
+    on_mouse_leave = function () {
+        this.is_active = true;
+    }
+
     on_play  = function () {
-        if (this.visual.audioContext) {
+        if (this.visual.audioContext && !this.is_playing) {
+            this.is_playing = true;
             this.arm_audio_node();
             this.audio_node.onended = this.stop.bind(this);
+            setTimeout (this.fade_out.bind (this), (this.audio_node.buffer.duration-FADE_OUT_TIME)*1000);
             this.audio_node.start();
+            this.gain_node.gain.setTargetAtTime (0.01, this.visual.audioContext.currentTime, 0.015);
+            this.gain_node.gain.linearRampToValueAtTime(1.0, this.visual.audioContext.currentTime + FADE_OUT_TIME);
             this.is_active = true;
         }
+    }
+
+    fade_out () {
+        this.gain_node.gain.linearRampToValueAtTime(0.01, this.visual.audioContext.currentTime + FADE_OUT_TIME);
     }
 
     on_stop = function () {
@@ -65,6 +81,7 @@ class AudioPoint extends Point {
             this.audio_node.stop();
             this.is_active = false;
         } 
+        this.is_playing = false;
         this.playing_duration = this.end_time - this.start_time;
         this.visual.fire_callbacks_point_stop (this, this.playing_duration);
     }
@@ -73,7 +90,9 @@ class AudioPoint extends Point {
     arm_audio_node() {
         this.audio_node = this.visual.audioContext.createBufferSource();
         this.audio_node.buffer = this.audio_buffer;
-        this.audio_node.connect(this.visual.audioGainNode);
+        this.gain_node = this.visual.audioContext.createGain ();
+        this.audio_node.connect(this.gain_node);
+        this.gain_node.connect (this.visual.audioContext.destination);
     }
 
     on_load_state_change (state) {
@@ -116,7 +135,7 @@ class ControlPoint extends Point {
             this.mouse_over_enabled = true;
         }
         else {
-            if (this.control_type != "reset" && this.control_type != "perm") {
+            if (this.control_type != "reset" && this.control_type != "perm" && this.control_type != "perm") {
                 this.is_toggle = true;
             };
             this.mouse_over_enabled = false;

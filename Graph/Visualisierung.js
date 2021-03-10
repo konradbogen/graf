@@ -4,7 +4,7 @@ const MOUSE_OVER = true;
 const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 const DOMAIN_PATH = "https://www.heptagon.network/";
 
-const CONTROL_NAMES = ["record", "play", "pause", "reset", "seqr", "bang", "loop", "perm"];
+const CONTROL_NAMES = ["record", "play", "pause", "reset", "seqr", "bang", "loop", "perm", "pendel", "dev"];
 
 
 
@@ -13,6 +13,8 @@ var FONT_SIZE_LEVEL_FACTOR = 1;
 var FONT_SIZE_LEVEL_EXP_FACTOR = 2.2 - 0.4;
 var RADIUS_LEVEL_FACTOR = 2.6;
 var RADIUS_VALUE = 30;
+var OPACITY_LEVEL_FACTOR = 1;
+var SHADOW_OPACITY = 1;
 
 var AudioContext = window.AudioContext || (window).webkitAudioContext;
 
@@ -23,11 +25,20 @@ class Line {
         this.point_a.callbacks.push (this.callback.bind(this));
         this.point_b.callbacks.push (this.callback.bind(this));
         this.strength = strength;
-        this.color = "white";
+        this._color = "white";
         this.opacity = 0.1 + Math.random ()*0.4;
         this.visual = visual;
         this.svg = visual.svg;
         this.create_html ();
+    }
+
+    get color () {
+        return this._color;
+    }
+
+    set color (val) {
+        this._color = val;
+        this.html.style.stroke = val;
     }
 
     get x1 () {
@@ -45,7 +56,13 @@ class Line {
 
     callback () {
         this.update_html ();
-        console.log ("callback");
+    }
+
+    reverse () {
+        var x;
+        x = this.point_a;
+        this.point_a = this.point_b;
+        this.point_b = x;
     }
     
     create_html () {
@@ -105,8 +122,8 @@ class Point {
         this._fontSize;
 
         this._opacity = 1;
-        this._boxShadowOpacity;
-        this.defaultBoxShadowOpacity = 1;
+        this._boxShadowOpacity = SHADOW_OPACITY;
+        this.defaultBoxShadowOpacity = SHADOW_OPACITY;
 
         this.is_toggle = false;
         this._is_active = false;
@@ -306,7 +323,7 @@ class Point {
     }
 
     set_html_opacities() {
-        this.opacity = 1 - (this.relative_level - 1) * 0.6 + Math.random() * 0.3;
+        this.opacity = 1- ((this.relative_level - 1) * 0.6)*OPACITY_LEVEL_FACTOR + Math.random() * 0.3;
         this.defaultBoxShadowOpacity = 0.2 - 0.01 * this.relative_level;
         this.boxShadowOpacity = this.defaultBoxShadowOpacity;
     }
@@ -334,10 +351,10 @@ class Point {
     }
 
     update_html_boxshadow() {
-        var r = this.boxShadowColor[0] * this.boxShadowOpacity;
-        var g = this.boxShadowColor[1] * this.boxShadowOpacity;
-        var b = this.boxShadowColor[2] * this.boxShadowOpacity;
-        this.html.style.boxShadow = "rgb(" + r + ", " + g + ", " + b + ") 0px 0px 50px 5px";
+        var r = this.boxShadowColor[0] ;
+        var g = this.boxShadowColor[1];
+        var b = this.boxShadowColor[2];
+        this.html.style.boxShadow = "rgba(" + r + ", " + g + ", " + b + ", " + this.boxShadowOpacity + ") 0px 0px 50px 5px";
     }
 
     create_event_listeners() {
@@ -499,14 +516,6 @@ class Visual {
         this.audioGainNode;
         this._audioVolume = 0;
 
-        this.default_line_color = "white";
-
-        this.default_point_color = "white";
-        this.default_point_background_color = "black";
-        this.default_point_shadow_color = [255, 255, 255];
-        this.default_point_active_background_color = "white";
-        this.default_point_active_color = "black";
-
         this.default_font_size = 20;
         this._depth = 2;
         this.start_node;
@@ -517,6 +526,26 @@ class Visual {
 
         this.create_html ();
 
+        this.light_theme = false;
+
+    }
+
+    set light_theme (val) {
+        if (val == true) {
+            this.default_line_color = "black";
+            this.default_point_color = "black";
+            this.default_point_background_color = "white";
+            this.default_point_shadow_color = [0, 0, 0];
+            this.default_point_active_background_color = "black";
+            this.default_point_active_color = "white";
+        }else {
+            this.default_line_color = "white";
+            this.default_point_color = "white";
+            this.default_point_background_color = "black";
+            this.default_point_shadow_color = [255, 255, 255];
+            this.default_point_active_background_color = "white";
+            this.default_point_active_color = "black";
+        }
     }
 
     get start_level () {
@@ -566,7 +595,6 @@ class Visual {
     }
 
     on_zoom_change (zoom) {
-        console.log ("On Zoom Change");
         /* var new_depth = 2+Math.round (zoom*this.max_level);
         if (new_depth != this.depth) {
             this.depth = new_depth;
@@ -722,6 +750,7 @@ class Visual {
         var _points = this.find_points_from_graph_edge (edge);
         if (_points != null) {
             var line = new Line (_points [0], _points [1], 1, this);
+            line.color = this.default_line_color;
             line.edge = edge;
             this.lines.push (line);
             return line;

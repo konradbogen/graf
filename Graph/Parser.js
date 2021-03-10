@@ -112,12 +112,7 @@ class Parser {
         var name = id_parts [0];
         if (name) {
             var seq = this.create_sequence_from_id_parts (name, id_parts, pac_system);
-            for (var i = 0; i<FARBEN.length;i++) {
-                if (name.includes (FARBEN [i])) {
-                    seq.color = FARBEN [i];
-                }
-            }
-            pac_system.sequences.push (seq);
+            pac_system.sequences[seq.name] = seq;
         }
     }
 
@@ -201,16 +196,16 @@ class Parser {
     }
 
     create_sequence_from_id_parts (name, id_parts, pac_system) {
-        var sequence = new Sequence (name);
+        var sequence = new PACSequence (name);
         sequence.visual = pac_system.visual;
         var total_duration = 0;
         for (var i = 1; i < id_parts.length - 1; i += 2) {
             var duration = this.get_sequence_duration (id_parts[i+1]);
             var duration = id_parts[i+1]*1000
-            var egde_id = id_parts[i]
-            var node_ids = this.get_node_ids_from_edge_id(egde_id);
-            if (node_ids && DURATION_REGEXP.test(duration)){
-                sequence.push (node_ids, duration);
+            var node_id = id_parts[i]; 
+            var point = pac_system.visual.find_point (node_id);
+            if (node_id && DURATION_REGEXP.test(duration)){
+                sequence.add_point (point, duration);
             }
             total_duration += duration;
         }
