@@ -10,10 +10,7 @@ const CONTROL_NAMES = ["record", "play", "pause", "reset", "seqr", "bang", "loop
 
 var FONT_SIZE_ZOOM_FACTOR = 1.1; //depends on UI Max Zoom (*1 equals)
 var FONT_SIZE_LEVEL_FACTOR = 1;
-var FONT_SIZE_LEVEL_EXP_FACTOR = 2.2 - 0.4;
-var RADIUS_LEVEL_FACTOR = 2.6;
 var RADIUS_VALUE = 30;
-var OPACITY_LEVEL_FACTOR = 1;
 var SHADOW_OPACITY = 1;
 
 var AudioContext = window.AudioContext || (window).webkitAudioContext;
@@ -312,7 +309,7 @@ class Point {
     }
 
     init_html_font() {
-        this.fontSize = 111 / (Math.pow(FONT_SIZE_LEVEL_EXP_FACTOR, this.relative_level) * FONT_SIZE_LEVEL_FACTOR);
+        this.fontSize = 111 / (Math.pow(this.visual.font_size_level_exp_factor, this.relative_level) * FONT_SIZE_LEVEL_FACTOR);
         this.html.style.fontWeight = "normal";
     }
 
@@ -323,7 +320,7 @@ class Point {
     }
 
     set_html_opacities() {
-        this.opacity = 1- ((this.relative_level - 1) * 0.6)*OPACITY_LEVEL_FACTOR + Math.random() * 0.3;
+        this.opacity = 1- ((this.relative_level - 1) * 0.6)* this.visual.opacity_level_factor + Math.random() * 0.3;
         this.defaultBoxShadowOpacity = 0.2 - 0.01 * this.relative_level;
         this.boxShadowOpacity = this.defaultBoxShadowOpacity;
     }
@@ -517,8 +514,15 @@ class Visual {
         this._audioVolume = 0;
 
         this.default_font_size = 20;
-        this._depth = 2;
+        this.opacity_level_factor = 0.3; //1
+        this.radius_level_factor = 2.3; //2.8
+
+        this.font_size_level_exp_factor = 1.2 //1.8
+
+
+        this._depth = 4;
         this.start_node;
+
 
         this.x_center = 50; 
         this.y_center = 50; 
@@ -526,11 +530,11 @@ class Visual {
 
         this.create_html ();
 
-        this.light_theme = false;
+        this.lightmode = false;
 
     }
 
-    set light_theme (val) {
+    set lightmode (val) {
         if (val == true) {
             this.default_line_color = "black";
             this.default_point_color = "black";
@@ -538,6 +542,8 @@ class Visual {
             this.default_point_shadow_color = [0, 0, 0];
             this.default_point_active_background_color = "black";
             this.default_point_active_color = "white";
+            this.master_container.style.backgroundColor = "white";
+            document.body.style.backgroundColor = "white";
         }else {
             this.default_line_color = "white";
             this.default_point_color = "white";
@@ -545,6 +551,8 @@ class Visual {
             this.default_point_shadow_color = [255, 255, 255];
             this.default_point_active_background_color = "white";
             this.default_point_active_color = "black";
+            this.master_container.style.backgroundColor = "black";
+            document.body.style.backgroundColor = "black";
         }
     }
 
@@ -617,22 +625,37 @@ class Visual {
     }
 
     create_from_graph (g, start_node) {
-        this.reset ();
-        this.graph = g;
-        if (start_node == null) {
-            this.create_points_from_graph (g, this.depth);
-            window.history.pushState(null, null, "");
-        }else {
-            this.create_points_from_start_node (g, start_node, this.depth);
-            window.history.pushState(null, null, "?sub=" + start_node.id);
+        if (g) {
+            this.reset ();
+            this.graph = g;
+            this.start_node = start_node;
+            this.set_visual_parameters ();
+            if (start_node == null) {
+                this.create_points_from_graph (g, this.depth);
+            }else {
+                this.create_points_from_start_node (g, start_node, this.depth);
+            }
+            this.create_lines_from_graph (g);
+            this.callback_create_from_graph ();
+            this.on_init_audio ();
         }
-        this.create_lines_from_graph (g);
-        this.callback_create_from_graph ();
-        this.on_init_audio ();
     }
 
+    set_visual_parameters () {
+        if (this.graph.edges.length > 200) {
+            this._depth = 3; 
+            this.opacity_level_factor = 1.4; 
+            this.radius_level_factor = 2.8;
+        }else {
+            this._depth = 4; 
+            this.opacity_level_factor = 0.3; 
+            this.radius_level_factor = 2.3;
+        }
+    }
+    
+
     create_html () {
-        this.container = document.createElement ("div");
+        this.container = document.createElement ("div");    
         this.container.className = "graphNodes"; 
         this.svg = document.createElementNS (SVG_NAMESPACE, "svg");
         this.master_container.appendChild (this.svg);
@@ -666,7 +689,6 @@ class Visual {
     }
 
     create_points_from_start_node (graph, start_node, depth) {
-        this.start_node = start_node;
         this.add_point (this.x_center, this.y_center, start_node);
         this.create_children_points_from_graph_node (graph,start_node, this.x_center, this.y_center, this.radius, depth-1);
     }
@@ -687,7 +709,7 @@ class Visual {
             var color = parentnode ? parentnode.color : get_random_rgb_color ();
             this.add_point (x,y, node)
             if (remaining_depth > 0) {
-                this.create_children_points_from_graph_node(graph, node, x, y, radius/RADIUS_LEVEL_FACTOR, remaining_depth-1);
+                this.create_children_points_from_graph_node(graph, node, x, y, radius/this.radius_level_factor, remaining_depth-1);
             }
         }
     }

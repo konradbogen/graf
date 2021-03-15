@@ -5,21 +5,19 @@ const SUB_REGEX = />sub (.*)/;
 const NODE_REGEX = /^(?:(\w+))\.*((?:\.*\w+)*(?:\w+)*)$/;
 const EDGE_REGEX = /^((?:\w*\.*)(?:\w+\.*\w+)*)-((?:\w*\.*)(?:\w+\.*\w+)*)$/;
 const DURATION_REGEXP = /^(\d*)$/
+const LIGHTMODE_REGEXP = />brightlight (.*)/;
+const DARKMODE_REGEXP = />darkuniverse (.*)/;
 
 
 class Lexer {
     constructor () {
-        this.node_ids = [];
-        this.edge_ids = [];
-        this.pac_ids = [];
-        this.seq_ids = [];
-        this.sub_ids = [];
+        this.init_ids ();
     }
 
     test_id (line, reg_ex) {
         if (line.includes (",")) {
-            return false;
             console.log ("dont use , in filenames!")
+            return false;
         }else {
             if (line.match (reg_ex)) {
                 return true
@@ -34,6 +32,7 @@ class Lexer {
         this.pac_ids = [];
         this.seq_ids = [];
         this.sub_ids = [];
+        this.visual_flag = "dark";
     }
 
     categorize_ids (eingabe) {
@@ -51,6 +50,10 @@ class Lexer {
                 this.pac_ids.push (line);
             }else if (this.test_id (line, SUB_REGEX)) {
                 this.sub_ids.push (line);
+            }else if (this.test_id (line, LIGHTMODE_REGEXP)) {
+                this.visual_flag = "light";
+            }else if (this.test_id (line, DARKMODE_REGEXP)) {
+                this.visual_flag = "dark";
             }
         }
       
@@ -63,8 +66,18 @@ class Lexer {
                 text = text + element + "\n";
             });
         }
-        if (this.edgesIds) {
-            this.edgesIds.forEach (element => {
+        if (this.edge_ids) {
+            this.edge_ids.forEach (element => {
+                text = text + element + "\n";
+            });
+        }
+        if (this.pac_ids) {
+            this.pac_ids.forEach (element => {
+                text = text + element + "\n";
+            });
+        }
+        if (this.seq_ids) {
+            this.seq_ids.forEach (element => {
                 text = text + element + "\n";
             });
         }
@@ -83,6 +96,14 @@ class Parser {
         this.lexer = new Lexer ();
         this.relative_seq_duration = true;
         this.start_node_id;
+    }
+
+    set_visual_parameters (visual) {
+        if (this.lexer.visual_flag == "light") {
+            visual.lightmode = true;
+        }else {
+            visual.lightmode = false;
+        }
     }
 
     create_all_pacs (pac_system) {

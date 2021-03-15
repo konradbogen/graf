@@ -9,249 +9,380 @@ const PALETTE = [
     '#550C18',
     '#3B429F']; //in # and ' for anime.js compatibility; 
 
-var default_entry_url = "/Stored/Default.txt";
+var stored_entry_path = "./Stored/";
 
-var graph;
-var parser;
-var visual;
-var daten;
-var test;
-var ui_input_container;
-var ui_graph_container;
-var zoom_container;
+class HPTGN  {
+    constructor (div_id) {
+        this.graph;
+        this.parser;
+        this.visual;
+        this.files;
+        this.ui_input_container;
+        this.ui_graph_container;
+        this.ui_header;
+        this.zoom_container;
+        this._storing_name;
+        this._is_stored = false;
 
-$(document).ready(function (){
-    init ();
-});
+        $(document).ready(function (){
+            this.create_files_visual_ui (div_id);
+        }.bind (this));
 
-function init () {
-    files = new FileSystem ();
-    visual = new Visual (document.getElementById('graphContainer'));
-    create_ui();
-    set_visual_callbacks();
-    if (RUNNING_IN_LOCAL == false) {
-        files.read_directory (); 
+        window.onpopstate = function (e) {
+            var stored_entry = sessionStorage.getItem('graph_entry');
+            this.update_input (stored_entry); 
+        }.bind (this);
     }
-    visual.connect_with_file_system(files);
-    load_default_entry ();
-}
+    
+    set storing_name (val) {
+        this._storing_name = val;
+        this.ui_header.value = val;
+        if (this.storing_name.includes ("/")) {
+            var filename = this.storing_name.replaceAll ("/", "");
+            this.load_files(filename, this.files.get_all_ids_entry_text());
+        } 
+        else {
+            this.visual.depth = 4;
+            this.load_files(val);
+        } 
+    }
 
+    get storing_name () {
+        return this._storing_name;
+    }
 
-function set_entry (input) {
-    ui_input_container.textarea.innerText = input;
-    sessionStorage.setItem('graph_entry', input);
-    parser = new Parser ();
-    parser.read_text (input);
-    update ();
-}
-
-function update () {
-    graph = new Graph ();
-    parser.create_graph (graph);
-    update_visual();
-    destroyAllStreamPeers ();
-    init_pacsystem();
-}
-
-function load_default_entry () {
-    var stored_entry = sessionStorage.getItem('graph_entry');
-    if (stored_entry) {
-        set_entry (stored_entry);   
-    }else {
-        if (!RUNNING_IN_LOCAL) {
-            set_entry_from_default_txt();
+    set is_stored (val) {
+        this._is_stored = val;
+        if (val == true) {
+            this.ui_header.style.fontWeight = "bold";
         }else {
-            set_entry ("running\nin\nlocal")
+            this.ui_header.style.fontWeight = "normal";
         }
     }
-}
 
-function set_entry_from_default_txt () {
-    var jsonFile = new XMLHttpRequest();
-    jsonFile.open("GET", default_entry_url, true);
-    jsonFile.onreadystatechange = function () {
-        if (jsonFile.readyState == 4 && jsonFile.status == 200) {
-            this.default_entry = jsonFile.responseText;
-            set_entry(files.get_all_ids_entry_text() + "\n" + this.default_entry);
+    get is_stored () {
+        return this.is_stored;
+    }
+
+    on_ready () {
+
+    }
+
+    create_files_visual_ui (div_id) {
+        this.files = new FileSystem ();
+        this.visual = new Visual (document.getElementById (div_id));
+        this.create_ui();
+        this.set_visual_callbacks();
+        if (RUNNING_IN_LOCAL == false) {
+            this.files.read_directory (); 
         }
-    };
-    jsonFile.send();
-}
+        this.visual.connect_with_file_system(this.files);
+        this.load_default_entry ();
+        this.on_ready ();
+    }
+    
+    
+    create_ui() {
+        this.ui_input_container = new InputContainer(PALETTE);
+        this.ui_input_container.onSubmitClick = function (val) {
+            this.update_input (val, false);
+        }.bind (this);
+        this.create_ui_mute_callbacks();
+        this.zoom_container = new ZoomContainer();
+        this.ui_header = document.getElementById ("headerinput");
+        this.ui_header.style.fontSize = "30px";
+        this.create_ui_header_callbacks();
+    }
 
-function set_visual_callbacks () {
-    visual.callback_create_from_graph = function () {
-        zoom_container.reset_zoom();
-        update_document_title ();
-    };
-    set_command_node_callbacks();
-    zoom_container.callbacks.push (visual.on_zoom_change.bind (visual));
-}
-
-function set_command_node_callbacks() {
-    visual.callbacks_point_play.push(function (point) {
-        if (point.type == "control") {
-            if (point.control_type == "record") {
-                if (point.is_active) {
-                    pacs.start_recording (point.control_target);
-                    if (point.name_arguments [3]) {
-                        pacs.fixed_recording_duration = point.name_arguments [3];
-                    }
-                }else {
-                    pacs.stop_recording ();
-                }
-            }else if (point.control_type == "play") {
-                pacs.add_pac_to_sequence (point.control_target, false);
-                console.log (pacs.sequences[point.control_target].sequence.get_print_text ());
-            }else if (point.control_type == "loop") {
-                if (point.is_active) {
-                    pacs.add_pac_to_sequence (point.control_target, true);
-                }else {
-                    pacs.stop_loops_on_sequence (point.control_target);
-                }
-            }else if (point.control_type == "pendel") {
-                if (point.is_active) {
-                    var p = pacs.add_pac_to_sequence (point.control_target, true);
-                    if (p) {p.is_pendel = true;}
-                }else {
-                    pacs.stop_loops_on_sequence (point.control_target);
-                }
-            }else if (point.control_type == "perm") {
-                if (point.name_arguments [2]) {
-                    if (pacs.sequences [point.name_arguments [2]]) {
-                        pacs.sequences [point.name_arguments [2]].permutate ();
-                    }
-                }else {
-                    pacs.recording_sequence.permutate ();
-                }
-            }else if (point.control_type == "dev") {
-                if (point.name_arguments [2]) {
-                    if (pacs.sequences [point.name_arguments [2]]) {
-                        pacs.sequences [point.name_arguments [2]].permutate (pacs.sequences [point.name_arguments [2]].last_point);
-                    }
-                }else {
-                    pacs.recording_sequence.permutate (pacs.recording_sequence.last_point);
-                }
+    
+    create_ui_mute_callbacks() {
+        this.ui_input_container.onMuteChange = function (val) {
+            if (val) {
+                this.visual.mute();
+            } else {
+                this.visual.init_audio();
+                this.visual.unmute();
             }
-            else if (point.control_type == "seqr") {
+        }.bind(this);
+    }
+
+    create_ui_header_callbacks() {
+        this.ui_header.onkeydown = function (e) {
+            if (e.key === 'Enter') {
+                this.store_file(this.ui_header.value);
+            }
+        }.bind(this);
+        this.ui_header.oninput = function (e) {
+            this.is_stored = false;
+            this.storing_name = this.ui_header.value;
+        }.bind(this);
+    }
+
+    create_pacsystem() {
+        this.pacs = new PACSystem(this.visual);
+        this.parser.create_all_sequences(this.pacs);
+        this.parser.create_all_pacs(this.pacs);
+        this.pacs.show_all_sequences();
+    }
+    
+    update_visual() {
+        var url_passed_start_node = this.get_url_parameter("sub");
+        if (!url_passed_start_node) {
+            url_passed_start_node = this.get_url_parameter("s");
+        }
+        this.visual.start_node = this.graph.find_node(url_passed_start_node);
+        this.parser.set_visual_parameters (this.visual);
+        this.visual.create_from_graph(this.graph, this.visual.start_node);
+    }
+
+    update_input (input) {
+        this.parser = new Parser ();
+        this.parser.read_text (input);
+        this.ui_input_container.textarea.innerText = input;
+        sessionStorage.setItem('graph_entry', input);
+        this.create_graph();
+        this.is_stored = false;
+    }
+
+    store_file(name) {
+        var filename = name.replaceAll ("/", "");
+        this.files.save_storagefile_text(filename, this.parser.lexer.create_text ());
+        this.is_stored = true;
+    }
+
+    load_files(name, additional_text) {
+        if (name != "") {
+            this.parts = name.split ("+");
+            this.full_text =  additional_text ? additional_text + "/n" : "";
+            this.i = 0;
+            this.parts.forEach (p=> {
+                this.files.get_storagefile_text (p, function (filetext = "") {
+                    this.full_text = this.full_text + filetext;
+                    if (this.i == this.parts.length - 1) {
+                        this.is_stored = true;
+                        this.update_input (this.full_text);
+                    }
+                    this.i ++;
+                }.bind(this));
+            })
+        }else {
+            this.update_input (additional_text);
+        }
+    }
+
+    create_graph () {
+        this.graph = new Graph ();
+        this.parser.create_graph (this.graph);
+        this.update_visual();
+        destroyAllStreamPeers ();
+        this.create_pacsystem();
+    }
+    
+    load_default_entry () {
+        var stored_entry = sessionStorage.getItem('graph_entry');
+        var param = this.get_url_parameter ("b");
+        if (param) {
+            this.storing_name = param;
+        }else {
+            if (stored_entry) {
+                this.update_input (stored_entry);
+            }else {
+                this.storing_name = "Blank";
+            }
+        }
+    }
+
+    set_visual_callbacks () {
+        this.visual.callback_create_from_graph = function () {
+            this.zoom_container.reset_zoom();
+            this.update_document_title ();
+            this.update_url ();
+        }.bind (this);
+        this.set_command_node_callbacks();
+        this.zoom_container.callbacks.push (this.visual.on_zoom_change.bind (this.visual));
+    }
+    
+    update_url () {
+        var start_node_tag = "";
+        var storing_name_tag = "";
+        if (this.storing_name) {
+            storing_name_tag = "?b=" + this.storing_name;
+        }
+        if (this.visual.start_node) {
+            start_node_tag =  "?s=" + this.visual.start_node.id;
+        }
+        window.history.pushState(null, null, start_node_tag+storing_name_tag);
+    }
+
+    set_command_node_callbacks() {
+        this.visual.callbacks_point_play.push( function (point) {
+            if (point.type == "control") {
+                if (point.control_type == "record") {
+                    this.handle_record_point(point);
+                }else if (point.control_type == "play") {
+                    this.handle_play_point (point);
+                }else if (point.control_type == "loop") {
+                    this.handle_loop_point(point);
+                }else if (point.control_type == "pendel") {
+                    this.handel_pendel_point(point);
+                }else if (point.control_type == "perm") {
+                    this.handle_perm_point(point);
+                }else if (point.control_type == "dev") {
+                    this.handle_dev_point(point);
+                }else if (point.control_type == "seqr") {
+                    this.handle_seqr_point(point);
+                }else if (point.control_type == "bang") {
+                    this.handle_bang_point (point);
+                }else if (point.control_type == "pause") {
+                    this.handle_pause_point(point);
+                }else if (point.control_type == "reset") {
+                    this.handle_reset_point(point);
+                }
+            }         
+        }.bind (this));
+    }
+     
+    handle_reset_point(point) {
+        this.pacs.delete_all_pacs();
+        this.pacs.init_recording_sequence(point.control_target);
+    }
+
+    handle_pause_point(point) {
+        if (point.is_active) {
+            if (point.name_arguments[2]) {
+                this.pacs.stop_on_sequence(point.name_arguments[2]);
+            } else {
+                this.pacs.stop_all_pacs();
+            }
+        } else {
+            if (point.name_arguments[2]) {
+                this.pacs.play_on_sequence(point.name_arguments[2]);
+            } else {
+                this.pacs.start_all_pacs();
+            }
+        }
+    }
+
+    handle_seqr_point(point) {
+        var neighbours = point.node.get_neighbours();
+        for (var i = 0; i < neighbours.length; i++) {
+            if (neighbours[i].node != point.node.parent) {
+                if (!point.sequences[i]) { point.sequences[i] = new PACSequence(point.name_arguments[2], visual); }
+                var s = point.sequences[i];
+                s.create_randomly_from_children_nodes(neighbours[i].id, point.name_arguments[3], point.name_arguments[4]);
+                var p = new PAC(s);
+                this.pacs.pacs.push(p);
+            }
+        }
+    }
+
+    handle_dev_point(point) {
+        if (point.name_arguments[2]) {
+            if (this.pacs.sequences[point.name_arguments[2]]) {
+                this.pacs.sequences[point.name_arguments[2]].permutate(pacs.sequences[point.name_arguments[2]].last_point);
+            }
+        } else {
+            this.pacs.recording_sequence.permutate(pacs.recording_sequence.last_point);
+        }
+    }
+
+    handle_perm_point(point) {
+        if (point.name_arguments[2]) {
+            if (this.pacs.sequences[point.name_arguments[2]]) {
+                this.pacs.sequences[point.name_arguments[2]].permutate();
+            }
+        } else {
+            this.pacs.recording_sequence.permutate();
+        }
+    }
+
+    handel_pendel_point(point) {
+        if (point.is_active) {
+            var p = this.pacs.add_pac_to_sequence(point.control_target, true);
+            if (p) { p.is_pendel = true; }
+        } else {
+            this.pacs.stop_loops_on_sequence(point.control_target);
+        }
+    }
+
+    handle_loop_point(point) {
+        if (point.is_active) {
+            this.pacs.add_pac_to_sequence(point.control_target, true);
+        } else {
+            this.pacs.stop_loops_on_sequence(point.control_target);
+        }
+    }
+
+    handle_play_point(point) {
+        this.pacs.add_pac_to_sequence(point.control_target, false);
+        console.log(pacs.sequences[point.control_target].sequence.get_print_text());
+    }
+
+    handle_record_point(point) {
+        if (point.is_active) {
+            this.pacs.start_recording(point.control_target);
+            if (point.name_arguments[3]) {
+                this.pacs.fixed_recording_duration = point.name_arguments[3];
+            }
+        } else {
+            this.pacs.stop_recording();
+        }
+    }
+
+    handle_bang_point (point) {
+        if (point.is_active) {
+            if (point.pacs.length > 0) {
+                this.point.start_all_pacs ();
+            }else 
+            {
                 var neighbours = point.node.get_neighbours ();
                 for (var i = 0; i < neighbours.length; i++) {
-                    if (neighbours[i].node != point.node.parent) {
-                        if (!point.sequences [i]) {point.sequences [i] = new PACSequence (point.name_arguments[2], visual)}
-                        var s = point.sequences [i]; 
-                        s.create_randomly_from_children_nodes (neighbours[i].id, point.name_arguments[3], point.name_arguments[4]);
-                        var p = new PAC (s);
-                        pacs.pacs.push (p);
-                    }
+                    if (!point.sequences [i]) {point.sequences [i] = new PACSequence (point.id+neighbours[i].id, visual)}
+                    var time_interval = point.name_arguments[2] ? point.name_arguments[2] : 1000
+                    point.sequences [i].push ([point.id, neighbours[i].id], time_interval, true);
+                    point.sequences [i].show ();
+                    var p = new PAC (point.sequences [i], true);
+                    this.pacs.pacs.push (p);
+                    point.pacs.push (p);
                 }
-            }else if (point.control_type == "bang") {
-                if (point.is_active) {
-                    if (point.pacs.length > 0) {
-                        point.start_all_pacs ();
-                    }else 
-                    {
-                        var neighbours = point.node.get_neighbours ();
-                        for (var i = 0; i < neighbours.length; i++) {
-                            if (!point.sequences [i]) {point.sequences [i] = new PACSequence (point.id+neighbours[i].id, visual)}
-                            var time_interval = point.name_arguments[2] ? point.name_arguments[2] : 1000
-                            point.sequences [i].push ([point.id, neighbours[i].id], time_interval, true);
-                            point.sequences [i].show ();
-                            var p = new PAC (point.sequences [i], true);
-                            pacs.pacs.push (p);
-                            point.pacs.push (p);
-                        }
-                    }
-                    
-                }else {
-                    point.stop_all_pacs ();
-                }
-                
             }
-            else if (point.control_type == "pause") {
-                    if (point.is_active) {
-                        if (point.name_arguments [2]) {
-                            pacs.stop_on_sequence (point.name_arguments [2]);
-                        }else {
-                            pacs.stop_all_pacs ();
-                        }
-                    }else {
-                        if (point.name_arguments [2]) {
-                            pacs.play_on_sequence (point.name_arguments [2]);
-                        }else {
-                            pacs.start_all_pacs ();
-                        }
-                    }
-            }else if (point.control_type == "reset") {
-                pacs.delete_all_pacs ();
-                pacs.init_recording_sequence (point.control_target);
-            }
-        }
-        
-    });
-    visual.callbacks_point_stop.push(function (point, duration) {
-        if (point.name_arguments [1] == "record") {
-            pacs.stop_recording ();
-        }else if (point.name_arguments [1] == "pause") {
-            pacs.start_all_pacs ();
-        }
-    });
-}
-
-
-
-function update_document_title () {
-    if (visual.start_node) {
-        document.title = "heptagon." + visual.start_node.id;
-    }else {
-        document.title = "heptagon";
-    }
-}
-
-function create_ui() {
-    ui_input_container = new InputContainer(PALETTE);
-    ui_input_container.onSubmitClick = function (val) {
-        parser.read_text(val);
-        sessionStorage.setItem('graph_entry', val);
-        update();
-    };
-    ui_input_container.onMuteChange = function (val) {
-        if (val) {
-            visual.mute();
+            
         }else {
-            visual.init_audio ();
-            visual.unmute();
+            point.stop_all_pacs ();
         }
     }
-    zoom_container = new ZoomContainer();
-}
 
-window.onpopstate = function (e) {
-    var stored_entry = sessionStorage.getItem('graph_entry');
-    set_entry (stored_entry); 
-}
-
-function init_pacsystem() {
-    pacs = new PACSystem(visual);
-    parser.create_all_sequences(pacs);
-    parser.create_all_pacs(pacs);
-    pacs.show_all_sequences();
-}
-
-function update_visual() {
-    var url_passed_start_node = get_url_parameter("sub");
-    if (!url_passed_start_node) {
-        url_passed_start_node = get_url_parameter("s");
+    update_document_title () {
+        if (this.visual.start_node) {
+            document.title = "heptagon." + this.visual.start_node.id;
+        }else {
+            document.title = "heptagon";
+        }
     }
-    visual.start_node = graph.find_node(url_passed_start_node);
-    visual.create_from_graph(graph, visual.start_node);
+    
+    
+    get_url_parameter (name, w){
+        w = w || window;
+        var rx = new RegExp('[\?]' + name + '=([^\?]*)'),
+            val = w.location.search.match(rx);
+        if (val) {
+            var result = val [1];
+            if (result.includes ("?")) {
+                return result.split ("?") [1];
+            }else {
+                return result;
+            }
+        }else {
+            return null;
+        }
+    }
 }
 
- function get_url_parameter (name, w){
-    w = w || window;
-    var rx = new RegExp('[\&|\?]'+name+'=([^\&\#]+)'),
-        val = w.location.search.match(rx);
-    return !val ? null:val[1];
+var hptgn = new HPTGN ("graphContainer");
+hptgn.on_ready = function () {
+    var test = new ParserTest (hptgn.parser);
+    test.testStoreCommand ();
 }
-
 
 
 

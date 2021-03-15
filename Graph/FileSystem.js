@@ -19,6 +19,39 @@ class FileSystem {
         return VERBINDUNG_REGEXP;
     }
 
+    save_storagefile_text (name, text) {
+        var data = new FormData();
+        data.append("name" , name);
+        data.append("text" , text);
+        var xhr = (window.XMLHttpRequest) ? new XMLHttpRequest() : new activeXObject("Microsoft.XMLHTTP");
+
+
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                console.log ("SUCESS REQUEST")
+                console.log (xhr.responseText);
+            }
+        }
+        xhr.open( 'post', './Upload.php', true );
+        xhr.send(data);
+
+
+    }
+ 
+    get_storagefile_text (name, callback) {
+        var jsonFile = new XMLHttpRequest();
+        jsonFile.open("GET", "../Graph/Stored/" + name + ".txt", true);
+        jsonFile.onreadystatechange = function  () {
+            if (jsonFile.readyState == 4 && jsonFile.status == 200) {
+                var text = jsonFile.responseText;
+                var text = text.replace(/\r/g, "");
+                callback (text);
+                return text;
+            }
+        }.bind (this);
+        jsonFile.send();
+    }
+    
     read_directory () {
         this.urls = [];
         var array = [];
