@@ -3,7 +3,7 @@ const DATEI_ENDUNG_REGEXP = /\.[a-zA-Z]*/;
 
 const PHP_DIR_PREDECESSOR = "/mnt/sda/public_html/Graph/Content/"
 
-const DIRECTORY = "https://www.heptagon.network/Graph/Content/"
+const DIRECTORY = "https://graph.heptagon.network/Content/"
 
 class FileSystem {
     constructor () {
