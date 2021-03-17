@@ -40,7 +40,7 @@ class FileSystem {
  
     get_storagefile_text (name, callback) {
         var jsonFile = new XMLHttpRequest();
-        jsonFile.open("GET", "../Graph/Stored/" + name + ".txt", true);
+        jsonFile.open("GET", "./Stored/" + name + ".txt", true);
         jsonFile.onreadystatechange = function  () {
             if (jsonFile.readyState == 4 && jsonFile.status == 200) {
                 var text = jsonFile.responseText;

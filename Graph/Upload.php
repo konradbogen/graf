@@ -2,7 +2,7 @@
     echo ("gogo ");
     $data = $_POST['text'];
     $fname = $_POST['name'] . ".txt"; 
-    $fpath = "../Graph/Stored/" . $fname;
+    $fpath = "./Stored/" . $fname;
 
     echo ($path . "\n");
 
@@ -15,7 +15,7 @@
     echo ($bytes . "\n");
     fclose($file);
 
-    if ($handle = opendir('../Graph/Stored/')) {
+    if ($handle = opendir('./Stored/')) {
         while (false !== ($entry = readdir($handle))) {
             if ($entry != "." && $entry != "..") {
                 echo ($entry . "\n");
