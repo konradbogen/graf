@@ -9,10 +9,37 @@ html {
 
 
 body{
-    background:black;
+    background-color:rgb(18,18,18);
     height:600%;
     margin:0;
     overflow-y: scroll;
+}
+
+#headerinputdiv {
+    width: 50vmax;
+    height: 50vmax;
+    border-radius: 50vmax;
+    background-color: rgb(222, 217, 202);
+    position: relative;
+    left: 25vmax;
+    top: -46vmax;
+    -webkit-box-shadow: 0 0 20px rgb(240, 237, 230);
+    -moz-box-shadow: 0 0 20px rgb(240, 237, 230);
+    box-shadow: 0 0 20px rgb(240, 237, 230);
+}
+
+#headerinput:focus {
+    outline: none;
+}
+
+#headerinput {
+    outline: none;
+    background-color: transparent;
+    text-shadow: -2px -2px 21px rgba(255, 255, 255, 0.75);
+    font-family: "Oswald";
+    color: rgb(18,18,18);
+    border-width: 0ch;
+    top: 46.5vmax;
 }
 
 #graphContainer{
@@ -50,13 +77,11 @@ body{
 
 #input{
     flex-direction: column;
-    justify-content: center;
     align-items: center;
     position:fixed;
     background:none;
     width:50%;
-    height:100%;
-    top:-10%;
+    height: 80%;
     opacity:0;
     color:white;
     border:none;

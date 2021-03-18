@@ -5,8 +5,8 @@ const SUB_REGEX = />sub (.*)/;
 const NODE_REGEX = /^(?:(\w+))\.*((?:\.*\w+)*(?:\w+)*)$/;
 const EDGE_REGEX = /^((?:\w*\.*)(?:\w+\.*\w+)*)-((?:\w*\.*)(?:\w+\.*\w+)*)$/;
 const DURATION_REGEXP = /^(\d*)$/
-const LIGHTMODE_REGEXP = />brightlight (.*)/;
-const DARKMODE_REGEXP = />darkuniverse (.*)/;
+const LIGHTMODE_REGEXP = />brightlight/;
+const DARKMODE_REGEXP = />darkuniverse/;
 
 
 class Lexer {

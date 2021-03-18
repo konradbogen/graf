@@ -4,13 +4,13 @@ const DEFAULT_LINE_COLOUR = "white";
 const COLOR_NAMES = ["blue", "red", "yellow", "green", "pink", "orange", "purple"];
 
 function is_color (string) {
-    var is_color_name = false;
     COLOR_NAMES.forEach (n => {
         if (string == n) {
             is_color_name = true;
+            return n;
         }
     })
-    return is_color_name;    
+    return null;    
 }
 
 class PACSequence {
@@ -38,10 +38,24 @@ class PACSequence {
     }
 
     get_color_from_name () {
-        var is_color_name = is_color (this.name);
-        var color = "red";
-        if (is_color_name) {
-            color = this.name;
+        var color_name = is_color (this.name);
+        var color;
+        if (color_name == "blue") {
+            color = "#4F6FBA"
+        }else if (color_name == "red") {
+            color = "#E76F51";
+        }else if (color_name == "yellow") {
+            color = "#E9C46A"
+        }else if (color_name == "green") {
+            color = "#629460"
+        }else if (color_name == "pink") {
+            color = "#F98AB3"
+        }else if (color_name == "orange") {
+            color = "#F4A261"
+        }else if (color_name == "purple") {
+            color = "#854773"
+        }else {
+            color = "#E76F51";
         }
         return color;
     } 

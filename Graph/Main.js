@@ -1,13 +1,21 @@
 const TEST_MODE = true;
 const RUNNING_IN_LOCAL = false;
 
-const PALETTE = [
+/* const PALETTE = [
     '#004F2D',
     '#247BA0',
     '#e6af2e',
     '#F76F8E',
     '#550C18',
-    '#3B429F']; //in # and ' for anime.js compatibility; 
+    '#3B429F']; //in # and ' for anime.js compatibility;  */
+
+const PALETTE = [
+        '#a3a19b',
+        '#ded9ca',
+        '#b5a984',
+        '#544c33',
+]
+ //in # and ' for anime.js compatibility;  */
 
 var stored_entry_path = "./Stored/";
 
@@ -54,9 +62,9 @@ class HPTGN  {
     set is_stored (val) {
         this._is_stored = val;
         if (val == true) {
-            this.ui_header.style.fontWeight = "bold";
+            document.getElementById("headerinputdiv").style.opacity = "80%";
         }else {
-            this.ui_header.style.fontWeight = "normal";
+            document.getElementById("headerinputdiv").style.opacity = "30%";
         }
     }
 
@@ -90,7 +98,7 @@ class HPTGN  {
         this.create_ui_mute_callbacks();
         this.zoom_container = new ZoomContainer();
         this.ui_header = document.getElementById ("headerinput");
-        this.ui_header.style.fontSize = "30px";
+        this.ui_header.style.fontSize = "20px";
         this.create_ui_header_callbacks();
     }
 
@@ -337,7 +345,7 @@ class HPTGN  {
             {
                 var neighbours = point.node.get_neighbours ();
                 for (var i = 0; i < neighbours.length; i++) {
-                    if (!point.sequences [i]) {point.sequences [i] = new PACSequence (point.id+neighbours[i].id, visual)}
+                    if (!point.sequences [i]) {point.sequences [i] = new PACSequence (point.id+neighbours[i].id, this.visual)}
                     var time_interval = point.name_arguments[2] ? point.name_arguments[2] : 1000
                     point.sequences [i].push ([point.id, neighbours[i].id], time_interval, true);
                     point.sequences [i].show ();

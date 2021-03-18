@@ -538,21 +538,21 @@ class Visual {
         if (val == true) {
             this.default_line_color = "black";
             this.default_point_color = "black";
-            this.default_point_background_color = "white";
+            this.default_point_background_color = "rgb(232, 232, 232)";
             this.default_point_shadow_color = [0, 0, 0];
-            this.default_point_active_background_color = "black";
-            this.default_point_active_color = "white";
-            this.master_container.style.backgroundColor = "white";
-            document.body.style.backgroundColor = "white";
-        }else {
-            this.default_line_color = "white";
-            this.default_point_color = "white";
-            this.default_point_background_color = "black";
-            this.default_point_shadow_color = [255, 255, 255];
-            this.default_point_active_background_color = "white";
+            this.default_point_active_background_color = "rgb(219, 219, 219)";
             this.default_point_active_color = "black";
-            this.master_container.style.backgroundColor = "black";
-            document.body.style.backgroundColor = "black";
+            this.master_container.style.backgroundColor = "rgb(242, 242, 242)";
+            document.body.style.backgroundColor = "rgb(242, 242, 242)";
+        }else {
+            this.default_line_color = "rgb(240, 237, 230)";
+            this.default_point_color = "rgb(245, 242, 240)";
+            this.default_point_background_color = "rgb(30, 30, 30)";
+            this.default_point_shadow_color = [255, 255, 255];
+            this.default_point_active_background_color = "rgb(245, 242, 240)";
+            this.default_point_active_color = "rgb(30, 30, 30)";
+            this.master_container.style.backgroundColor = "rgb(18,18,18)";
+            document.body.style.backgroundColor = "rgb(18,18,18)";
         }
     }
 
@@ -642,7 +642,7 @@ class Visual {
     }
 
     set_visual_parameters () {
-        if (this.graph.edges.length > 200) {
+        if (this.graph.edges.length > 300) {
             this._depth = 3; 
             this.opacity_level_factor = 1.4; 
             this.radius_level_factor = 2.8;
