@@ -10,12 +10,41 @@
         <link rel = "icon" href = "hepta_white.png"type = "image/x-icon">
     <meta name="google" content="notranslate">
     <link href="https://fonts.googleapis.com/css2?family=Oswald&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300&display=swap" rel="stylesheet"> 
 </head>
 
 <body>
-    <div id=hptgn> 
-        
+    <div id=graphContainer>
+    </div>
+    <input id = "headerinput" style="width: 100%;background-color: white;border: black;color: black;position: relative; text-align: center">
+    <div id=fixedcontainer>
+    <svg id=svghept width=100vmin height=100vmin viewBox="0 0 100 100">
+        <defs>
+          <linearGradient id=grad1 x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop id=stop1 offset="20%"/>
+            <stop id=stop2 offset="80%"/>
+          </linearGradient>
+        </defs>
+          <polygon id=heptpolygon style='opacity:0;'class=svghept stroke=white fill="url(#grad1)" points='50 100, 50 50, 98.746 38.874, 50 50, 50 50, 1.254 38.874, 50 50'></polygon>
+        <defs>
+            <clipPath id=heptagonClip clipPathUnits="objectBoundingBox">
+                <polygon points='0.50 1, 0.89092 0.81174, 0.98746 0.38874, 0.71694 0.04952, 0.28306 0.04952, 0.01254 0.38874, 0.10908 0.81174'></polygon>
+            </clipPath>
+        </defs>
+      </svg>
+      <!-- <textarea id = "input" name="input"></textarea>  -->
+      <div contenteditable="true" id = "input">input</div>
+    </div>
+
+    <div id="menu">
+        <button id="volumeButton">
+            <img id = "volumeImg" src="./Ressources/Speaker_Icon.png"></img>
+        </button>
+        <button id="inputButton">
+            <svg id = "inputSvg" width="50" height="50" viewBox="-15 -15 80 80"xmlns="http://www.w3.org/2000/svg">
+                <circle cx="25" cy="25" r="25" fill="grey"/>
+                <polygon fill="white" points="10 19, 25 38, 40 19"> </polygon>
+             </svg>
+        </button>
     </div>
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -25,10 +54,9 @@
 <script src=FileSystem.js></script>
 <script src=Graph.js></script>
 <script src=Parser.js></script>
-<script src=Data.js></script>
 <script src=Test.js></script>
 <script src=UI.js></script>
 <script src=Visualisierung.js></script>
 <script src=Node.js></script>
 <script src=PAC.js></script>
-<script src=HPTGN.js></script>
+<script src=Main.js></script>
