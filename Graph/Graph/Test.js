@@ -9,6 +9,12 @@ class FileSystemTest {
     }
 }
 
+class HPTGNTest {
+    constructor (hptgn) {
+        this.hptgn = hptgn;
+    }
+}
+
 class ParserTest {
     constructor (parser) {
         this.parser = parser;

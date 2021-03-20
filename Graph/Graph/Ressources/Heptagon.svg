@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1" baseProfile="full"
+    width="100vmin" height="100vmin"
+    viewBox="-0 0 100 100">
+    <title>Heptagon</title>
+    <desc>Das Heptagon Logo.</desc>
+
+    <defs>
+      <linearGradient x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="20%"/>
+        <stop offset="80%"/>
+      </linearGradient>
+    </defs>
+      <polygon style='opacity:0;' stroke='white' fill="url(#grad1)" 
+      points='50 100, 50 50, 98.746 38.874, 50 50, 50 50, 1.254 38.874, 50 50'></polygon>
+    <defs>
+        <clipPath clipPathUnits="objectBoundingBox">
+            <polygon points='0.50 1, 0.89092 0.81174, 0.98746 0.38874, 0.71694 0.04952, 0.28306 0.04952, 0.01254 0.38874, 0.10908 0.81174'>
+
+            </polygon>
+        </clipPath>
+    </defs>
+  </svg>

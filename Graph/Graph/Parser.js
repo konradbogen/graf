@@ -32,7 +32,7 @@ class Lexer {
         this.pac_ids = [];
         this.seq_ids = [];
         this.sub_ids = [];
-        this.visual_flag = "dark";
+        this.visual_flag = "";
     }
 
     categorize_ids (eingabe) {
@@ -101,7 +101,7 @@ class Parser {
     set_visual_parameters (visual) {
         if (this.lexer.visual_flag == "light") {
             visual.lightmode = true;
-        }else {
+        }else if (this.lexer.visual_flag == "dark") {
             visual.lightmode = false;
         }
     }

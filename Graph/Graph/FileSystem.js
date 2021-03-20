@@ -1,14 +1,14 @@
 
 const DATEI_ENDUNG_REGEXP = /\.[a-zA-Z]*/;
 
-const PHP_DIR_PREDECESSOR = "/mnt/sda/public_html/Graph/Content/"
-
-const DIRECTORY = "https://www.heptagon.network/Graph/Content/"
+//const DIRECTORY = "https://www.heptagon.network/Graph/Content/"
 
 class FileSystem {
-    constructor () {
+    constructor (directory) {
         this.node_ids = [];
+        this.directory = directory;
         this.urls = [];
+        this.php_dir_predecessor = "";
     }
 
     static get KNOTEN_REGEXP () {
@@ -17,6 +17,18 @@ class FileSystem {
  
     static get VERBINDUNG_REGEXP () {
         return VERBINDUNG_REGEXP;
+    }
+
+    get content_directory () {
+        return this.directory + "/Content/"
+    }
+
+    get content_path () {
+        return this.get_own_domain () + this.directory + "/Content/"
+    }
+
+    get store_directory () {
+        return this.directory + "/Stored/"
     }
 
     save_storagefile_text (name, text) {
@@ -32,7 +44,7 @@ class FileSystem {
                 console.log (xhr.responseText);
             }
         }
-        xhr.open( 'post', './Upload.php', true );
+        xhr.open( 'post', this.directory + '/Upload.php', true );
         xhr.send(data);
 
 
@@ -40,7 +52,7 @@ class FileSystem {
  
     get_storagefile_text (name, callback) {
         var jsonFile = new XMLHttpRequest();
-        jsonFile.open("GET", "../Graph/Stored/" + name + ".txt", true);
+        jsonFile.open("GET", this.store_directory + name + ".txt", true);
         jsonFile.onreadystatechange = function  () {
             if (jsonFile.readyState == 4 && jsonFile.status == 200) {
                 var text = jsonFile.responseText;
@@ -68,7 +80,7 @@ class FileSystem {
 
     request_php_verzeichnis (array) {
         var xmlhttp = new XMLHttpRequest();
-        xmlhttp.open("GET", "FileSystem.php", false);
+        xmlhttp.open("GET", this.directory + "/FileSystem.php", false);
         xmlhttp.send(null);
         if (xmlhttp.status == 200) {
             var response = xmlhttp.responseText;
@@ -76,6 +88,7 @@ class FileSystem {
                 array = JSON.parse(response);
             }
         }
+        this.php_dir_predecessor = array [0];
         return array;
     }
 
@@ -84,8 +97,12 @@ class FileSystem {
         var node_id = this.create_node_id_from_rel_file_path (relative_file_path);
         if (node_id) {
             this.node_ids.push(node_id);
-            this.urls.push(DIRECTORY + relative_file_path);
+            this.urls.push(this.get_content_path(relative_file_path));
         }
+    }
+
+    get_content_path(relative_file_path) {
+        return this.get_own_domain() + this.content_directory + relative_file_path;
     }
 
     create_node_id_from_rel_file_path (file_path) {
@@ -99,7 +116,7 @@ class FileSystem {
     }
 
     create_relative_file_path (php_string) {
-        var stringOhneVerzeichnis = php_string.substr (PHP_DIR_PREDECESSOR.length);
+        var stringOhneVerzeichnis = php_string.substr ((this.php_dir_predecessor+"/Content/").length);
         return stringOhneVerzeichnis;
     }
 
@@ -127,6 +144,13 @@ class FileSystem {
         return "";
     }
 
+    get_own_domain () {
+        var loc = window.location.hostname
+        return loc;
+    }
+
 }
+
+
 
 //94

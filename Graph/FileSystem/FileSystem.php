@@ -3,7 +3,7 @@
 
 function getDirContents($dir, &$results = array()) {
     $files = scandir($dir);
-
+    $results[] = realpath($main);
     foreach ($files as $key => $value) {
         $path = realpath($dir . DIRECTORY_SEPARATOR . $value);
         if (!is_dir($path)) {
@@ -29,7 +29,7 @@ function verzeichnisAuslesen ($path, $totalFilesJSON) {
         return $filesJSON;
     }
 } */
-    $main = "../Graph/Content/"; //die Main URL sollte man irgendwann zentral in einer Datenbank hinterlegen
+    $main = "./Content/"; //die Main URL sollte man irgendwann zentral in einer Datenbank hinterlegen
     echo getDirContents ($main, $filesJSON);
 
 ?>

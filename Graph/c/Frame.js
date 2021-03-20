@@ -27,7 +27,7 @@ function load_content(url, type) {
 
 function get_content_url (id, type) {
     var content_path = id.replaceAll(".", "/");
-    var url = "Content/" + content_path + "." + type;
+    var url =  "/" + content_path + "." + type;
     return url;
 }
 
@@ -45,7 +45,7 @@ function set_title (title) {
     var title_parts = title.split (".");
     var sub_id = "";
     var html_title = "";
-    var pre_url = "https://www.heptagon.network/Graph/?sub=";
+    var pre_url = this.get_graph_url () + "?s="
     title_parts.forEach (title_part => {
         if (sub_id == "") {
             sub_id = sub_id + title_part;
@@ -56,6 +56,7 @@ function set_title (title) {
         }
     })
     document.getElementById("title").innerHTML = "<h1>" + html_title + "</h1>";
+    document.getElementById("graphlink").setAttribute ("href", this.get_graph_url ());
     document.title = "heptagon." + title;
 }
 
@@ -109,6 +110,12 @@ function create_from_video_file (url) {
 function create_from_image_file (url) {
     document.getElementById ("content").innerHTML =  "<img src=\" " + url + "\">";
 }    
+
+function get_graph_url () {
+    var loc = window.location.href;
+    var dir = loc.substring(0, loc.lastIndexOf ("/c"));
+    return dir;
+}
 
 const PALETTE =  [
     '#004F2D',

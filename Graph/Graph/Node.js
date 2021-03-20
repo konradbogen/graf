@@ -4,18 +4,25 @@ class NodePoint extends Point {
     constructor (x, y, node, visual) {
         super (x, y, node, visual);
         this.type = "node";
+        if (this.visual.clickToOpen == false) {
+            this.html.style.cursor = "default";
+        }
     }
 
     on_click = function() {
-        if (this.visual.start_node && this.node.id == this.visual.start_node.id) {
-            this.visual.create_from_graph (this.visual.graph, this.node.parent);
-        }else {
-            this.visual.create_from_graph (this.visual.graph, this.node);
+        if (this.visual.clickToOpen) {
+            if (this.visual.start_node && this.node.id == this.visual.start_node.id) {
+                this.visual.create_from_graph (this.visual.graph, this.node.parent);
+            }else {
+                this.visual.create_from_graph (this.visual.graph, this.node);
+            }
         }
     }
 
     on_mouse_over = function () {
-        this.play ();
+        if (this.visual.clickToOpen) {
+            this.play ();
+        }
     }
 }
 
@@ -32,17 +39,12 @@ class AudioPoint extends Point {
         this.url = url;
         this.is_toggle = false;
         this.visual.callbacks_init_audio.push (this.load_audio_buffer.bind (this));
+        this.loaded = false;
     }
-
-    on_load_state_change (state) {
-        if (state == 1) {
-            this.backgroundColor = get_random_rgb_color (); //loaded;
-        }
-    } 
 
     on_click = function () {
         this.prevent_mouse_over_flag = true;
-        if (this.is_playing == true) {
+        if (this.is_playing == false) {
             this.play();
         } else {
             this.on_stop();
@@ -60,7 +62,7 @@ class AudioPoint extends Point {
     }
 
     on_play  = function () {
-        if (this.visual.audioContext && !this.is_playing) {
+        if (this.visual.audioContext && !this.is_playing && this.loaded) {
             this.is_playing = true;
             this.arm_audio_node();
             this.audio_node.onended = this.stop.bind(this);
@@ -77,10 +79,8 @@ class AudioPoint extends Point {
     }
 
     on_stop = function () {
-        if (this.audio_node) {
-            this.audio_node.stop();
-            this.is_active = false;
-        } 
+        this.audio_node.stop();
+        this.is_active = false;
         this.is_playing = false;
         this.playing_duration = this.end_time - this.start_time;
         this.visual.fire_callbacks_point_stop (this, this.playing_duration);
@@ -98,6 +98,8 @@ class AudioPoint extends Point {
     on_load_state_change (state) {
         if (state == 1) {
             this.backgroundColor = get_random_rgb_color (); //loaded;
+            this.loaded = true;
+
         }
     } 
 
@@ -105,7 +107,7 @@ class AudioPoint extends Point {
         if (!this.audio_buffer) {
             var audioCtx = this.visual.audioContext;
             var request = new XMLHttpRequest();
-            console.log ("path: " + this.relative_path);
+            console.log ("path: " + this.path);
             request.open('GET', this.relative_path, true);
             request.responseType = 'arraybuffer';
             request.onload = function() {
@@ -251,9 +253,28 @@ class FilePoint extends Point {
     }
 
     open_content_page () {
-        var frame_parameter = this.id + this.file_extension;
-        window.open("https://www.heptagon.network/Graph/c?=" + frame_parameter, "_self");
+        if (this.visual.frameEnabled == true){
+            var id_parameter = this.visual.content_directory.replaceAll ("/", ".") + this.id + this.file_extension
+            id_parameter = id_parameter.substring (1);
+            window.open(this.get_own_url_location () + "c/?=" + id_parameter, "_self");
+        }else {
+            window.open (this.relative_path);
+        }
+       
     }
+
+    get_own_url_location () {
+        var pn = window.location.pathname;
+        if (pn.includes ("?")) {
+            var loc = pn.split (pn.indexOf ("?/")) [0];
+        }else {
+            var loc = pn.split (pn.lastIndexOf ("/")) [0];
+        }
+        return loc;
+    }
+
 }
+
+
 
 

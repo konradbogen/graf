@@ -1,10 +1,8 @@
 //PLUGIN FuR GRAPH
 const FARBEN = ["blue", "red", "yellow", "purple", "green", "orange", "pink", "brown", "white"]
 const MOUSE_OVER = true;
-const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
-const DOMAIN_PATH = "https://www.heptagon.network/";
-
 const CONTROL_NAMES = ["record", "play", "pause", "reset", "seqr", "bang", "loop", "perm", "pendel", "dev"];
+const SVG_NAMESPACE = "http://www.w3.org/2000/svg";
 
 
 
@@ -25,7 +23,7 @@ class Line {
         this._color = "white";
         this.opacity = 0.1 + Math.random ()*0.4;
         this.visual = visual;
-        this.svg = visual.svg;
+        this.svg = visual.line_svg;
         this.create_html ();
     }
 
@@ -109,7 +107,7 @@ class Point {
         this.node = node;
         this.type = "point"
         this.visual = visual;
-        this.container = visual.container;
+        this.container = visual.point_container;
         this.html;
 
 
@@ -259,7 +257,7 @@ class Point {
     }
 
     get relative_path () {
-        var path = this.url.substring (DOMAIN_PATH.length - 1);
+        var path = this.url.substring (this.visual.domain.length);
         return path;
     }
 
@@ -339,12 +337,7 @@ class Point {
     }
 
     set_html_text() {
-        if (this.is_link) {
-            this.html.innerHTML = "<u>" + this.node.name + "</u>";
-            this.html.style.cursor = "pointer";
-        } else {
-            this.html.innerHTML = this.node.name;
-        }
+        this.html.innerHTML = this.node.name;
     }
 
     update_html_boxshadow() {
@@ -361,6 +354,7 @@ class Point {
     }
 
     click () {
+        this.prevent_mouse_over_flag = true;
         this.on_click ();
     }
 
@@ -388,7 +382,9 @@ class Point {
         }
     }
 
-    on_mouse_over () {};
+    on_mouse_over () {
+
+    };
 
     on_update_url () {
     
@@ -466,7 +462,6 @@ class Point {
         }    
     }
 
-
     set_active_style() {
         this.html.style.backgroundColor = this.visual.default_point_active_background_color;
         this.boxShadowOpacity = 0.3;
@@ -498,36 +493,39 @@ class Visual {
     constructor (master_container) {
         this.graph;
         this.url_list = [];
-
+        this.domain = "";
         this.points = [];
         this.lines = [];
+
         this.master_container = master_container; 
-        this.container;
-        this.svg;
+        this.point_container;
+        this.line_svg;
 
         this.callbacks_point_play = [];
         this.callbacks_point_stop = [];
         this.callbacks_init_audio = [];
         
+        this.domain;
+        this.content_directory;
+
         this.audioContext;
         this.audioGainNode;
         this._audioVolume = 0;
 
+        this.clickToOpen = true;
+        this.frameEnabled = true;
+        this.mouseOverEnabled = true;
         this.default_font_size = 20;
         this.opacity_level_factor = 0.3; //1
         this.radius_level_factor = 2.3; //2.8
-
-        this.font_size_level_exp_factor = 1.2 //1.8
-
-
-        this._depth = 4;
-        this.start_node;
-
-
+        this.radius = RADIUS_VALUE;
         this.x_center = 50; 
         this.y_center = 50; 
-        this.radius = RADIUS_VALUE;
+        this.font_size_level_exp_factor = 1.2 //1.8
+        this._depth = 4;
 
+        this.start_node;
+ 
         this.create_html ();
 
         this.lightmode = false;
@@ -565,11 +563,11 @@ class Visual {
     }
 
     get font_size () {
-        return this.container.style.fontSize;
+        return this.point_container.style.fontSize;
     }
 
     set font_size (val) {
-        this.container.style.fontSize = val;
+        this.point_container.style.fontSize = val;
     }
 
     get max_level () {
@@ -598,8 +596,8 @@ class Visual {
     reset () {
         this.points = [];
         this.lines = [];
-        this.svg.innerHTML = "";
-        this.container.innerHTML = "";
+        this.line_svg.innerHTML = "";
+        this.point_container.innerHTML = "";
     }
 
     on_zoom_change (zoom) {
@@ -610,7 +608,9 @@ class Visual {
         this.font_size = this.default_font_size + zoom*FONT_SIZE_ZOOM_FACTOR*100;
     };
 
-    callback_create_from_graph () {};
+    callback_create_from_graph () {
+
+    };
 
     fire_callbacks_point_play (point) {
         this.callbacks_point_play.forEach (e => {
@@ -642,10 +642,15 @@ class Visual {
     }
 
     set_visual_parameters () {
-        if (this.graph.edges.length > 300) {
+        if (this.graph.edges.length > 1500) {
             this._depth = 3; 
             this.opacity_level_factor = 1.4; 
-            this.radius_level_factor = 2.8;
+            this.radius_level_factor = 2.5;
+        }
+        else if (this.graph.edges.length > 300) {
+            this._depth = 3; 
+            this.opacity_level_factor = 0.75; 
+            this.radius_level_factor = 3.1;
         }else {
             this._depth = 4; 
             this.opacity_level_factor = 0.3; 
@@ -655,11 +660,11 @@ class Visual {
     
 
     create_html () {
-        this.container = document.createElement ("div");    
-        this.container.className = "graphNodes"; 
-        this.svg = document.createElementNS (SVG_NAMESPACE, "svg");
-        this.master_container.appendChild (this.svg);
-        this.master_container.appendChild (this.container);
+        this.point_container = document.createElement ("div");    
+        this.point_container.className = "graphNodes"; 
+        this.line_svg = document.createElementNS (SVG_NAMESPACE, "svg");
+        this.master_container.appendChild (this.line_svg);
+        this.master_container.appendChild (this.point_container);
         this.font_size = this.default_font_size;
     }
 
@@ -699,7 +704,6 @@ class Visual {
         });
     }
 
-
     create_children_points_from_graph_node (graph, parentnode, x_center, y_center, radius, remaining_depth) {
         var children = graph.get_children_nodes (parentnode);
         for (var i=0; i<children.length; i++) {
@@ -732,6 +736,7 @@ class Visual {
             p.url = url;
         } else if (url) {
             p = new FilePoint(x, y, node, this, color);
+            p.url = url;
             p.file_extension = get_file_extension_from_url (url);
         } else if (is_control_node) { //array
             p = new ControlPoint (x, y, node, this, color);
@@ -745,6 +750,7 @@ class Visual {
         else {
             p = new NodePoint (x, y, node, this, color)
         }
+        p.mouse_over_enabled = this.mouseOverEnabled;
         return p;
     }
 
@@ -818,7 +824,6 @@ class Visual {
             }
     }
 
-
     find_line (point_a_id, point_b_id) {
         for (var i = 0; i<this.lines.length; i++) {
             if (this.lines[i].point_a.id == point_a_id && this.lines[i].point_b.id == point_b_id) {
@@ -835,9 +840,10 @@ class Visual {
     connect_with_file_system (filesystem) {
         for (var i = 0; i<filesystem.node_ids.length; i++) {
             this.url_list [filesystem.node_ids[i]] = filesystem.urls [i];
+            this.domain = filesystem.get_own_domain ();
+            this.content_directory = filesystem.content_directory;
         };
     }
-
 
     mute () {
         this.audioVolume = 0;
@@ -846,7 +852,6 @@ class Visual {
     unmute () {
         this.audioVolume = 1;
     }
-
 }
 
 function get_random_rgb_color () {

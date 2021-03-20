@@ -20,20 +20,29 @@ const PALETTE = [
 var stored_entry_path = "./Stored/";
 
 class HPTGN  {
-    constructor (div_id) {
+    constructor (div_id, options) {
         this.graph;
         this.parser;
         this.visual;
         this.files;
-        this.ui_input_container;
-        this.ui_graph_container;
+
+        this.ui_menu; 
         this.ui_header;
-        this.zoom_container;
+        this.ui_zoom_container;
+        
+        this.on_ready_callbacks = [];
+        this.is_ready = false;
         this._storing_name;
         this._is_stored = false;
 
         $(document).ready(function (){
-            this.create_files_visual_ui (div_id);
+            this.create_visual (div_id, options.clickToOpenEnabled, options.mouseOverEnabled, options.lightTheme, options.frameEnabled);
+            if (options.hasUi) {this.create_ui (div_id, options.hasUiHeader, options.hasUiMenu, options.zoomEnabled)};
+            if (options.hasFileSystem) {this.create_filesystem (this.visual, options.fileSystemDirectory)};
+            this.load_default_entry ();
+            this.is_ready = true;
+            this.on_ready_callbacks.forEach (c => {c ()})
+            this.on_ready ();
         }.bind (this));
 
         window.onpopstate = function (e) {
@@ -43,16 +52,24 @@ class HPTGN  {
     }
     
     set storing_name (val) {
-        this._storing_name = val;
-        this.ui_header.value = val;
-        if (this.storing_name.includes ("/")) {
-            var filename = this.storing_name.replaceAll ("/", "");
-            this.load_files(filename, this.files.get_all_ids_entry_text());
-        } 
-        else {
-            this.visual.depth = 4;
-            this.load_files(val);
-        } 
+        if (this.is_ready) {
+            this._storing_name = val;
+            if (this.ui_header) {
+                this.ui_header.value = val
+            };
+            if (this.storing_name.includes ("/")) {
+                var filename = this.storing_name.replaceAll ("/", "");
+                this.load_files(filename, this.files.get_all_ids_entry_text());
+            } 
+            else {
+                this.load_files(val);
+            } 
+        }else {
+            this.on_ready_callbacks.push (function () {
+                this.storing_name = val;
+            }.bind (this))
+        }
+        
     }
 
     get storing_name () {
@@ -61,10 +78,12 @@ class HPTGN  {
 
     set is_stored (val) {
         this._is_stored = val;
-        if (val == true) {
-            document.getElementById("headerinputdiv").style.opacity = "80%";
-        }else {
-            document.getElementById("headerinputdiv").style.opacity = "30%";
+        if (this.ui_header) {
+            if (val == true) {
+                this.ui_header.shines = true;
+            }else {
+                this.ui_header.shines = false;
+            }
         }
     }
 
@@ -76,35 +95,54 @@ class HPTGN  {
 
     }
 
-    create_files_visual_ui (div_id) {
-        this.files = new FileSystem ();
-        this.visual = new Visual (document.getElementById (div_id));
-        this.create_ui();
+    create_visual (div_id, clickToOpenEnabled, mouseOverEnabled, lightTheme, frameEnabled) {
+        var graphContainer = this.create_graph_container(div_id);
+        this.visual = new Visual (graphContainer);
+        this.visual.clickToOpen = clickToOpenEnabled;
+        this.visual.frameEnabled = frameEnabled;
+        this.visual.lightmode = lightTheme;
+        this.visual.mouseOverEnabled = mouseOverEnabled;
         this.set_visual_callbacks();
-        if (RUNNING_IN_LOCAL == false) {
-            this.files.read_directory (); 
-        }
-        this.visual.connect_with_file_system(this.files);
-        this.load_default_entry ();
-        this.on_ready ();
     }
     
-    
-    create_ui() {
-        this.ui_input_container = new InputContainer(PALETTE);
-        this.ui_input_container.onSubmitClick = function (val) {
-            this.update_input (val, false);
-        }.bind (this);
-        this.create_ui_mute_callbacks();
-        this.zoom_container = new ZoomContainer();
-        this.ui_header = document.getElementById ("headerinput");
-        this.ui_header.style.fontSize = "20px";
-        this.create_ui_header_callbacks();
+    create_filesystem (visual, directory) {
+        this.files = new FileSystem(directory);
+        if (RUNNING_IN_LOCAL == false) {
+            this.files.read_directory();
+        }
+        visual.connect_with_file_system(this.files);
     }
 
-    
+    create_graph_container (div_id) {
+        var graphContainer = document.createElement("div");
+        graphContainer.id = "graphContainer";
+        document.getElementById(div_id).appendChild(graphContainer);
+        return graphContainer;
+    }
+
+    create_ui(div_id, createUiHeader, createUiMenu, createZoomContainer) {
+        if (createUiMenu) {
+            this.ui_menu = new Menu (div_id, PALETTE);
+            this.create_ui_menu_callback();
+        }
+        if (createZoomContainer) {
+            this.ui_zoom_container = new ZoomContainer();
+        }
+        if (createUiHeader) {
+            this.ui_header = new HeaderInput (div_id);
+            this.create_ui_header_callbacks();
+        }
+    }
+
+    create_ui_menu_callback() {
+        this.ui_menu.onSubmitClick = function (val) {
+            this.update_input(val, false);
+        }.bind(this);
+        this.create_ui_mute_callbacks();
+    }
+
     create_ui_mute_callbacks() {
-        this.ui_input_container.onMuteChange = function (val) {
+        this.ui_menu.onMuteChange = function (val) {
             if (val) {
                 this.visual.mute();
             } else {
@@ -115,67 +153,84 @@ class HPTGN  {
     }
 
     create_ui_header_callbacks() {
-        this.ui_header.onkeydown = function (e) {
-            if (e.key === 'Enter') {
-                this.store_file(this.ui_header.value);
-            }
+        this.ui_header.onEnter = function (e) {
+            this.store_file(this.ui_header.value);
         }.bind(this);
-        this.ui_header.oninput = function (e) {
+        this.ui_header.onInput = function (e) {
             this.is_stored = false;
             this.storing_name = this.ui_header.value;
         }.bind(this);
     }
 
     create_pacsystem() {
-        this.pacs = new PACSystem(this.visual);
-        this.parser.create_all_sequences(this.pacs);
-        this.parser.create_all_pacs(this.pacs);
-        this.pacs.show_all_sequences();
+        if (this.visual) {
+            this.pacs = new PACSystem(this.visual);
+            this.parser.create_all_sequences(this.pacs);
+            this.parser.create_all_pacs(this.pacs);
+            this.pacs.show_all_sequences();
+        }else {
+            this.on_ready_callbacks.push (this.create_pacsystem.bind (this));
+        }
     }
     
     update_visual() {
-        var url_passed_start_node = this.get_url_parameter("sub");
-        if (!url_passed_start_node) {
-            url_passed_start_node = this.get_url_parameter("s");
+        if (this.visual) {
+            var url_passed_start_node = this.get_url_parameter("sub");
+            if (!url_passed_start_node) {
+                url_passed_start_node = this.get_url_parameter("s");
+            }
+            this.visual.start_node = this.graph.find_node(url_passed_start_node);
+            this.parser.set_visual_parameters (this.visual);
+            this.visual.create_from_graph(this.graph, this.visual.start_node);
+        }else {
+            this.on_ready_callbacks.push (this.update_visual.bind (this));
         }
-        this.visual.start_node = this.graph.find_node(url_passed_start_node);
-        this.parser.set_visual_parameters (this.visual);
-        this.visual.create_from_graph(this.graph, this.visual.start_node);
+
     }
 
     update_input (input) {
+        if (this.ui_menu) {
+            this.ui_menu.text = input;
+        }
         this.parser = new Parser ();
         this.parser.read_text (input);
-        this.ui_input_container.textarea.innerText = input;
         sessionStorage.setItem('graph_entry', input);
         this.create_graph();
         this.is_stored = false;
     }
 
     store_file(name) {
-        var filename = name.replaceAll ("/", "");
-        this.files.save_storagefile_text(filename, this.parser.lexer.create_text ());
-        this.is_stored = true;
+        if (this.files) {
+            var filename = name.replaceAll ("/", "");
+            this.files.save_storagefile_text(filename, this.parser.lexer.create_text ());
+            this.is_stored = true;
+        }
     }
 
     load_files(name, additional_text) {
-        if (name != "") {
-            this.parts = name.split ("+");
-            this.full_text =  additional_text ? additional_text + "/n" : "";
-            this.i = 0;
-            this.parts.forEach (p=> {
-                this.files.get_storagefile_text (p, function (filetext = "") {
-                    this.full_text = this.full_text + filetext;
-                    if (this.i == this.parts.length - 1) {
-                        this.is_stored = true;
-                        this.update_input (this.full_text);
-                    }
-                    this.i ++;
-                }.bind(this));
-            })
-        }else {
-            this.update_input (additional_text);
-        }
+        if (this.files) {
+            if (name != "") {
+                this.parts = name.split ("+");
+                this.full_text =  additional_text ? additional_text + "/n" : "";
+                this.i = 0;
+                this.parts.forEach (p=> {
+                    this.files.get_storagefile_text (p, function (filetext = "") {
+                        this.full_text = this.full_text + filetext;
+                        if (this.i == this.parts.length - 1) {
+                            this.is_stored = true;
+                            this.update_input (this.full_text);
+                        }
+                        this.i ++;
+                    }.bind(this));
+                })
+            }else {
+                this.update_input (additional_text);
+            }
+        }else { 
+            this.on_ready_callbacks.push (function () {
+                this.load_files (name, additional_text);
+            }.bind (this))
+        }   
     }
 
     create_graph () {
@@ -202,12 +257,16 @@ class HPTGN  {
 
     set_visual_callbacks () {
         this.visual.callback_create_from_graph = function () {
-            this.zoom_container.reset_zoom();
+            if (this.ui_zoom_container) {
+                this.ui_zoom_container.reset_zoom();
+            }
             this.update_document_title ();
             this.update_url ();
         }.bind (this);
+        if (this.ui_zoom_container) {t
+            his.ui_zoom_container.callbacks.push (this.visual.on_zoom_change.bind (this.visual))
+        };
         this.set_command_node_callbacks();
-        this.zoom_container.callbacks.push (this.visual.on_zoom_change.bind (this.visual));
     }
     
     update_url () {
@@ -367,8 +426,7 @@ class HPTGN  {
             document.title = "heptagon";
         }
     }
-    
-    
+     
     get_url_parameter (name, w){
         w = w || window;
         var rx = new RegExp('[\?]' + name + '=([^\?]*)'),
@@ -384,12 +442,6 @@ class HPTGN  {
             return null;
         }
     }
-}
-
-var hptgn = new HPTGN ("graphContainer");
-hptgn.on_ready = function () {
-    var test = new ParserTest (hptgn.parser);
-    test.testStoreCommand ();
 }
 
 
