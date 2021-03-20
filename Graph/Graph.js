@@ -183,6 +183,14 @@ class Sequence {
         this.nodes.push (node);
     }
 
+    get_print_text () {
+        var text = "";
+        this.nodes.forEach (n => {
+            text = text + n.level + n.name + " ";
+        })
+        return text;
+    }
+
     push_edge (edge) {
         if (this.edges.length == 0) {
             this.nodes.push (edge.node_a);
@@ -218,7 +226,7 @@ class Sequence {
             }
             newSequence.push (newNode);
             predecessor_node = newNode;
-        });
+        }); 
         return newSequence;
     }
 }

@@ -1,9 +1,27 @@
 
+class FileSystemTest {
+    constructor (filesystem) {
+        this.filesystem = filesystem;
+    }
+
+    test_save_storagefile_text () {
+        this.filesystem.save_storagefile_text ("uploadtest", "hallowelt");
+    }
+}
+
 class ParserTest {
     constructor (parser) {
         this.parser = parser;
     }
 
+    testStoreCommand () {
+        this.parser.read_text (">store default");
+        if (this.parser.storefile_name != null) {
+            console.log ("testStoreCommand passed");
+        }else {
+            console.log ("testStoreCommand failed")
+        }
+    }
     testErstelleGraph (daten, graph) {
         console.log ("---testErstelleGraph()---")
       

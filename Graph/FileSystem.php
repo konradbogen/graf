@@ -29,7 +29,7 @@ function verzeichnisAuslesen ($path, $totalFilesJSON) {
         return $filesJSON;
     }
 } */
-    $main = "../Graph/Content/"; //die Main URL sollte man irgendwann zentral in einer Datenbank hinterlegen
+    $main = "./Content/"; //die Main URL sollte man irgendwann (~50 Jahre) zentral in einer Datenbank hinterlegen
     echo getDirContents ($main, $filesJSON);
 
 ?>

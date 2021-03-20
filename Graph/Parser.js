@@ -5,21 +5,19 @@ const SUB_REGEX = />sub (.*)/;
 const NODE_REGEX = /^(?:(\w+))\.*((?:\.*\w+)*(?:\w+)*)$/;
 const EDGE_REGEX = /^((?:\w*\.*)(?:\w+\.*\w+)*)-((?:\w*\.*)(?:\w+\.*\w+)*)$/;
 const DURATION_REGEXP = /^(\d*)$/
+const LIGHTMODE_REGEXP = />brightlight (.*)/;
+const DARKMODE_REGEXP = />darkuniverse (.*)/;
 
 
 class Lexer {
     constructor () {
-        this.node_ids = [];
-        this.edge_ids = [];
-        this.pac_ids = [];
-        this.seq_ids = [];
-        this.sub_ids = [];
+        this.init_ids ();
     }
 
     test_id (line, reg_ex) {
         if (line.includes (",")) {
-            return false;
             console.log ("dont use , in filenames!")
+            return false;
         }else {
             if (line.match (reg_ex)) {
                 return true
@@ -34,6 +32,7 @@ class Lexer {
         this.pac_ids = [];
         this.seq_ids = [];
         this.sub_ids = [];
+        this.visual_flag = "dark";
     }
 
     categorize_ids (eingabe) {
@@ -51,6 +50,10 @@ class Lexer {
                 this.pac_ids.push (line);
             }else if (this.test_id (line, SUB_REGEX)) {
                 this.sub_ids.push (line);
+            }else if (this.test_id (line, LIGHTMODE_REGEXP)) {
+                this.visual_flag = "light";
+            }else if (this.test_id (line, DARKMODE_REGEXP)) {
+                this.visual_flag = "dark";
             }
         }
       
@@ -63,8 +66,18 @@ class Lexer {
                 text = text + element + "\n";
             });
         }
-        if (this.edgesIds) {
-            this.edgesIds.forEach (element => {
+        if (this.edge_ids) {
+            this.edge_ids.forEach (element => {
+                text = text + element + "\n";
+            });
+        }
+        if (this.pac_ids) {
+            this.pac_ids.forEach (element => {
+                text = text + element + "\n";
+            });
+        }
+        if (this.seq_ids) {
+            this.seq_ids.forEach (element => {
                 text = text + element + "\n";
             });
         }
@@ -83,6 +96,14 @@ class Parser {
         this.lexer = new Lexer ();
         this.relative_seq_duration = true;
         this.start_node_id;
+    }
+
+    set_visual_parameters (visual) {
+        if (this.lexer.visual_flag == "light") {
+            visual.lightmode = true;
+        }else {
+            visual.lightmode = false;
+        }
     }
 
     create_all_pacs (pac_system) {
@@ -112,12 +133,7 @@ class Parser {
         var name = id_parts [0];
         if (name) {
             var seq = this.create_sequence_from_id_parts (name, id_parts, pac_system);
-            for (var i = 0; i<FARBEN.length;i++) {
-                if (name.includes (FARBEN [i])) {
-                    seq.color = FARBEN [i];
-                }
-            }
-            pac_system.sequences.push (seq);
+            pac_system.sequences[seq.name] = seq;
         }
     }
 
@@ -201,16 +217,16 @@ class Parser {
     }
 
     create_sequence_from_id_parts (name, id_parts, pac_system) {
-        var sequence = new Sequence (name);
+        var sequence = new PACSequence (name);
         sequence.visual = pac_system.visual;
         var total_duration = 0;
         for (var i = 1; i < id_parts.length - 1; i += 2) {
             var duration = this.get_sequence_duration (id_parts[i+1]);
             var duration = id_parts[i+1]*1000
-            var egde_id = id_parts[i]
-            var node_ids = this.get_node_ids_from_edge_id(egde_id);
-            if (node_ids && DURATION_REGEXP.test(duration)){
-                sequence.push (node_ids, duration);
+            var node_id = id_parts[i]; 
+            var point = pac_system.visual.find_point (node_id);
+            if (node_id && DURATION_REGEXP.test(duration)){
+                sequence.add_point (point, duration);
             }
             total_duration += duration;
         }

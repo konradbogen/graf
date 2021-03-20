@@ -1,5 +1,5 @@
-const VOLUME_ICON_ON = "../Graph/Ressources/Speaker_Icon.png";
-const VOLUME_ICON_OFF = "../Graph/Ressources/Speaker_Icon_Off.png";
+const VOLUME_ICON_ON = "./Ressources/Speaker_Icon.png";
+const VOLUME_ICON_OFF = "./Ressources/Speaker_Icon_Off.png";
 
 class InputContainer{
 
