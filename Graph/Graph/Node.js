@@ -7,6 +7,7 @@ class NodePoint extends Point {
         if (this.visual.clickToOpen == false) {
             this.html.style.cursor = "default";
         }
+        this.mouseOverEnabled = this.visual.mouseOverEnabled;
     }
 
     on_click = function() {
@@ -35,7 +36,7 @@ class AudioPoint extends Point {
         this.audio_buffer = null;
         this.is_playing = false;
         this.start_time; this.end_time; this.playing_duration;
-        this.mouse_over_enabled = true;
+        this.mouseOverEnabled = this.visual.mouseOverEnabled;
         this.url = url;
         this.is_toggle = false;
         this.visual.callbacks_init_audio.push (this.load_audio_buffer.bind (this));
@@ -133,14 +134,14 @@ class ControlPoint extends Point {
         this.sequences = [];
         this.pacs = [];
 
-        if (this.control_type == "play" || this.control_type == "seqr") {
-            this.mouse_over_enabled = true;
+        if (this.control_type == "play" || this.control_type == "seqr" && this.visual.mouseOverEnabled == true) {
+            this.mouseOverEnabled = true;
         }
         else {
             if (this.control_type != "reset" && this.control_type != "perm" && this.control_type != "perm") {
                 this.is_toggle = true;
             };
-            this.mouse_over_enabled = false;
+            this.mouseOverEnabled = false;
         }
     }
 
@@ -165,7 +166,7 @@ class ControlPoint extends Point {
     }
 
     on_mouse_over = function () {
-        if (this.mouse_over_enabled) {
+        if (this.mouseOverEnabled) {
             this.play ();
         }
     }
@@ -246,6 +247,7 @@ class FilePoint extends Point {
         super (x, y, node, visual);
         this.type = "file";
         this.file_extension = file_extension;
+        this.mouseOverEnabled = this.visual.mouseOverEnabled;
     }
 
     on_click = function () {
@@ -256,7 +258,7 @@ class FilePoint extends Point {
         if (this.visual.frameEnabled == true){
             var id_parameter = this.visual.content_directory.replaceAll ("/", ".") + this.id + this.file_extension
             id_parameter = id_parameter.substring (1);
-            window.open(this.get_own_url_location () + "c/?=" + id_parameter, "_self");
+            window.open(this.get_own_url_location () + "c/?=" + id_parameter, "_blank");
         }else {
             window.open (this.relative_path);
         }

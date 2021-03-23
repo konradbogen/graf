@@ -147,7 +147,7 @@ class PACSequence {
 
     reverse_lines () {
         var rev_lines = []; 
-        for (var i = this.lines.length-1; i >= 0; i--) {
+        for (var i = this.lines.length-1; i >= 0; i--) {
             this.lines [i].reverse ();
             rev_lines.push (this.lines [i]);
         }
@@ -334,7 +334,7 @@ class PAC {
         this.active = true;
         this.is_looping = looping;
         this.is_pendel = false;
-        this.svg_container = sequence.visual.svg;
+        this.svg_container = sequence.visual.line_svg;
         this.svg_element;
         this.erstelle_svg ();
         this.exec ();

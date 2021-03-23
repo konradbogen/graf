@@ -1,17 +1,17 @@
 <?php
-    echo ("gogo ");
+    echo ("Request To Save File: ");
     $data = $_POST['text'];
     $fname = $_POST['name'] . ".txt"; 
     $fpath = "./Stored/" . $fname;
 
-    echo ($path . "\n");
+    echo (realpath ($fpath) . "\n");
 
     $file = fopen($fpath, 'w');//creates new file
     if (false === $file) {
         echo ('Unable to open' . "\n");
     }    
     $bytes = fwrite($file, $data);
-    echo (" Wrote so many bytes ");
+    echo (" Wrote so many Bytes");
     echo ($bytes . "\n");
     fclose($file);
 

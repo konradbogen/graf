@@ -15,13 +15,10 @@ class Lexer {
     }
 
     test_id (line, reg_ex) {
-        if (line.includes (",")) {
-            console.log ("dont use , in filenames!")
-            return false;
-        }else {
-            if (line.match (reg_ex)) {
-                return true
-            }
+        line = line.replaceAll (" ", "");
+        line = line.replaceAll (",", "");
+        if (line.match (reg_ex)) {
+            return true
         }
         return false;
     }
@@ -80,6 +77,13 @@ class Lexer {
             this.seq_ids.forEach (element => {
                 text = text + element + "\n";
             });
+        }
+        if (this.visual_flag != "") {
+            if (this.visual_flag == "bright") {
+                text = text + ">brightlight" + "\n";
+            }else if (this.visual_flag == "dark") {
+                text = text + ">darkuniverse" + "\n";
+            }
         }
         return text;
     }
@@ -143,7 +147,9 @@ class Parser {
     }
 
     read_text (text) {
-        this.lexer.categorize_ids (text);
+        if (text) {
+            this.lexer.categorize_ids (text);
+        }
     }
 
     create_graph (graph) {

@@ -1,0 +1,12 @@
+body {
+    color: rgb(240, 237, 230);
+    font-family:'Oswald';
+    background-color: rgb(240, 237, 230);
+    text-align: center;
+}
+
+#hptgn {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+}

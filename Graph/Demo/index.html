@@ -1,0 +1,110 @@
+<head>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300&display=swap" rel="stylesheet"> 
+    <link rel=stylesheet href=../Graph/GraphStyle.css> </link>
+    <link rel=stylesheet href=style.css> </link>
+</head>
+
+<body>
+    <div id = "content">
+        <p>     
+            <h1>graf</h1>
+            This page demonstrates the different options one can choose from when using the graf bundle.
+        </p>
+        
+        <p>
+            <h3>graf.graph</h3> <br>
+            Lets start off with the basic graph structure - some heads, some lines. <br>
+            <div class="demodiv" id = "noui"></div>
+        </p>
+
+        <p>
+            <h3>graf.filesystem</h3> <br>
+            It is very unhandy to enter the graph structure inline - let's activate the FileSystem! <br>
+            <div class="demodiv" id = "noui_filesystem" ></div>
+        </p>
+
+        <p>
+            <h3>graf.visual.clicktoenter</h3> <br>
+            Ooh, the structure got bigger. Let's add optionality to open children heads by clicking on a head. <br>
+            <div class="demodiv" id = "noui_clicktoopen"></div>
+        </p>
+
+        <p>
+            <h3>graf.ui.zoom</h3><br>
+            Looks like we need an option to drag the map, now that it is even bigger. <br>
+            <div class="demodiv" id = "noui_zoom"></div>
+        </p> 
+
+        <p>
+            <h3>graf.frame</h3><br>
+            How about giving members the option to open their own content in a seperate framing page? <br>
+            <div class="demodiv" id = "noui_filesystem_frame"></div>
+        </p>
+
+        <p>
+            <h3>graf.visual.mousehover-graf.visual.audio</h3><br>
+            Since the graph is very much about sound, let's add a "Mouse-Hover" input to play audio! <br>
+            <div  class="demodiv" id = "noui_filesystem_audiomousehover"></div>
+        </p>    
+
+        <p>
+            <h3>graf.pac</h3><br>
+            Let's try recording and playing sequences by adding a _record and a _play head. By the way, PAC stands for "Player Attention Control". <br>
+            <div class="demodiv" id = "noui_pac_playrecord"></div>
+        </p>
+
+        <p>
+            <h3>graf.graph.perm-graf.pac</h3><br>
+            To permutate all seqeuences, let's add a _perm head! <br>
+            Saying that, the graf structure is a standardized "Graph" Data Structure, so it is possible to write own data restructuring algorhythms as well as machine learning implementation. <br>
+            <div class="demodiv" id = "noui_pac_perm"></div>
+        </p>
+
+        <p>
+            <h3>graf.ui.menu</h3><br>
+            Let the members decide, how their graf should look like by enabling the UI Menu.  <br>
+            Typing "xxx.xxx" creates a head and a children head, typing "xxx-yyy" creates a line between two heads. <br>
+            <div class="demodiv" id = "ui_menu"></div>
+        </p>
+        
+        <p>
+            <h3>graf.filesystem-graf.ui.header</h3><br>
+            The FileSystem in combination with the UI Header enables the members to store their graf by typing a name in the Header and pressing Enter. <br>
+            <div class="demodiv" id = "ui__header_filesystem"></div>
+        </p>
+
+        <p>
+            <h3>graf.ui.menu-graf.ui.header</h3><br>
+            Let's enable input of an own graph and storing it by entering a name in the Header! <br>
+            <div class="demodiv" id = "ui_filesystem"></div>
+        </p>
+
+        <p>
+            <h3>graf.visual.lightmode</h3><br>
+            Finally, let's brighten up things a little by typing >brightlight instead of >darkuniverse in the UI Input! <br>
+            <div class="demodiv"id = "ui_lightmode"></div>
+        </p>   
+
+        <p>
+            <i>Good sailing, <br>
+            Konrad!
+            </i>
+        </p>
+    </div>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="../Graph/peerjs.min.js"></script>
+<script src="../Graph/Stream.js"></script>
+<script src=../Graph/anime.min.js></script>
+<script src=../Graph/FileSystem.js></script>
+<script src=../Graph/Graph.js></script>
+<script src=../Graph/Parser.js></script>
+<script src=../Graph/Data.js></script>
+<script src=../Graph/Test.js></script>
+<script src=../Graph/UI.js></script>
+<script src=../Graph/Visualisierung.js></script>
+<script src=../Graph/Node.js></script>
+<script src=../Graph/PAC.js></script>
+<script src=../Graph/HPTGN.js></script>
+<script src=main.js></script>

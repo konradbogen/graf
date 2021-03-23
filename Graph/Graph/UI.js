@@ -296,7 +296,7 @@ class BackgroundAnimation{
 }
 
 class ZoomContainer {
-    constructor(){
+    constructor(container, zoomEnabled, dragEnabled){
         this.zoomEnabled = true;
         this.mobile = false;
         var string =  /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/;
@@ -304,8 +304,7 @@ class ZoomContainer {
             this.mobile = true;
         }
         
-        this.html_element = document.getElementById('graphContainer');
-        this.html_element.style.cursor = "move";
+        this.html_element = container;
 
         this._drag_offset_x = 0;
         this._drag_offset_y = 0;
@@ -327,21 +326,29 @@ class ZoomContainer {
             //this.scrollToBottom();
         }
 
-        window.onscroll = this.zoom.bind (this);
+        if (zoomEnabled) {
+            window.onscroll = this.zoom.bind (this);
+        }   
+
         this.html_element.onmousemove  = this.setMousePosition.bind(this);
-        this.html_element.onmousedown = this.dragMouseDown.bind(this);
+
+        if (dragEnabled) {
+            this.html_element.style.cursor = "move";
+            this.html_element.parentElement.style.overflow = "hidden";
+            this.html_element.onmousedown = this.dragMouseDown.bind(this);
+        }
 
         this.init_animation();
     }
 
     set drag_offset_x (val) {
         this._drag_offset_x = val;
-        this.html_element.style.left = (this.html_element.offsetLeft - this._drag_offset_x) + "px";
+        this.html_element.style.left = ((this.html_element.offsetLeft-this.html_element.parentElement.offsetLeft) - this._drag_offset_x) + "px";
     }
 
     set drag_offset_y (val) {
         this._drag_offset_y = val;
-        this.html_element.style.top = (this.html_element.offsetTop - this._drag_offset_y) + "px";
+        this.html_element.style.top = ((this.html_element.offsetTop-this.html_element.parentElement.offsetTop) - this._drag_offset_y) + "px";
 
     }
 

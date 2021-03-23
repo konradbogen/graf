@@ -1,0 +1,13 @@
+body {
+    color: rgb(18, 18, 18);
+    font-family:'Oswald';
+    background-color: rgb(240, 237, 230);
+    text-align: center;
+}
+
+.demodiv {
+    width: 60%;
+    margin-left: 20%;
+    margin-top: 10px;
+    height: 300px;
+}

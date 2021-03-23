@@ -26,12 +26,10 @@ class HPTGN  {
         this.visual;
         this.files;
 
-        this.pass_startnode_in_url = false;
-
         this.ui_menu; 
         this.ui_header;
         this.ui_zoom_container;
-
+        
         this.on_ready_callbacks = [];
         this.is_ready = false;
         this._storing_name;
@@ -39,18 +37,8 @@ class HPTGN  {
 
         $(document).ready(function (){
             this.create_visual (div_id, options.clickToOpenEnabled, options.mouseOverEnabled, options.lightTheme, options.frameEnabled);
-            this.pass_startnode_in_url = options.passStartNodeInUrl;
-            if (options.hasUi) {
-                this.create_ui (div_id, options.hasUiHeader, options.hasUiMenu, options.zoomEnabled, options.dragEnabled)
-            };
-            if (options.hasFileSystem) {
-                this.create_filesystem (this.visual, options.fileSystemDirectory)
-            };
-            if (options.audioEnabled) {
-                this.visual.init_audio();
-                if (this.ui_menu) {this.ui_menu.toggle_mute ()}; 
-                this.visual.unmute();
-            }
+            if (options.hasUi) {this.create_ui (div_id, options.hasUiHeader, options.hasUiMenu, options.zoomEnabled)};
+            if (options.hasFileSystem) {this.create_filesystem (this.visual, options.fileSystemDirectory)};
             this.load_default_entry ();
             this.is_ready = true;
             this.on_ready_callbacks.forEach (c => {c ()})
@@ -63,29 +51,21 @@ class HPTGN  {
         }.bind (this);
     }
     
-    set start_node (val) {
-        if (this.is_ready) {
-            this.visual.create_from_graph (this.graph, this.graph.find_node (val));
-        }else {
-            this.on_ready_callbacks.push (function () { 
-                this.start_node = val;
-            }.bind (this))
-        }
-    }
-
-    get start_node () {
-        return this.visual.start_node.id;
-    }
-
     set storing_name (val) {
         if (this.is_ready) {
             this._storing_name = val;
             if (this.ui_header) {
                 this.ui_header.value = val
             };
-            this.load_files(val);
+            if (this.storing_name.includes ("/")) {
+                var filename = this.storing_name.replaceAll ("/", "");
+                this.load_files(filename, this.files.get_all_ids_entry_text());
+            } 
+            else {
+                this.load_files(val);
+            } 
         }else {
-            this.on_ready_callbacks.push (function () { 
+            this.on_ready_callbacks.push (function () {
                 this.storing_name = val;
             }.bind (this))
         }
@@ -140,13 +120,13 @@ class HPTGN  {
         return graphContainer;
     }
 
-    create_ui(div_id, createUiHeader, createUiMenu, zoomEnabled, dragEnabled) {
+    create_ui(div_id, createUiHeader, createUiMenu, createZoomContainer) {
         if (createUiMenu) {
             this.ui_menu = new Menu (div_id, PALETTE);
             this.create_ui_menu_callback();
         }
-        if (zoomEnabled || dragEnabled) {
-            this.ui_zoom_container = new ZoomContainer(this.visual.master_container, zoomEnabled, dragEnabled);
+        if (createZoomContainer) {
+            this.ui_zoom_container = new ZoomContainer();
         }
         if (createUiHeader) {
             this.ui_header = new HeaderInput (div_id);
@@ -195,23 +175,17 @@ class HPTGN  {
     
     update_visual() {
         if (this.visual) {
-            if (this.pass_startnode_in_url) {
-                this.set_visual_startnode_from_url();
-            }   
+            var url_passed_start_node = this.get_url_parameter("sub");
+            if (!url_passed_start_node) {
+                url_passed_start_node = this.get_url_parameter("s");
+            }
+            this.visual.start_node = this.graph.find_node(url_passed_start_node);
             this.parser.set_visual_parameters (this.visual);
             this.visual.create_from_graph(this.graph, this.visual.start_node);
         }else {
             this.on_ready_callbacks.push (this.update_visual.bind (this));
         }
 
-    }
-
-    set_visual_startnode_from_url() {
-        var url_passed_start_node = this.get_url_parameter("sub");
-        if (!url_passed_start_node) {
-            url_passed_start_node = this.get_url_parameter("s");
-        }
-        this.visual.start_node = this.graph.find_node(url_passed_start_node);
     }
 
     update_input (input) {
@@ -226,7 +200,7 @@ class HPTGN  {
     }
 
     store_file(name) {
-        if (this.files && this.parser) {
+        if (this.files) {
             var filename = name.replaceAll ("/", "");
             this.files.save_storagefile_text(filename, this.parser.lexer.create_text ());
             this.is_stored = true;
@@ -235,10 +209,7 @@ class HPTGN  {
 
     load_files(name, additional_text) {
         if (this.files) {
-            if (name.includes ("/")) {
-                var filename = name.replaceAll ("/", "");
-                this.load_files(filename, this.files.get_all_ids_entry_text());
-            } else if (name != "") {
+            if (name != "") {
                 this.parts = name.split ("+");
                 this.full_text =  additional_text ? additional_text + "/n" : "";
                 this.i = 0;
@@ -290,9 +261,7 @@ class HPTGN  {
                 this.ui_zoom_container.reset_zoom();
             }
             this.update_document_title ();
-            if (this.pass_startnode_in_url) {
-                this.update_url ();
-            };
+            this.update_url ();
         }.bind (this);
         if (this.ui_zoom_container) {t
             his.ui_zoom_container.callbacks.push (this.visual.on_zoom_change.bind (this.visual))

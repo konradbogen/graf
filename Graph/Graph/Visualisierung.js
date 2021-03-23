@@ -122,7 +122,7 @@ class Point {
 
         this.is_toggle = false;
         this._is_active = false;
-        this.mouse_over_enabled = true;
+        this.mouseOverEnabled = true;
         this.prevent_mouse_over_flag = false;
 
         this._visibility = true;
@@ -363,7 +363,7 @@ class Point {
     }
 
     mouse_leave () {
-        if (this.mouse_over_enabled && this.prevent_mouse_over_flag == true) {
+        if (this.mouseOverEnabled && this.prevent_mouse_over_flag == true) {
             this.prevent_mouse_over_flag = false;
             if (!this.is_toggle) {this.is_active = false;}
             this.on_mouse_leave();
@@ -375,7 +375,7 @@ class Point {
     };
     
     mouse_over () {
-        if (this.mouse_over_enabled && !this.prevent_mouse_over_flag) {
+        if (this.mouseOverEnabled && !this.prevent_mouse_over_flag) {
             this.prevent_mouse_over_flag = true;
             if (!this.is_toggle) {this.is_active = true;}
             this.on_mouse_over ();
@@ -395,7 +395,7 @@ class Point {
             this.is_active = !this.is_active;
         }else {
             this.is_active = true;
-            if (!this.mouse_over_enabled) {setTimeout (function () {this.is_active = false}.bind (this), 100)};
+            if (!this.mouseOverEnabled) {setTimeout (function () {this.is_active = false}.bind (this), 100)};
         }
         this.start_time = new Date ();
         this.visual.fire_callbacks_point_play (this);
@@ -514,7 +514,7 @@ class Visual {
 
         this.clickToOpen = true;
         this.frameEnabled = true;
-        this.mouseOverEnabled = true;
+        this.mouseOverEnabled = false;
         this.default_font_size = 20;
         this.opacity_level_factor = 0.3; //1
         this.radius_level_factor = 2.3; //2.8
@@ -541,7 +541,7 @@ class Visual {
             this.default_point_active_background_color = "rgb(219, 219, 219)";
             this.default_point_active_color = "black";
             this.master_container.style.backgroundColor = "rgb(242, 242, 242)";
-            document.body.style.backgroundColor = "rgb(242, 242, 242)";
+            this.master_container.parentElement.style.backgroundColor = "rgb(242, 242, 242)";
         }else {
             this.default_line_color = "rgb(240, 237, 230)";
             this.default_point_color = "rgb(245, 242, 240)";
@@ -550,7 +550,7 @@ class Visual {
             this.default_point_active_background_color = "rgb(245, 242, 240)";
             this.default_point_active_color = "rgb(30, 30, 30)";
             this.master_container.style.backgroundColor = "rgb(18,18,18)";
-            document.body.style.backgroundColor = "rgb(18,18,18)";
+            this.master_container.parentElement.style.backgroundColor = "rgb(18,18,18)";
         }
     }
 
@@ -750,7 +750,6 @@ class Visual {
         else {
             p = new NodePoint (x, y, node, this, color)
         }
-        p.mouse_over_enabled = this.mouseOverEnabled;
         return p;
     }
 
