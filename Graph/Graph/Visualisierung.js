@@ -596,8 +596,8 @@ class Visual {
     reset () {
         this.points = [];
         this.lines = [];
-        this.line_svg.innerHTML = "";
-        this.point_container.innerHTML = "";
+        this.line_svg.innerHTML = " ";
+        this.point_container.innerHTML = " ";
     }
 
     on_zoom_change (zoom) {
